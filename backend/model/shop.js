@@ -1,0 +1,422 @@
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
+const shopSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, "Please enter your shop name!"],
+  },
+  email: {
+    type: String,
+    required: [true, "Please enter your shop email address"],
+  },
+  password: {
+    type: String,
+    required: [true, "Please enter your password"],
+    minLength: [6, "Password should be greater than 6 characters"],
+    select: false,
+  },
+  description: {
+    type: String,
+  },
+  address: {
+    type: String,
+    required: true,
+  },
+  phoneNumber: {
+    type: Number,
+    required: true,
+  },
+  gstNumber: {
+    type: String,
+    required: false,
+    validate: {
+      validator: function(gst) {
+        // Allow empty string or null for optional field
+        if (!gst) return true;
+        // GST number format validation (15 characters: 2 state code + 10 PAN + 1 entity + 1 check + 1 default)
+        const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+        return gstRegex.test(gst);
+      },
+      message: 'Please enter a valid GST number (format: 22AAAAA0000A1Z5)'
+    }
+  },
+  role: {
+    type: String,
+    default: "Seller",
+  },
+  avatar: {
+    type: {
+      url: {
+        type: String,
+        required: false,
+      },
+      public_id: {
+        type: String,
+        required: false,
+      },
+    },
+    required: false,
+    default: null,
+  },
+  // Trade and Business License documents (mandatory)
+  tradeLicenses: [
+    {
+      url: {
+        type: String,
+        required: true,
+      },
+      public_id: {
+        type: String,
+        required: true,
+      },
+      originalName: {
+        type: String,
+      },
+      uploadedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
+  zipCode: {
+    type: Number,
+    required: true,
+  },
+  latitude: {
+    type: String,
+  },
+  longitude: {
+    type: String,
+  },
+  withdrawMethod: {
+    type: Object,
+  },
+  paypalEmail: {
+    type: String,
+    required: [true, 'PayPal email is required to receive payments'],
+    validate: {
+      validator: function(email) {
+        if (!email) return false;
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      },
+      message: 'Please enter a valid PayPal email address'
+    }
+  },
+  // Bank Account Details (for alternative payment methods)
+  bankAccountDetails: {
+    accountHolderName: {
+      type: String,
+      required: false,
+    },
+    accountNumber: {
+      type: String,
+      required: false,
+    },
+    bankName: {
+      type: String,
+      required: false,
+    },
+    ifscCode: {
+      type: String,
+      required: false,
+    },
+    accountType: {
+      type: String,
+      enum: ['savings', 'current', ''],
+      default: '',
+    },
+  },
+  availableBalance: {
+    type: Number,
+    default: 0,
+  },
+  transections: [
+    {
+      amount: {
+        type: Number,
+        required: true,
+      },
+      status: {
+        type: String,
+        default: "Processing",
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now(),
+      },
+      updatedAt: {
+        type: Date,
+      },
+    },
+  ],
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+  },
+  resetPasswordToken: String,
+  resetPasswordTime: Date,
+  // Ban system fields
+  isBanned: {
+    type: Boolean,
+    default: false,
+  },
+  banReason: {
+    type: String,
+    default: null,
+  },
+  bannedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
+  bannedAt: {
+    type: Date,
+    default: null,
+  },
+  // Simple shipping configuration
+  simpleShippingConfig: {
+    baseShippingRate: {
+      type: Number,
+      default: 50,
+    },
+    freeShippingThreshold: {
+      type: Number,
+      default: 999,
+    },
+    isShippingEnabled: {
+      type: Boolean,
+      default: true,
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  // Admin approval system
+  approvalStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending',
+  },
+  approvedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
+  approvedAt: {
+    type: Date,
+    default: null,
+  },
+  rejectedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
+  rejectedAt: {
+    type: Date,
+    default: null,
+  },
+  rejectionReason: {
+    type: String,
+    default: null,
+  },
+  // Subscription plan
+  subscriptionPlan: {
+    type: String,
+    enum: ['free', 'bronze', 'silver', 'gold', 'revenue-share'],
+    default: 'free',
+  },
+  currentSubscription: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Subscription',
+    default: null,
+  },
+  // Revenue share tracking (for revenue-share plan)
+  revenueShare: {
+    monthlyMinimum: {
+      type: Number,
+      default: 25, // $25 minimum per month
+    },
+    isPaid: {
+      type: Boolean,
+      default: false,
+    },
+    lastPaymentDate: {
+      type: Date,
+    },
+    currentMonthRevenue: {
+      type: Number,
+      default: 0,
+    },
+  },
+  // Custom HTML/CSS Editor (Gold+ plan feature)
+  customHtml: {
+    type: String,
+    default: "",
+    maxlength: [50000, "Custom HTML cannot exceed 50000 characters"],
+  },
+  customCss: {
+    type: String,
+    default: "",
+    maxlength: [20000, "Custom CSS cannot exceed 20000 characters"],
+  },
+  customHtmlEnabled: {
+    type: Boolean,
+    default: false,
+  },
+  // PayPal Integration
+  paypalEmail: {
+    type: String,
+    required: false,
+  },
+  paypalMerchantId: {
+    type: String,
+    required: false,
+  },
+  // Store Manager Service
+  storeManagerService: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'StoreManagerService',
+    default: null,
+  },
+  storeManagerEnabled: {
+    type: Boolean,
+    default: false,
+  },
+  // In-House Store Settings (for stores owned by the platform)
+  isInHouseStore: {
+    type: Boolean,
+    default: false,
+  },
+  inHouseStoreNote: {
+    type: String,
+    default: "",
+  },
+  // Advertising Fee Exemption (for in-house stores or special partners)
+  adFeeExempt: {
+    type: Boolean,
+    default: false,
+  },
+  adFeeExemptReason: {
+    type: String,
+    default: "",
+  },
+  adFeeExemptBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
+  adFeeExemptAt: {
+    type: Date,
+    default: null,
+  },
+  // Store Settings
+  storeSettings: {
+    // SEO Settings
+    seo: {
+      metaTitle: {
+        type: String,
+        default: "",
+        maxlength: 70
+      },
+      metaDescription: {
+        type: String,
+        default: "",
+        maxlength: 160
+      },
+      metaKeywords: {
+        type: String,
+        default: ""
+      },
+      ogImage: {
+        type: String,
+        default: ""
+      }
+    },
+    // Payment Preferences
+    payment: {
+      acceptCOD: {
+        type: Boolean,
+        default: true
+      },
+      acceptOnlinePayment: {
+        type: Boolean,
+        default: true
+      },
+      minimumOrderAmount: {
+        type: Number,
+        default: 0
+      },
+      freeShippingThreshold: {
+        type: Number,
+        default: 0
+      }
+    },
+    // Store Policies
+    policies: {
+      returnPolicy: {
+        type: String,
+        default: ""
+      },
+      shippingPolicy: {
+        type: String,
+        default: ""
+      },
+      privacyPolicy: {
+        type: String,
+        default: ""
+      },
+      termsOfService: {
+        type: String,
+        default: ""
+      }
+    },
+    // Notification Preferences
+    notifications: {
+      emailOnNewOrder: {
+        type: Boolean,
+        default: true
+      },
+      emailOnOrderStatus: {
+        type: Boolean,
+        default: true
+      },
+      emailOnNewReview: {
+        type: Boolean,
+        default: true
+      },
+      emailOnLowStock: {
+        type: Boolean,
+        default: false
+      },
+      lowStockThreshold: {
+        type: Number,
+        default: 5
+      }
+    }
+  }
+});
+
+// Hash password
+shopSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) {
+    next();
+  }
+  this.password = await bcrypt.hash(this.password, 10);
+});
+
+// jwt token
+shopSchema.methods.getJwtToken = function () {
+  return jwt.sign({ id: this._id }, process.env.JWT_SECRET_KEY, {
+    expiresIn: process.env.JWT_EXPIRES,
+  });
+};
+
+// comapre password
+shopSchema.methods.comparePassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+module.exports = mongoose.model("Shop", shopSchema);

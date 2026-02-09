@@ -1,0 +1,23 @@
+import AdminDashboardPage from "../pages/AdminDashboardPage";
+import AdminDashboardUsers from "../pages/AdminDashboardUsers";
+import AdminDashboardSellers from "../pages/AdminDashboardSellers";
+import AdminDashboardPendingSellers from "../pages/AdminDashboardPendingSellers";
+import AdminDashboardOrders from "../pages/AdminDashboardOrders";
+import AdminDashboardProducts from "../pages/AdminDashboardProducts";
+import AdminDashboardEvents from "../pages/AdminDashboardEvents";
+import AdminDashboardWithdraw from "../pages/AdminDashboardWithdraw";
+import AdminDashboardBanner from "../pages/AdminDashboardBanner";
+import AdminDashboardCategories from "../pages/AdminDashboardCategories";
+
+export {
+  AdminDashboardPage,
+  AdminDashboardUsers,
+  AdminDashboardSellers,
+  AdminDashboardPendingSellers,
+  AdminDashboardOrders,
+  AdminDashboardProducts,
+  AdminDashboardEvents,
+  AdminDashboardWithdraw,
+  AdminDashboardBanner,
+  AdminDashboardCategories,
+};

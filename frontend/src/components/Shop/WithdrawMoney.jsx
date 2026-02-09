@@ -1,0 +1,401 @@
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { getAllOrdersOfShop } from "../../redux/actions/order";
+import styles from "../../styles/styles";
+import { RxCross1 } from "react-icons/rx";
+import axios from "axios";
+import { server } from "../../server";
+import { toast } from "react-toastify";
+import { loadSeller } from "../../redux/actions/user";
+import { AiOutlineDelete } from "react-icons/ai";
+import { useCurrency } from "../../context/CurrencyContext";
+
+const WithdrawMoney = () => {
+  const [open, setOpen] = useState(false);
+  const dispatch = useDispatch();
+  const { seller } = useSelector((state) => state.seller);
+  const { formatPrice } = useCurrency();
+  const [paymentMethod, setPaymentMethod] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState(1);
+  const [paypalEmail, setPaypalEmail] = useState("");
+  const [bankInfo, setBankInfo] = useState({
+    bankName: "",
+    bankCountry: "India",
+    bankSwiftCode: null, // Will be used as IFSC for Indian banks
+    ifscCode: "", // Dedicated IFSC field
+    bankAccountNumber: null,
+    bankHolderName: "",
+    bankAddress: "",
+    upiId: "", // For UPI payouts
+  });
+
+  useEffect(() => {
+    dispatch(getAllOrdersOfShop(seller._id));
+    if (seller?.paypalEmail) {
+      setPaypalEmail(seller.paypalEmail);
+    }
+  }, [dispatch, seller]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const withdrawMethod = {
+      bankName: bankInfo.bankName,
+      bankCountry: bankInfo.bankCountry,
+      bankSwiftCode: bankInfo.bankSwiftCode || bankInfo.ifscCode, // Use IFSC as Swift for Indian banks
+      ifscCode: bankInfo.ifscCode, // Dedicated IFSC field
+      bankAccountNumber: bankInfo.bankAccountNumber,
+      bankHolderName: bankInfo.bankHolderName,
+      bankAddress: bankInfo.bankAddress,
+      upiId: bankInfo.upiId, // UPI ID for instant payouts
+    };
+
+    setPaymentMethod(false);
+
+    await axios
+      .put(
+        `${server}/shop/update-payment-methods`,
+        {
+          withdrawMethod,
+          paypalEmail: paypalEmail || null,
+        },
+        { withCredentials: true }
+      )
+      .then((res) => {
+        toast.success("Withdraw method added successfully!");
+        dispatch(loadSeller());
+        setBankInfo({
+          bankName: "",
+          bankCountry: "India",
+          bankSwiftCode: null,
+          ifscCode: "",
+          bankAccountNumber: null,
+          bankHolderName: "",
+          bankAddress: "",
+          upiId: "",
+        });
+      })
+      .catch((error) => {
+        console.log(error.response.data.message);
+      });
+  };
+
+  const deleteHandler = async () => {
+    await axios
+      .delete(`${server}/shop/delete-withdraw-method`, {
+        withCredentials: true,
+      })
+      .then((res) => {
+        toast.success("Withdraw method deleted successfully!");
+        dispatch(loadSeller());
+      });
+  };
+
+  const error = () => {
+    toast.error("You not have enough balance to withdraw!");
+  };
+
+  const withdrawHandler = async () => {
+    if (withdrawAmount < 1 || withdrawAmount > availableBalance) {
+      toast.error("You can't withdraw this amount!");
+    } else {
+      const amount = withdrawAmount;
+      await axios
+        .post(
+          `${server}/withdraw/create-withdraw-request`,
+          { amount },
+          { withCredentials: true }
+        )
+        .then((res) => {
+          toast.success("Withdraw money request is successful!");
+        });
+    }
+  };
+
+  const availableBalance = seller?.availableBalance.toFixed(2);
+
+  return (
+    <div className="w-full h-[90vh] p-8">
+      <div className="w-full bg-white h-full rounded flex items-center justify-center flex-col">
+        <h5 className="text-[20px] pb-4">
+          Available Balance: {formatPrice(availableBalance)}
+        </h5>
+        <div
+          className={`${styles.button} text-white !h-[42px] !rounded`}
+          onClick={() => (availableBalance < 1 ? error() : setOpen(true))}
+        >
+          Withdraw
+        </div>
+      </div>
+      {open && (
+        <div className="w-full h-screen z-[9999] fixed top-0 left-0 flex items-center justify-center bg-[#0000004e]">
+          <div
+            className={`w-[95%] 800px:w-[50%] bg-white shadow rounded ${
+              paymentMethod ? "h-[80vh] overflow-y-scroll" : "h-[unset]"
+            } min-h-[40vh] p-3`}
+          >
+            <div className="w-full flex justify-end">
+              <RxCross1
+                size={25}
+                onClick={() => setOpen(false) || setPaymentMethod(false)}
+                className="cursor-pointer"
+              />
+            </div>
+            {paymentMethod ? (
+              <div>
+                <h3 className="text-[22px] font-Poppins text-center font-[600]">
+                  Add new Withdraw Method:
+                </h3>
+                <form onSubmit={handleSubmit}>
+                  {/* PayPal Email Section */}
+                  <div className="pt-4 border-b pb-4 mb-4">
+                    <h4 className="text-[18px] font-[600] text-blue-600 mb-2">
+                      PayPal Withdrawal (Recommended)
+                    </h4>
+                    <label>
+                      PayPal Email{" "}
+                      <span className="text-gray-500">
+                        (Optional - For instant payouts)
+                      </span>
+                    </label>
+                    <input
+                      type="email"
+                      value={paypalEmail}
+                      onChange={(e) => setPaypalEmail(e.target.value)}
+                      placeholder="Enter your PayPal email (e.g., seller@paypal.com)"
+                      className={`${styles.input} mt-2`}
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Add your PayPal email to receive instant withdrawals
+                      directly to your PayPal account.
+                    </p>
+                  </div>
+
+                  {/* Bank Details Section */}
+                  <h4 className="text-[18px] font-[600] mb-2">
+                    Bank Account Details
+                  </h4>
+                  <div>
+                    <label>
+                      Bank Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name=""
+                      required
+                      value={bankInfo.bankName}
+                      onChange={(e) =>
+                        setBankInfo({ ...bankInfo, bankName: e.target.value })
+                      }
+                      id=""
+                      placeholder="Enter your Bank name!"
+                      className={`${styles.input} mt-2`}
+                    />
+                  </div>
+                  <div className="pt-2">
+                    <label>
+                      Bank Country <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name=""
+                      value={bankInfo.bankCountry}
+                      onChange={(e) =>
+                        setBankInfo({
+                          ...bankInfo,
+                          bankCountry: e.target.value,
+                        })
+                      }
+                      id=""
+                      required
+                      placeholder="Enter your bank Country!"
+                      className={`${styles.input} mt-2`}
+                    />
+                  </div>
+                  <div className="pt-2">
+                    <label>
+                      IFSC Code <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name=""
+                      id=""
+                      required
+                      value={bankInfo.ifscCode}
+                      onChange={(e) =>
+                        setBankInfo({
+                          ...bankInfo,
+                          ifscCode: e.target.value.toUpperCase(),
+                        })
+                      }
+                      placeholder="Enter IFSC Code (e.g., HDFC0000123)"
+                      className={`${styles.input} mt-2`}
+                      maxLength={11}
+                    />
+                  </div>
+
+                  <div className="pt-2">
+                    <label>
+                      UPI ID{" "}
+                      <span className="text-gray-500">
+                        (Optional - For Instant Payouts)
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      name=""
+                      id=""
+                      value={bankInfo.upiId}
+                      onChange={(e) =>
+                        setBankInfo({
+                          ...bankInfo,
+                          upiId: e.target.value,
+                        })
+                      }
+                      placeholder="Enter UPI ID (e.g., seller@paytm)"
+                      className={`${styles.input} mt-2`}
+                    />
+                  </div>
+
+                  <div className="pt-2">
+                    <label>
+                      Bank Account Number{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      name=""
+                      id=""
+                      value={bankInfo.bankAccountNumber}
+                      onChange={(e) =>
+                        setBankInfo({
+                          ...bankInfo,
+                          bankAccountNumber: e.target.value,
+                        })
+                      }
+                      required
+                      placeholder="Enter your bank account number!"
+                      className={`${styles.input} mt-2`}
+                    />
+                  </div>
+                  <div className="pt-2">
+                    <label>
+                      Bank Holder Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name=""
+                      required
+                      value={bankInfo.bankHolderName}
+                      onChange={(e) =>
+                        setBankInfo({
+                          ...bankInfo,
+                          bankHolderName: e.target.value,
+                        })
+                      }
+                      id=""
+                      placeholder="Enter your bank Holder name!"
+                      className={`${styles.input} mt-2`}
+                    />
+                  </div>
+
+                  <div className="pt-2">
+                    <label>
+                      Bank Address <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name=""
+                      required
+                      id=""
+                      value={bankInfo.bankAddress}
+                      onChange={(e) =>
+                        setBankInfo({
+                          ...bankInfo,
+                          bankAddress: e.target.value,
+                        })
+                      }
+                      placeholder="Enter your bank address!"
+                      className={`${styles.input} mt-2`}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className={`${styles.button} mb-3 text-white`}
+                  >
+                    Add
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <>
+                <h3 className="text-[22px] font-Poppins">
+                  Available Withdraw Methods:
+                </h3>
+
+                {seller && seller?.withdrawMethod ? (
+                  <div>
+                    <div className="800px:flex w-full justify-between items-center">
+                      <div className="800px:w-[50%]">
+                        <h5>
+                          Account Number:{" "}
+                          {"*".repeat(
+                            seller?.withdrawMethod.bankAccountNumber.length - 3
+                          ) +
+                            seller?.withdrawMethod.bankAccountNumber.slice(-3)}
+                        </h5>
+                        <h5>Bank Name: {seller?.withdrawMethod.bankName}</h5>
+                      </div>
+                      <div className="800px:w-[50%]">
+                        <AiOutlineDelete
+                          size={25}
+                          className="cursor-pointer"
+                          onClick={() => deleteHandler()}
+                        />
+                      </div>
+                    </div>
+                    <br />
+                    <h4>Available Balance: {formatPrice(availableBalance)}</h4>
+                    <br />
+                    <div className="800px:flex w-full items-center">
+                      <input
+                        type="number"
+                        placeholder="Amount..."
+                        value={withdrawAmount}
+                        onChange={(e) => setWithdrawAmount(e.target.value)}
+                        className="800px:w-[100px] w-[full] border 800px:mr-3 p-1 rounded"
+                      />
+                      <div
+                        className={`${styles.button} !h-[42px] text-white`}
+                        onClick={withdrawHandler}
+                      >
+                        Withdraw
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-[18px] pt-2">
+                      No Withdraw Methods available!
+                    </p>
+                    <div className="w-full flex items-center">
+                      <div
+                        className={`${styles.button} text-[#fff] text-[18px] mt-4`}
+                        onClick={() => setPaymentMethod(true)}
+                      >
+                        Add new
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default WithdrawMoney;

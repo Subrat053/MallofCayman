@@ -1,0 +1,466 @@
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  HiOutlineViewGrid,
+  HiOutlineShoppingBag,
+  HiOutlineUsers,
+  HiOutlineUserGroup,
+  HiOutlineCube,
+  HiOutlineCalendar,
+  HiOutlineCurrencyDollar,
+  HiOutlineChartBar,
+  HiOutlineLogout,
+  HiOutlinePhotograph,
+  HiOutlineCollection,
+  HiOutlineClock,
+  HiOutlineDocumentText,
+  HiOutlineStar,
+  HiOutlineCog,
+  HiOutlineQuestionMarkCircle,
+  HiOutlineFilm,
+  HiOutlineUserAdd,
+  HiOutlineSpeakerphone,
+  HiOutlineLocationMarker,
+  HiOutlineIdentification,
+  HiOutlineMail,
+} from "react-icons/hi";
+import { logoutUser } from "../../../redux/actions/user";
+import { toast } from "react-toastify";
+
+const AdminSideBar = ({ active, onItemClick, isMobileOverlay = false }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { user } = useSelector((state) => state.user);
+
+  const handleLogout = () => {
+    dispatch(logoutUser());
+    toast.success("Logged out successfully!");
+    navigate("/");
+    if (onItemClick) onItemClick();
+  };
+
+  // Define all menu items with permission requirements
+  const allMenuItems = [
+    {
+      id: 1,
+      name: "Dashboard",
+      icon: HiOutlineViewGrid,
+      url: "/admin/dashboard",
+      color: "bg-blue-500",
+      roles: ["Admin", "SubAdmin", "Manager"], // All can see dashboard
+    },
+    {
+      id: 11,
+      name: "Pending Sellers",
+      icon: HiOutlineClock,
+      url: "/admin-pending-sellers",
+      color: "bg-yellow-500",
+      roles: ["Admin", "SubAdmin"], // Only Admin and SubAdmin can approve vendors
+    },
+    {
+      id: 20,
+      name: "Pending Products",
+      icon: HiOutlineCube,
+      url: "/admin-pending-products",
+      color: "bg-orange-500",
+      roles: ["Admin", "SubAdmin"], // Only Admin and SubAdmin can approve products
+    },
+    {
+      id: 21,
+      name: "Pending Video Banners",
+      icon: HiOutlineFilm,
+      url: "/admin-video-banners?status=pending",
+      color: "bg-red-500",
+      roles: ["Admin", "SubAdmin"], // SubAdmin can approve ads/video banners
+    },
+    {
+      id: 13,
+      name: "Review Management",
+      icon: HiOutlineStar,
+      url: "/admin-reviews",
+      color: "bg-indigo-500",
+      roles: ["Admin", "SubAdmin"], // SubAdmin can moderate reviews
+    },
+    {
+      id: 3,
+      name: "All Sellers",
+      icon: HiOutlineUserGroup,
+      url: "/admin-sellers",
+      color: "bg-orange-500",
+      roles: ["Admin", "Manager"], // Manager can manage vendors
+    },
+    {
+      id: 2,
+      name: "All Orders",
+      icon: HiOutlineShoppingBag,
+      url: "/admin-orders",
+      color: "bg-green-500",
+      roles: ["Admin", "Manager"], // Manager can manage orders
+    },
+    {
+      id: 5,
+      name: "All Products",
+      icon: HiOutlineCube,
+      url: "/admin-products",
+      color: "bg-indigo-500",
+      roles: ["Admin", "Manager"], // Manager can manage products
+    },
+    {
+      id: 9,
+      name: "Categories",
+      icon: HiOutlineCollection,
+      url: "/admin-categories",
+      color: "bg-cyan-500",
+      roles: ["Admin", "Manager"], // Manager can manage categories
+    },
+    {
+      id: 4,
+      name: "All Users",
+      icon: HiOutlineUsers,
+      url: "/admin-users",
+      color: "bg-purple-500",
+      roles: ["Admin", "Manager"], // Manager can manage users
+    },
+    {
+      id: 8,
+      name: "Home Banner",
+      icon: HiOutlinePhotograph,
+      url: "/admin-banner",
+      color: "bg-pink-500",
+      roles: ["Admin", "Manager"], // Manager can manage content
+    },
+    {
+      id: 16,
+      name: "All Video Banners",
+      icon: HiOutlineFilm,
+      url: "/admin-video-banners",
+      color: "bg-red-500",
+      roles: ["Admin", "Manager"], // Manager can manage content
+    },
+    {
+      id: 22,
+      name: "Advertisements",
+      icon: HiOutlineSpeakerphone,
+      url: "/admin-advertisements",
+      color: "bg-orange-500",
+      roles: ["Admin", "SubAdmin"], // Admin and SubAdmin can manage ads
+    },
+    {
+      id: 23,
+      name: "Ad Plan Management",
+      icon: HiOutlineSpeakerphone,
+      url: "/admin-ad-plans",
+      color: "bg-purple-500",
+      roles: ["Admin"], // Only Admin can modify ad plans/pricing
+    },
+    {
+      id: 12,
+      name: "Legal Pages",
+      icon: HiOutlineDocumentText,
+      url: "/admin-legal-pages",
+      color: "bg-emerald-500",
+      roles: ["Admin", "Manager"], // Manager can manage content
+    },
+    {
+      id: 15,
+      name: "FAQ Management",
+      icon: HiOutlineQuestionMarkCircle,
+      url: "/admin-faq",
+      color: "bg-blue-500",
+      roles: ["Admin", "Manager"], // Manager can manage content
+    },
+    {
+      id: 7,
+      name: "Withdraw Request",
+      icon: HiOutlineCurrencyDollar,
+      url: "/admin-withdraw-request",
+      color: "bg-red-500",
+      roles: ["Admin", "Manager"], // Manager can manage orders/payments
+    },
+    {
+      id: 10,
+      name: "Analytics",
+      icon: HiOutlineChartBar,
+      url: "/admin/analytics",
+      color: "bg-teal-500",
+      roles: ["Admin", "SubAdmin", "Manager"], // All can view analytics
+    },
+    {
+      id: 17,
+      name: "Subscription Management",
+      icon: HiOutlineCurrencyDollar,
+      url: "/admin-subscriptions",
+      color: "bg-purple-500",
+      roles: ["Admin"], // Only Admin can access setup
+    },
+    {
+      id: 18,
+      name: "Plan Management",
+      icon: HiOutlineCog,
+      url: "/admin-plan-management",
+      color: "bg-indigo-500",
+      roles: ["Admin"], // Only Admin can access setup
+    },
+    {
+      id: 26,
+      name: "Store Managers",
+      icon: HiOutlineIdentification,
+      url: "/admin-store-managers",
+      color: "bg-teal-500",
+      roles: ["Admin"], // Only Admin can manage store manager services
+    },
+    {
+      id: 14,
+      name: "Site Settings",
+      icon: HiOutlineCog,
+      url: "/admin-site-settings",
+      color: "bg-gray-500",
+      roles: ["Admin"], // Only Admin can access setup
+    },
+    {
+      id: 27,
+      name: "Email Templates",
+      icon: HiOutlineMail,
+      url: "/admin-email-templates",
+      color: "bg-pink-500",
+      roles: ["Admin"], // Only Admin can manage email templates
+    },
+    {
+      id: 28,
+      name: "In-House Stores",
+      icon: HiOutlineIdentification,
+      url: "/admin-in-house-stores",
+      color: "bg-purple-600",
+      roles: ["Admin"], // Only Admin can manage in-house stores
+    },
+    {
+      id: 25,
+      name: "Currency",
+      icon: HiOutlineCurrencyDollar,
+      url: "/admin-currency-settings",
+      color: "bg-green-500",
+      roles: ["Admin"], // Only Admin can access currency settings
+    },
+    {
+      id: 19,
+      name: "Admin Staff",
+      icon: HiOutlineUserAdd,
+      url: "/admin-staff",
+      color: "bg-blue-600",
+      roles: ["Admin"], // Only Admin can manage staff
+    },
+    {
+      id: 14,
+      name: "Districts",
+      icon: HiOutlineLocationMarker,
+      url: "/admin-districts",
+      color: "bg-teal-500",
+      roles: ["Admin"], // Only Admin can manage delivery districts
+    },
+  ];
+
+  // Filter menu items based on user role
+  const menuItems = allMenuItems.filter((item) =>
+    item.roles.includes(user?.role),
+  );
+
+  return (
+    <div
+      className={`w-full h-full bg-transparent flex flex-col overflow-hidden ${
+        isMobileOverlay ? "" : "bg-white shadow-sm border-r border-gray-200"
+      }`}
+    >
+      {/* Header - Only show on desktop or if not mobile overlay */}
+      {!isMobileOverlay && (
+        <div className="flex-shrink-0 p-6 border-b border-gray-100">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
+              <HiOutlineViewGrid className="h-5 w-5 text-white" />
+            </div>
+            <div className="hidden 800px:block">
+              <h2 className="text-lg font-semibold text-gray-900">
+                {user?.role === "Manager"
+                  ? "Manager Panel"
+                  : user?.role === "SubAdmin"
+                    ? "SubAdmin Panel"
+                    : "Admin Panel"}
+              </h2>
+              <p className="text-sm text-gray-500">Management Dashboard</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Navigation Menu - Refined for cleaner look */}
+      <div
+        className={`flex-1 overflow-y-auto admin-sidebar-scroll ${
+          isMobileOverlay ? "p-4 pt-3" : "p-4"
+        }`}
+      >
+        <div className="space-y-2">
+          {menuItems.map((item) => {
+            const IconComponent = item.icon;
+            const isActive = active === item.id;
+
+            return (
+              <Link
+                key={item.id}
+                to={item.url}
+                onClick={onItemClick}
+                className={`
+                  relative flex items-center rounded-lg font-medium transition-all duration-200 group admin-nav-item
+                  ${
+                    isMobileOverlay
+                      ? "px-3 py-3 space-x-3"
+                      : "px-4 py-3 space-x-3"
+                  }
+                  ${
+                    isActive
+                      ? "bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 border border-blue-200/50 shadow-sm"
+                      : "hover:bg-gray-50 hover:shadow-sm border border-transparent hover:border-gray-200/50"
+                  }
+                `}
+                title={item.name}
+              >
+                <div
+                  className={`
+                  relative flex items-center justify-center rounded-lg transition-all duration-200
+                  ${isMobileOverlay ? "w-10 h-10" : "w-10 h-10"}
+                  ${
+                    isActive
+                      ? "bg-gradient-to-br from-blue-500 via-purple-600 to-indigo-600 text-white shadow-md transform scale-105"
+                      : "bg-gray-100 group-hover:bg-blue-100 text-gray-600 group-hover:text-blue-600"
+                  }
+                `}
+                >
+                  <IconComponent
+                    className={`transition-all duration-200 ${
+                      isMobileOverlay ? "h-5 w-5" : "h-5 w-5"
+                    }`}
+                  />
+                </div>
+
+                <div className="flex-1 flex items-center justify-between min-w-0">
+                  <div className="flex-1">
+                    <span
+                      className={`
+                      font-medium transition-colors duration-200 truncate block
+                      ${
+                        isMobileOverlay
+                          ? "text-sm"
+                          : "text-sm hidden 800px:block"
+                      }
+                      ${
+                        isActive
+                          ? "text-blue-700"
+                          : "text-gray-700 group-hover:text-blue-600"
+                      }
+                    `}
+                    >
+                      {item.name}
+                    </span>
+                    {isMobileOverlay && (
+                      <span className="text-xs text-gray-500 block mt-0.5">
+                        {item.name === "Dashboard" && "Overview & analytics"}
+                        {item.name === "All Orders" && "Manage orders"}
+                        {item.name === "All Sellers" && "Seller management"}
+                        {item.name === "Pending Sellers" && "Approve sellers"}
+                        {item.name === "All Users" && "User management"}
+                        {item.name === "All Products" && "Product inventory"}
+                        {item.name === "All Events" && "Event management"}
+                        {item.name === "Withdraw Request" && "Payment requests"}
+                        {item.name === "Home Banner" && "Homepage banners"}
+                        {item.name === "Categories" && "Category management"}
+                        {item.name === "Legal Pages" && "Terms & policies"}
+                        {item.name === "Review Management" &&
+                          "Manage product reviews"}
+                        {item.name === "Site Settings" &&
+                          "Configure site information"}
+                        {item.name === "FAQ Management" &&
+                          "Manage frequently asked questions"}
+                        {item.name === "Analytics" && "Reports & insights"}
+                        {item.name === "Subscription Management" &&
+                          "Seller subscriptions"}
+                        {item.name === "Plan Management" &&
+                          "Manage subscription plans"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {isActive && (
+                  <div className="absolute right-2 w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse"></div>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Footer - Refined sizing */}
+      <div
+        className={`flex-shrink-0 border-t border-gray-100 ${
+          isMobileOverlay ? "p-4 pt-3 space-y-3" : "p-4 space-y-3"
+        } ${isMobileOverlay ? "block" : "hidden 800px:block"}`}
+      >
+        {/* Logout Button - Refined */}
+        <button
+          onClick={handleLogout}
+          className={`w-full flex items-center rounded-lg font-medium transition-all duration-200 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 group hover:shadow-sm ${
+            isMobileOverlay ? "px-3 py-3 space-x-3" : "px-4 py-3 space-x-3"
+          }`}
+        >
+          <div
+            className={`flex items-center justify-center rounded-lg bg-red-100 group-hover:bg-red-200 text-red-600 transition-colors ${
+              isMobileOverlay ? "w-10 h-10" : "w-8 h-8"
+            }`}
+          >
+            <HiOutlineLogout
+              className={isMobileOverlay ? "w-5 h-5" : "w-4 h-4"}
+            />
+          </div>
+          <div className="flex-1 text-left">
+            <span
+              className={`text-red-600 group-hover:text-red-700 font-medium ${
+                isMobileOverlay ? "text-sm" : "text-sm"
+              }`}
+            >
+              Logout
+            </span>
+            {isMobileOverlay && (
+              <p className="text-xs text-red-500 mt-0.5">
+                Sign out of {user?.role?.toLowerCase() || "admin"} panel
+              </p>
+            )}
+          </div>
+        </button>
+
+        {/* Footer info - Refined */}
+        <div className="text-center space-y-0.5">
+          <p
+            className={`font-medium text-gray-700 ${
+              isMobileOverlay ? "text-xs" : "text-xs"
+            }`}
+          >
+            {user?.role === "Manager"
+              ? "Manager"
+              : user?.role === "SubAdmin"
+                ? "SubAdmin"
+                : "Admin"}{" "}
+            Dashboard v2.0
+          </p>
+          <p
+            className={`text-gray-500 ${
+              isMobileOverlay ? "text-xs" : "text-xs"
+            }`}
+          >
+            © 2025 Your Platform
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdminSideBar;

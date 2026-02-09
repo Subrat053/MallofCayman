@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" id="dynamic-favicon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" id="dynamic-theme-color" content="#000000" />
+    <meta
+      name="description"
+      id="dynamic-description"
+      content="Mall of Cayman - Your trusted online marketplace for all your shopping needs"
+    />
+
+    <!-- Open Graph Meta Tags for Social Sharing -->
+    <meta property="og:title" content="Mall of Cayman" />
+    <meta
+      property="og:description"
+      content="Your trusted online marketplace for all your shopping needs in Cayman Islands"
+    />
+    <meta
+      property="og:image"
+      content="https://www.mallofcayman.com/og-image.png"
+    />
+    <meta property="og:url" content="https://www.mallofcayman.com" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Mall of Cayman" />
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Mall of Cayman" />
+    <meta
+      name="twitter:description"
+      content="Your trusted online marketplace for all your shopping needs in Cayman Islands"
+    />
+    <meta
+      name="twitter:image"
+      content="https://www.mallofcayman.com/og-image.png"
+    />
+
+    <link
+      rel="apple-touch-icon"
+      id="dynamic-apple-icon"
+      href="%PUBLIC_URL%/logo192.png"
+    />
+
+    <!-- Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+    <!-- Script to dynamically load branding settings -->
+    <script>
+      (function () {
+        // Determine the API base URL based on environment
+        var apiBase;
+
+        if (window.location.hostname === "localhost") {
+          apiBase = "http://localhost:8000/api/v2";
+        } else {
+          // For production - use mallofcayman.com
+          apiBase = "https://www.mallofcayman.com/api/v2";
+        }
+
+        console.log("Fetching site settings from:", apiBase);
+
+        fetch(apiBase + "/site-settings/get-site-settings")
+          .then(function (response) {
+            return response.json();
+          })
+          .then(function (data) {
+            console.log("Site settings response:", data);
+            if (data.success && data.settings && data.settings.branding) {
+              var branding = data.settings.branding;
+              console.log("Branding settings:", branding);
+
+              // Update favicon - add cache buster
+              if (branding.favicon) {
+                var faviconEl = document.getElementById("dynamic-favicon");
+                if (faviconEl) {
+                  var faviconUrl = branding.favicon;
+                  // Add cache buster to force browser to reload
+                  faviconUrl =
+                    faviconUrl +
+                    (faviconUrl.includes("?") ? "&" : "?") +
+                    "v=" +
+                    Date.now();
+                  faviconEl.href = faviconUrl;
+                  console.log("Updated favicon to:", faviconUrl);
+
+                  // Also add a new link element for better browser support
+                  var newFavicon = document.createElement("link");
+                  newFavicon.rel = "icon";
+                  newFavicon.type = "image/png";
+                  newFavicon.href = faviconUrl;
+                  document.head.appendChild(newFavicon);
+                }
+              }
+
+              // Update theme color
+              if (branding.themeColor) {
+                var themeColorEl = document.getElementById(
+                  "dynamic-theme-color"
+                );
+                if (themeColorEl) {
+                  themeColorEl.content = branding.themeColor;
+                }
+              }
+
+              // Update meta description
+              if (branding.metaDescription) {
+                var descEl = document.getElementById("dynamic-description");
+                if (descEl) {
+                  descEl.content = branding.metaDescription;
+                }
+              }
+
+              // Update apple touch icon
+              if (branding.appleTouchIcon) {
+                var appleIconEl = document.getElementById("dynamic-apple-icon");
+                if (appleIconEl) {
+                  appleIconEl.href = branding.appleTouchIcon;
+                }
+              }
+
+              // Update page title
+              if (branding.siteTitle) {
+                document.title = branding.siteTitle;
+              }
+            }
+          })
+          .catch(function (error) {
+            console.log(
+              "Could not load branding settings, using defaults:",
+              error
+            );
+          });
+      })();
+    </script>
+    <!--
+      Notice the use of %PUBLIC_URL% in the tags above.
+      It will be replaced with the URL of the `public` folder during the build.
+      Only files inside the `public` folder can be referenced from the HTML.
+
+      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
+      work correctly both with client-side routing and a non-root public URL.
+      Learn how to configure a non-root public URL by running `npm run build`.
+    -->
+    <title id="dynamic-title">Mall of Cayman</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+  </body>
+</html>
