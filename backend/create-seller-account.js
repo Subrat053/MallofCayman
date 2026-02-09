@@ -15,7 +15,7 @@ const createSellerAccount = async () => {
     });
     console.log("✅ Connected to database\n");
 
-    const sellerEmail = "subhankardash45585@gmail.com";
+    const sellerEmail = "seller@test.com";
     
     // Check if seller already exists
     const existingSeller = await Shop.findOne({ email: sellerEmail });

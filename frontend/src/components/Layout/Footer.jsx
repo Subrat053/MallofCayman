@@ -82,19 +82,19 @@ const Footer = () => {
   return (
     <footer className="relative bg-gradient-to-b from-slate-50 to-gray-100">
       {/* Newsletter Section - Simple Design */}
-      <div className="bg-gradient-to-r from-primary-500 to-accent-500 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4 animate-fade-in">
+      <div className="bg-gradient-to-r from-indigo-500 to-cyan-500 py-3 lg:py-4">
+        <div className=" max-w-7xl mx-auto py-2 px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row justify-between">
+          <div className="text-start py-1">
+            <h2 className="text-[17px] lg:text-2xl font-bold text-white mb-3 animate-fade-in">
               🏝️ Stay Connected with Mall of Cayman
             </h2>
-            <p className="text-white/90 text-lg max-w-2xl mx-auto animate-fade-in-delay">
+            <p className="text-white/90 text-sm lg:text-[16px] max-w-3xl mb-3 mx-auto animate-fade-in-delay">
               Get exclusive deals, new store announcements, and island updates delivered to your inbox
             </p>
           </div>
 
-          <div className="max-w-md mx-auto animate-slide-up">
-            <form onSubmit={handleSubscribe} className="flex gap-3">
+          <div className=" max-w-md mx-auto animate-slide-up flex align-center">
+            <form onSubmit={handleSubscribe} className="flex flex-wrap items-center gap-3">
               <input
                 type="email"
                 required
@@ -102,12 +102,12 @@ const Footer = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
-                className="flex-1 px-4 py-3 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/30 disabled:opacity-60 shadow-lg"
+                className="flex-1 px-4 py-2 w-3/4 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/30 disabled:opacity-60 shadow-lg"
               />
               <button
                 type="submit"
                 disabled={isLoading || !email}
-                className="px-6 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-gray-50 transition-all duration-300 disabled:opacity-60 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="px-4 py-2 bg-blue-100 text-red-500 font-semibold rounded-lg hover:bg-gray-50 transition-all duration-300 disabled:opacity-80 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
@@ -124,8 +124,8 @@ const Footer = () => {
 
       {/* Main Footer Content - Simple Design */}
       <div className="bg-gray-800 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
             
             {/* Company Info */}
             <div className="space-y-6 animate-fade-in">
@@ -273,6 +273,10 @@ const Footer = () => {
                 ))}
               </ul>
 
+              
+            </div>
+
+            <div className="animate-fade-in-delay-3">
               {/* Social Media */}
               <div className="mb-6">
                 <h4 className="text-white font-semibold mb-4">Follow Us</h4>

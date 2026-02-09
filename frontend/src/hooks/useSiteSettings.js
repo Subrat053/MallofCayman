@@ -30,12 +30,12 @@ export const useSiteSettings = () => {
             city: "Bangalore",
             postalCode: "560079",
             phone: "+91 7349727270",
-            email: "support@wanttar.in"
+            email: "support@mallofcayman.com"
           },
           companyInfo: {
-            name: "Wanttar",
+            name: "Mall of Cayman",
             description: "Your trusted online marketplace",
-            website: "https://www.wanttar.in"
+            website: "https://www.mallofcayman.com"
           },
           socialMedia: {
             facebook: "",

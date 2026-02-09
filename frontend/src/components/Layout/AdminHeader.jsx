@@ -63,7 +63,7 @@ const AdminHeader = ({ activeMenuItem = 1 }) => {
           <img
             src="/logo (10).png"
             alt="Brand Logo"
-            className="h-16 w-auto object-contain transition-all duration-300 hover:scale-105"
+            className="h-16 w-auto scale- object-contain transition-all duration-300 hover:scale-105"
             style={{
               filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
             }}

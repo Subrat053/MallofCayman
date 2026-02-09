@@ -41,8 +41,8 @@ const CategoryTreeItem = ({
   return (
     <div>
       <div
-        className="flex items-center py-1"
-        style={{ paddingLeft: `${level * 12}px` }}
+        className="flex items-center pt-1 group hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 rounded-lg transition-all duration-300"
+        style={{ paddingLeft: `${level * 16}px` }}
       >
         {/* Expand/Collapse button */}
         {hasChildCategories ? (
@@ -51,30 +51,32 @@ const CategoryTreeItem = ({
               e.preventDefault();
               toggleExpanded(categoryId);
             }}
-            className="w-4 h-4 flex items-center justify-center text-gray-400 hover:text-gray-600 mr-1"
+            className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-indigo-600 mr-2 rounded-md hover:bg-indigo-100 transition-all duration-200"
           >
             {isExpanded ? (
-              <HiChevronDown className="w-3 h-3" />
+              <HiChevronDown className="w-4 h-4" />
             ) : (
-              <HiChevronRight className="w-3 h-3" />
+              <HiChevronRight className="w-4 h-4" />
             )}
           </button>
         ) : (
-          <span className="w-4 h-4 mr-1" /> // Spacer for alignment
+          <span className="w-5 h-5 mr-2" /> // Spacer for alignment
         )}
 
-        <label className="flex items-center flex-1 cursor-pointer">
+        <label className="flex items-center flex-1 cursor-pointer group-hover:scale-[1.02] transition-transform duration-200">
           <input
             type="radio"
             name="category"
             checked={isSelected}
             onChange={() => onSelect(category)}
-            className="w-3 h-3 text-blue-600"
+            className="w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500 focus:ring-2"
           />
           <span
-            className={`ml-2 text-xs ${
-              level === 0 ? "font-medium text-gray-700" : "text-gray-600"
-            } ${isSelected ? "text-blue-600 font-semibold" : ""}`}
+            className={`ml-3 text-sm transition-all duration-200 ${level === 0 ? "font-semibold text-slate-800" : "text-slate-600"
+              } ${isSelected
+                ? "text-indigo-700 font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
+                : "group-hover:text-slate-900"
+              }`}
           >
             {categoryName}
           </span>
@@ -83,7 +85,7 @@ const CategoryTreeItem = ({
 
       {/* Render children recursively */}
       {isExpanded && hasChildCategories && (
-        <div className="border-l border-gray-200 ml-2">
+        <div className="border-l-2 border-gradient-to-b from-indigo-200 to-purple-200 ml-3 pl-1 mt-1">
           {children.map((child) => (
             <CategoryTreeItem
               key={child._id || child.id}
@@ -322,7 +324,7 @@ const ProductsPage = () => {
             console.log(
               "  Parent match:",
               product.category.parent &&
-                allowedCategoryIds.includes(product.category.parent)
+              allowedCategoryIds.includes(product.category.parent)
             );
 
             return false;
@@ -519,176 +521,217 @@ const ProductsPage = () => {
   return (
     <>
       {isLoading ? (
-        <Loader />
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-20 w-20 border-4 border-slate-200 border-t-indigo-600 mx-auto mb-6 shadow-lg"></div>
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl px-8 py-6 shadow-xl border border-white/20">
+              <p className="text-slate-700 text-lg font-semibold">Loading products...</p>
+              <p className="text-slate-500 text-sm mt-2">Please wait while we fetch the latest products</p>
+            </div>
+          </div>
+        </div>
       ) : (
         <div>
           <Header activeHeading={3} />
 
           {/* Main Content */}
-          <div className="bg-gray-50 min-h-screen pt-6">
+          <div className="pb-4 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen pt-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               {/* Page Header */}
-              <div className="mb-6">
-                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-                  {selectedCategory ? selectedCategory : "All Products"}
-                </h1>
-                <p className="text-gray-600">
-                  {filteredData?.length || 0} products found
-                </p>
+              <div className="mb-4">
+                <div className="text-center lg:text-left">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-slate-900 via-indigo-900 to-purple-900 bg-clip-text text-transparent mb-2">
+                    {selectedCategory ? selectedCategory : "All Products"}
+                  </h1>
+                  <div className="flex items-center justify-center lg:justify-start gap-2 text-slate-600">
+                    <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></div>
+                    <p className="text-md font-medium">
+                      {filteredData?.length || 0} products found
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex flex-col lg:flex-row gap-6">
+              <div className="flex flex-col lg:flex-row gap-8 ">
                 {/* Sidebar Filters */}
                 <div
-                  className={`lg:w-72 flex-shrink-0 ${
-                    showFilters ? "block" : "hidden lg:block"
-                  }`}
+                  className={`lg:w-80 flex-shrink-0 ${showFilters ? "block" : "hidden lg:block"
+                    }`}
                 >
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 sticky top-24">
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-xl border border-white/20 p-3 lg:p-5 sticky top-24">
                     {/* Filter Header */}
                     <div className="flex items-center justify-between mb-5">
-                      <h3 className="text-base font-semibold text-gray-900 flex items-center">
-                        <HiFilter className="w-4 h-4 mr-2" />
+                      <h3 className="text-sm lg:text-md font-bold text-slate-900 flex items-center">
+                        <div className="w-7 h-7 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center mr-3 shadow-lg">
+                          <HiFilter className="w-4 h-4 text-white" />
+                        </div>
                         Filters
                       </h3>
                       <div className="flex items-center space-x-3">
                         <button
                           onClick={clearFilters}
-                          className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                          className="px-2 py-1 text-sm text-indigo-600 hover:text-indigo-700 font-semibold bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-all duration-200 hover:scale-105"
                         >
                           Clear All
                         </button>
                         {/* Mobile Close Button */}
                         <button
                           onClick={() => setShowFilters(false)}
-                          className="lg:hidden p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                          className="lg:hidden p-2 hover:bg-slate-100 rounded-xl transition-colors duration-200"
                           aria-label="Close filters"
                         >
-                          <HiX className="w-4 h-4 text-gray-600" />
+                          <HiX className="w-5 h-5 text-slate-600" />
                         </button>
                       </div>
                     </div>
 
                     {/* Search */}
-                    <div className="mb-5">
-                      <label className="block text-xs font-medium text-gray-700 mb-2">
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-slate-800 mb-3">
                         Search Products
                       </label>
-                      <input
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Search by name or description..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                      />
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          placeholder="Search by name or description..."
+                          className="w-full px-4 py-3 pl-4 pr-10 border-2 border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white/70 backdrop-blur-sm transition-all duration-300 hover:border-indigo-300"
+                        />
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <div className="w-5 h-5 text-slate-400">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Category Filter */}
-                    <div className="mb-5">
-                      <label className="block text-xs font-medium text-gray-700 mb-2">
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-slate-800 mb-2">
                         Categories
                       </label>
-                      <div className="space-y-1 max-h-72 overflow-y-auto pr-1">
-                        <label className="flex items-center py-1">
-                          <input
-                            type="radio"
-                            name="category"
-                            checked={
-                              selectedCategory === "" &&
-                              selectedSubcategory === ""
-                            }
-                            onChange={() => {
-                              handleCategoryChange("");
-                              setSelectedSubcategory("");
-                            }}
-                            className="w-3 h-3 text-blue-600"
-                          />
-                          <span className="ml-2 text-xs text-gray-700">
-                            All Categories
-                          </span>
-                        </label>
-
-                        {/* Recursive Category Tree Component */}
-                        {rootCategories.map((category) => (
-                          <CategoryTreeItem
-                            key={category._id || category.id}
-                            category={category}
-                            level={0}
-                            selectedCategory={selectedCategory}
-                            onSelect={(cat) => {
-                              handleCategoryChange(cat.name || cat.title, cat);
-                              // Auto-expand parent when selecting
-                              if (cat.parent) {
-                                setExpandedCategories(
-                                  (prev) => new Set([...prev, cat.parent])
-                                );
+                      <div className="bg-gradient-to-br from-slate-50 to-indigo-50 rounded-2xl p-4 border border-slate-200">
+                        <div className="space-y-2 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+                          <label className="flex items-center py-2 px-3 rounded-xl hover:bg-white/60 transition-all duration-200 group cursor-pointer">
+                            <input
+                              type="radio"
+                              name="category"
+                              checked={
+                                selectedCategory === "" &&
+                                selectedSubcategory === ""
                               }
-                            }}
-                            getChildCategories={getChildCategories}
-                            hasChildren={hasChildren}
-                            expandedCategories={expandedCategories}
-                            toggleExpanded={toggleExpanded}
-                          />
-                        ))}
+                              onChange={() => {
+                                handleCategoryChange("");
+                                setSelectedSubcategory("");
+                              }}
+                              className="w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500 focus:ring-2"
+                            />
+                            <span className="ml-3 text-sm font-medium text-slate-700 group-hover:text-slate-900">
+                              All Categories
+                            </span>
+                          </label>
+
+                          {/* Recursive Category Tree Component */}
+                          {rootCategories.map((category) => (
+                            <CategoryTreeItem
+                              key={category._id || category.id}
+                              category={category}
+                              level={0}
+                              selectedCategory={selectedCategory}
+                              onSelect={(cat) => {
+                                handleCategoryChange(cat.name || cat.title, cat);
+                                // Auto-expand parent when selecting
+                                if (cat.parent) {
+                                  setExpandedCategories(
+                                    (prev) => new Set([...prev, cat.parent])
+                                  );
+                                }
+                              }}
+                              getChildCategories={getChildCategories}
+                              hasChildren={hasChildren}
+                              expandedCategories={expandedCategories}
+                              toggleExpanded={toggleExpanded}
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
 
                     {/* Price Range Filter */}
-                    <div className="mb-5">
-                      <label className="block text-xs font-medium text-gray-700 mb-2">
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-slate-800 mb-2">
                         Price Range
                       </label>
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="number"
-                            value={priceRange[0]}
-                            onChange={(e) =>
-                              setPriceRange([
-                                parseInt(e.target.value) || 0,
-                                priceRange[1],
-                              ])
-                            }
-                            placeholder="Min"
-                            className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs"
-                          />
-                          <span className="text-gray-500 text-xs">-</span>
-                          <input
-                            type="number"
-                            value={priceRange[1]}
-                            onChange={(e) =>
-                              setPriceRange([
-                                priceRange[0],
-                                parseInt(e.target.value) || 10000,
-                              ])
-                            }
-                            placeholder="Max"
-                            className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs"
-                          />
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {formatPrice(priceRange[0])} -{" "}
-                          {formatPrice(priceRange[1])}
+                      <div className="bg-gradient-to-br from-slate-50 to-indigo-50 rounded-xl p-3 border border-slate-200">
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex-1">
+                              <label className="block text-xs font-medium text-slate-600 mb-1">Min Price</label>
+                              <input
+                                type="number"
+                                value={priceRange[0]}
+                                onChange={(e) =>
+                                  setPriceRange([
+                                    parseInt(e.target.value) || 0,
+                                    priceRange[1],
+                                  ])
+                                }
+                                placeholder="Min"
+                                className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/70 backdrop-blur-sm transition-all duration-300"
+                              />
+                            </div>
+                            <div className="flex items-center justify-center pt-6">
+                              <span className="text-slate-400 text-lg font-medium">-</span>
+                            </div>
+                            <div className="flex-1">
+                              <label className="block text-xs font-medium text-slate-600 mb-1">Max Price</label>
+                              <input
+                                type="number"
+                                value={priceRange[1]}
+                                onChange={(e) =>
+                                  setPriceRange([
+                                    priceRange[0],
+                                    parseInt(e.target.value) || 10000,
+                                  ])
+                                }
+                                placeholder="Max"
+                                className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/70 backdrop-blur-sm transition-all duration-300"
+                              />
+                            </div>
+                          </div>
+                          <div className="text-center p-3 bg-white/60 backdrop-blur-sm rounded-md border border-slate-200">
+                            <div className="text-sm font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                              {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Sort Filter */}
-                    <div className="mb-5">
-                      <label className="block text-xs font-medium text-gray-700 mb-2">
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-slate-800 mb-2">
                         Sort By
                       </label>
-                      <select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs"
-                      >
-                        <option value="default">Default</option>
-                        <option value="price-low">Price: Low to High</option>
-                        <option value="price-high">Price: High to Low</option>
-                        <option value="name">Name: A to Z</option>
-                        <option value="rating">Highest Rated</option>
-                      </select>
+                      <div className="relative">
+                        <select
+                          value={sortBy}
+                          onChange={(e) => setSortBy(e.target.value)}
+                          className="w-full px-4 py-2 border-2 border-slate-200 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white/70 backdrop-blur-sm appearance-none cursor-pointer transition-all duration-300 hover:border-indigo-300"
+                        >
+                          <option value="default">Default</option>
+                          <option value="price-low">Price: Low to High</option>
+                          <option value="price-high">Price: High to Low</option>
+                          <option value="name">Name: A to Z</option>
+                          <option value="rating">Highest Rated</option>
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <HiChevronDown className="w-5 h-5 text-slate-400" />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -696,74 +739,87 @@ const ProductsPage = () => {
                 {/* Main Product Area */}
                 <div className="flex-1">
                   {/* Mobile Filter Toggle & View Controls */}
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-6 bg-white/60 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20">
                     <button
                       onClick={() => setShowFilters(!showFilters)}
-                      className="lg:hidden flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm"
+                      className="lg:hidden flex items-center px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                     >
-                      <HiAdjustments className="w-4 h-4 mr-2" />
+                      <HiAdjustments className="w-5 h-5 mr-2" />
                       Filters
                     </button>
 
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs text-gray-600 hidden sm:block">
+                    {/* Show result count on mobile */}
+                    <div className="lg:hidden text-sm font-medium text-slate-600">
+                      {filteredData?.length || 0} items
+                    </div>
+
+                    <div className="flex items-center space-x-3">
+                      <span className="text-sm font-medium text-slate-600 hidden sm:block">
                         View:
                       </span>
-                      <button
-                        onClick={() => setViewMode("grid")}
-                        className={`p-2 rounded-lg transition-colors ${
-                          viewMode === "grid"
-                            ? "bg-blue-100 text-blue-600"
-                            : "bg-white text-gray-600 hover:bg-gray-50"
-                        }`}
-                      >
-                        <HiViewGrid className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setViewMode("list")}
-                        className={`p-2 rounded-lg transition-colors ${
-                          viewMode === "list"
-                            ? "bg-blue-100 text-blue-600"
-                            : "bg-white text-gray-600 hover:bg-gray-50"
-                        }`}
-                      >
-                        <HiViewList className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center bg-white/80 rounded-xl p-1 shadow-md border border-slate-200">
+                        <button
+                          onClick={() => setViewMode("grid")}
+                          className={`p-3 rounded-lg transition-all duration-300 ${viewMode === "grid"
+                              ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg"
+                              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                            }`}
+                        >
+                          <HiViewGrid className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => setViewMode("list")}
+                          className={`p-3 rounded-lg transition-all duration-300 ${viewMode === "list"
+                              ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg"
+                              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                            }`}
+                        >
+                          <HiViewList className="w-5 h-5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
 
                   {/* Products Grid */}
                   {filteredData && filteredData.length > 0 ? (
                     <div
-                      className={`${
-                        viewMode === "grid"
-                          ? "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 auto-rows-fr"
-                          : "space-y-4"
-                      }`}
+                      className={`${viewMode === "grid"
+                          ? "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 auto-rows-fr"
+                          : "space-y-6"
+                        }`}
                     >
                       {filteredData.map((product, index) => (
-                        <div key={index} className="h-full">
-                          <ProductCard data={product} />
+                        <div key={index} className="h-full group">
+                          <div className="h-full transform transition-all duration-500 group-hover:scale-[1.02] group-hover:-translate-y-2">
+                            <ProductCard data={product} />
+                          </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-12">
-                      <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
-                        <HiX className="w-6 h-6 text-gray-400" />
+                    <div className="text-center py-16">
+                      <div className="max-w-md mx-auto">
+                        <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-indigo-100 rounded-3xl flex items-center justify-center shadow-lg">
+                          <div className="w-12 h-12 bg-gradient-to-br from-slate-300 to-indigo-300 rounded-2xl flex items-center justify-center">
+                            <HiX className="w-7 h-7 text-slate-600" />
+                          </div>
+                        </div>
+                        <h3 className="text-2xl font-bold text-slate-900 mb-4">
+                          No products found
+                        </h3>
+                        <p className="text-slate-600 mb-8 text-lg leading-relaxed">
+                          We couldn't find any products matching your current filters. Try adjusting your search criteria.
+                        </p>
+                        <button
+                          onClick={clearFilters}
+                          className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-2xl hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                        >
+                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          Clear All Filters
+                        </button>
                       </div>
-                      <h3 className="text-base font-medium text-gray-900 mb-2">
-                        No products found
-                      </h3>
-                      <p className="text-gray-500 mb-4 text-sm">
-                        Try adjusting your filters or search terms
-                      </p>
-                      <button
-                        onClick={clearFilters}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                      >
-                        Clear Filters
-                      </button>
                     </div>
                   )}
                 </div>

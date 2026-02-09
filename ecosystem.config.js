@@ -7,7 +7,7 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 8000,
-        FRONTEND_URL: 'https://www.mallofcayman.com'
+        FRONTEND_URL: 'https://your-domain.com'
       },
       instances: 1,
       autorestart: true,

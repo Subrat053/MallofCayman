@@ -38,8 +38,8 @@ const SubscriptionPlansPage = () => {
   return (
     <div>
       <Header activeHeading={4} />
-      <div className="min-h-screen bg-gray-50 py-6 sm:py-12">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-4 sm:py-8">
+        <div className="max-w-[1400px] mx-auto px-2 sm:px-4">
           <SubscriptionPlans isPublic={true} />
         </div>
       </div>
