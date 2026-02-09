@@ -55,8 +55,8 @@ app.use(cookieParser());
 // Enable CORS for all routes
 app.use(
   cors({
-    // origin: ["http://localhost:3000", "http://127.0.0.1:3000","https://multi-vondor-e-shop-1.onrender.com","https://multi-vondor-e-shop-2.onrender.com","https://www.wanttar.in","http://72.60.103.18:3000","http://72.60.103.18", "https://72.60.103.18","https://samrudhigroup.in","https://www.samrudhigroup.in","https://samrudhigroup.in:8000","https://samrudhigroup.in:4000","https://wanttar.in","https://www.mallofcayman.com"],
-    origin: ["http://localhost:3000"],
+    origin: ["http://localhost:3000", "http://127.0.0.1:3000","https://multi-vondor-e-shop-1.onrender.com","https://multi-vondor-e-shop-2.onrender.com","https://www.wanttar.in","http://72.60.103.18:3000","http://72.60.103.18", "https://72.60.103.18","http://mallofcayman.hirehand.co.in","https://mallofcayman.hirehand.co.in","https://mallofcayman.hirehand.co.in:8000","https://mallofcayman.hirehand.co.in:4000","https://wanttar.in"],
+    // origin: ["http://localhost:3000"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token", "X-Requested-With", "X-Context"],

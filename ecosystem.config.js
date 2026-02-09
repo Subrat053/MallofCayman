@@ -7,7 +7,7 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 8000,
-        FRONTEND_URL: 'https://your-domain.com'
+        FRONTEND_URL: 'https://mallofcayman.hirehand.co.in'
       },
       instances: 1,
       autorestart: true,
