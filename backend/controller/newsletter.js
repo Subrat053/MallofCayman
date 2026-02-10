@@ -49,7 +49,8 @@ router.post(
         let template = await EmailTemplate.findOne({ slug: 'newsletter_welcome' });
         
         let emailSubject, emailHtml;
-        const unsubscribeUrl = `https://www.mallofcayman.com/unsubscribe?email=${encodeURIComponent(email)}`;
+        // const unsubscribeUrl = `https://www.mallofcayman.com/unsubscribe?email=${encodeURIComponent(email)}`;
+        const unsubscribeUrl = `${process.env.APP_URL}/unsubscribe?email=${encodeURIComponent(email)}`;
         
         if (template) {
           const variables = {

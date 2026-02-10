@@ -184,10 +184,13 @@ const EmailTemplateManager = () => {
       sampleVariables.sellerName = "Jane Seller";
       sampleVariables.email = "sample@example.com";
       sampleVariables.activationUrl =
-        "https://www.mallofcayman.com/activate/sample-token";
+        `${process.env.REACT_APP_WEBSITE_URL}/activate/sample-token`;
+        // "https://www.mallofcayman.com/activate/sample-token";
       sampleVariables.resetUrl =
-        "https://www.mallofcayman.com/reset/sample-token";
-      sampleVariables.loginUrl = "https://www.mallofcayman.com/shop-login";
+        `${process.env.REACT_APP_WEBSITE_URL}/reset/sample-token`;
+        // "https://www.mallofcayman.com/reset/sample-token";
+      sampleVariables.loginUrl = `${process.env.REACT_APP_WEBSITE_URL}/shop-login`;
+      // sampleVariables.loginUrl = "https://www.mallofcayman.com/shop-login";
       sampleVariables.orderNumber = "ORD-12345";
       sampleVariables.orderTotal = "$99.99";
       sampleVariables.statusText = "Shipped";
@@ -226,9 +229,12 @@ const EmailTemplateManager = () => {
       sampleVariables.shopName = "Test Shop";
       sampleVariables.userName = "Test User";
       sampleVariables.activationUrl =
-        "https://www.mallofcayman.com/activate/test";
-      sampleVariables.resetUrl = "https://www.mallofcayman.com/reset/test";
-      sampleVariables.loginUrl = "https://www.mallofcayman.com/shop-login";
+        `${process.env.REACT_APP_WEBSITE_URL}/activate/test`;
+        // "https://www.mallofcayman.com/activate/test";
+      sampleVariables.resetUrl = `${process.env.REACT_APP_WEBSITE_URL}/reset/test`;
+      // sampleVariables.resetUrl = "https://www.mallofcayman.com/reset/test";
+      sampleVariables.loginUrl = `${process.env.REACT_APP_WEBSITE_URL}/shop-login`;
+      // sampleVariables.loginUrl = "https://www.mallofcayman.com/shop-login";
 
       await axios.post(
         `${server}/email-template/${selectedTemplate.slug}/test`,

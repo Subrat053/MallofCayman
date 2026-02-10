@@ -8,16 +8,7 @@ const server = http.createServer(app);
 // Configure CORS for Socket.io
 const io = socketIO(server, {
   cors: {
-    origin: [
-      "http://localhost:3000", 
-      "http://127.0.0.1:3000",
-      "https://multi-vondor-e-shop-1.onrender.com",
-      "https://multi-vondor-e-shop-2.onrender.com",
-      "https://www.mallofcayman.com",
-      "https://mallofcayman.com",
-      "http://72.60.103.18:3000",
-      "https://samrudhigroup.in"
-    ],
+    origin: "*",
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true
@@ -30,16 +21,7 @@ require("dotenv").config({
 
 // Configure CORS for Express routes
 app.use(cors({
-  origin: [
-    "http://localhost:3000", 
-    "http://127.0.0.1:3000",
-    "https://multi-vondor-e-shop-1.onrender.com",
-    "https://multi-vondor-e-shop-2.onrender.com",
-    "https://www.mallofcayman.com",
-    "https://mallofcayman.com",
-    "http://72.60.103.18:3000",
-    "https://samrudhigroup.in"
-  ],
+  origin: "*",
   credentials: true
 }));
 app.use(express.json());

@@ -118,7 +118,8 @@ router.post("/create-shop", uploadShopRegistration, async (req, res, next) => {
 
     const activationToken = createActivationToken(seller);
 
-   const activationUrl = `https://www.mallofcayman.com/seller/activation/${activationToken}`;
+  //  const activationUrl = `https://www.mallofcayman.com/seller/activation/${activationToken}`;
+   const activationUrl = `${process.env.APP_URL}/seller/activation/${activationToken}`;
 
     try {
       // Fetch the email template from database
@@ -867,7 +868,8 @@ router.post(
       await targetAccount.save();
 
       // Create reset password URL (pointing to frontend)
-      const resetPasswordUrl = `https://www.mallofcayman.com/shop-reset-password/${resetToken}`;
+      // const resetPasswordUrl = `https://www.mallofcayman.com/shop-reset-password/${resetToken}`;
+      const resetPasswordUrl = `${process.env.APP_URL}/shop-reset-password/${resetToken}`;
 
       const accountTypeText = accountType === 'supplier' ? 'Supplier account' : 'Shop account';
 
@@ -1276,7 +1278,8 @@ router.put(
         let template = await EmailTemplate.findOne({ slug: 'shop_approved' });
         
         let emailSubject, emailHtml;
-        const dashboardUrl = 'https://www.mallofcayman.com/dashboard';
+        // const dashboardUrl = 'https://www.mallofcayman.com/dashboard';
+        const dashboardUrl = `${process.env.APP_URL}/dashboard`;
         
         if (template) {
           // Use the template from database

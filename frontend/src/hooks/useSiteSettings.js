@@ -35,7 +35,8 @@ export const useSiteSettings = () => {
           companyInfo: {
             name: "Mall of Cayman",
             description: "Your trusted online marketplace",
-            website: "https://www.mallofcayman.com"
+            website: process.env.REACT_APP_WEBSITE_URL // Use environment variable for website URL
+            // website: "https://www.mallofcayman.com"
           },
           socialMedia: {
             facebook: "",

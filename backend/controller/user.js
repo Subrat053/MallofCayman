@@ -69,7 +69,8 @@ router.post("/create-user", upload.single("file"), async (req, res, next) => {
 
     const activationToken = createActivationToken(user);
 
-    const activationUrl = `https://www.mallofcayman.com/activation/${activationToken}`;
+    // const activationUrl = `https://www.mallofcayman.com/activation/${activationToken}`;
+    const activationUrl = `${process.env.APP_URL}/activation/${activationToken}`;
 
     // send email to user using template
     try {
@@ -686,7 +687,8 @@ router.post(
       await user.save();
 
       // Create reset password URL (pointing to frontend)
-      const resetPasswordUrl = `https://www.mallofcayman.com/reset-password/${resetToken}`;
+      // const resetPasswordUrl = `https://www.mallofcayman.com/reset-password/${resetToken}`;
+      const resetPasswordUrl = `${process.env.APP_URL}/reset-password/${resetToken}`;
 
       try {
         // Fetch the email template from database
