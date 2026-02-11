@@ -67,6 +67,7 @@ npm install --production
 
 echo "[6/10] Installing frontend dependencies..."
 cd $APP_DIR/frontend
+npm install @material-ui/styles --legacy-peer-deps
 npm install --legacy-peer-deps
 
 # ---- STEP 7: Copy Production Environment Files ----
