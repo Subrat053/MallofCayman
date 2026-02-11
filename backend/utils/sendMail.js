@@ -30,7 +30,7 @@ const sendMail = async (options) => {
         pass: process.env.SMPT_PASSWORD,
       },
       tls: {
-        rejectUnauthorized: false,
+        rejectUnauthorized: process.env.NODE_ENV === 'PRODUCTION',
       },
       debug: process.env.NODE_ENV !== 'PRODUCTION', // Enable debug in development
       logger: process.env.NODE_ENV !== 'PRODUCTION' // Enable logging in development

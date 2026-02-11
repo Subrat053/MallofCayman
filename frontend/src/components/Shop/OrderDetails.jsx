@@ -25,7 +25,8 @@ import { useDispatch, useSelector } from "react-redux";
 import OrderLocationMap from "./OrderLocationMap";
 import { useCurrency } from "../../context/CurrencyContext";
 import socketIO from "socket.io-client";
-const SOCKET_ENDPOINT = process.env.SOCKET_URL || "http://localhost:4000";
+import { socket_url } from "../../server";
+const SOCKET_ENDPOINT = socket_url;
 
 const OrderDetails = () => {
   const { orders, isLoading } = useSelector((state) => state.order);

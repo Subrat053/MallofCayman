@@ -6,9 +6,13 @@ const app = express();
 const server = http.createServer(app);
 
 // Configure CORS for Socket.io
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',')
+  : ["http://localhost:3000"];
+
 const io = socketIO(server, {
   cors: {
-    origin: "*",
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true
@@ -21,7 +25,7 @@ require("dotenv").config({
 
 // Configure CORS for Express routes
 app.use(cors({
-  origin: "*",
+  origin: allowedOrigins,
   credentials: true
 }));
 app.use(express.json());
@@ -54,8 +58,12 @@ app.get("/online-users/:userId", (req, res) => {
 let users = [];
 
 const addUser = (userId, socketId) => {
-  !users.some((user) => user.userId === userId) &&
+  const index = users.findIndex((user) => user.userId === userId);
+  if (index !== -1) {
+    users[index].socketId = socketId; // Update to new socket on reconnect
+  } else {
     users.push({ userId, socketId });
+  }
 };
 
 const removeUser = (socketId) => {
@@ -73,6 +81,7 @@ const getUserIdFromSocket = (socketId) => {
 
 // Define a message object with a seen property
 const createMessage = ({ senderId, receiverId, text, images }) => ({
+  id: `${senderId}_${receiverId}_${Date.now()}`,
   senderId,
   receiverId,
   text,
@@ -85,6 +94,41 @@ let orderTracking = {};
 
 // Store active video calls
 let videoCalls = {};
+
+// Module-scope messages store (shared across connections)
+const messages = {};
+
+// Periodic cleanup for stale data (every hour)
+setInterval(() => {
+  // Clean up old messages (older than 24 hours)
+  const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+  Object.keys(messages).forEach(key => {
+    if (messages[key]) {
+      messages[key] = messages[key].filter(msg => {
+        const msgTime = parseInt(msg.id.split('_').pop());
+        return msgTime > oneDayAgo;
+      });
+      if (messages[key].length === 0) delete messages[key];
+    }
+  });
+  // Clean up stale order tracking (older than 7 days)
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  Object.keys(orderTracking).forEach(key => {
+    if (orderTracking[key] && new Date(orderTracking[key].timestamp).getTime() < sevenDaysAgo) {
+      delete orderTracking[key];
+    }
+  });
+  // Clean up stale video calls (older than 2 hours)
+  const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
+  Object.keys(videoCalls).forEach(key => {
+    const call = videoCalls[key];
+    if (call && call.participants.length === 0) {
+      delete videoCalls[key];
+    } else if (call && call.startTime && new Date(call.startTime).getTime() < twoHoursAgo) {
+      delete videoCalls[key];
+    }
+  });
+}, 60 * 60 * 1000);
 
 io.on("connection", (socket) => {
   // when connect
@@ -107,8 +151,6 @@ io.on("connection", (socket) => {
   });
 
   // send and get message
-  const messages = {}; // Object to track messages sent to each user
-
   socket.on("sendMessage", ({ senderId, receiverId, text, images }) => {
     const message = createMessage({ senderId, receiverId, text, images });
 
@@ -599,8 +641,8 @@ io.on("connection", (socket) => {
         const participant = call.participants[participantIndex];
         call.participants.splice(participantIndex, 1);
         
-        // Notify other participants
-        socket.to(`call_${callId}`).emit("userLeftCall", {
+        // Notify other participants (use io.to since socket already left rooms)
+        io.to(`call_${callId}`).emit("userLeftCall", {
           callId,
           userId: participant.userId,
           participantCount: call.participants.length,

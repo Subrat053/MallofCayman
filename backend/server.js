@@ -15,8 +15,10 @@ if (process.env.NODE_ENV !== "PRODUCTION") {
   });
 }
 
-// connect db
-connectDatabase();
+// connect db then initialize settings
+connectDatabase().then(() => {
+  initializeSiteSettings();
+});
 
 // Initialize default site settings
 const initializeSiteSettings = async () => {
@@ -27,17 +29,12 @@ const initializeSiteSettings = async () => {
     if (!existingSettings) {
       const defaultSettings = new SiteSettings({});
       await defaultSettings.save();
-      console.log('✅ Default site settings initialized');
+      console.log('Default site settings initialized');
     }
   } catch (error) {
-    console.error('❌ Error initializing site settings:', error.message);
+    console.error('Error initializing site settings:', error.message);
   }
 };
-
-// Initialize settings after database connection
-setTimeout(() => {
-  initializeSiteSettings();
-}, 2000);
 
 // Create uploads directory if it doesn't exist
 const fs = require("fs");
@@ -53,10 +50,13 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(cookieParser());
 
 // Enable CORS for all routes
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',')
+  : ["http://localhost:3000"];
+
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://127.0.0.1:3000","https://multi-vondor-e-shop-1.onrender.com","https://multi-vondor-e-shop-2.onrender.com","https://www.wanttar.in","http://72.60.103.18:3000","http://72.60.103.18", "https://72.60.103.18","http://mallofcayman.hirehand.co.in","https://mallofcayman.hirehand.co.in","https://mallofcayman.hirehand.co.in:8000","https://mallofcayman.hirehand.co.in:4000","https://wanttar.in"],
-    // origin: ["http://localhost:3000"],
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token", "X-Requested-With", "X-Context"],
@@ -69,7 +69,7 @@ app.use(
 // Handle preflight requests
 app.options('*', cors());
 
-app.use("/", express.static("uploads"));
+app.use("/uploads", express.static("uploads"));
 
 app.get("/test", (req, res) => {
   res.send("Hello World!");
@@ -185,7 +185,10 @@ const server = app.listen(process.env.PORT, () => {
 // Handling Uncaught Exceptions
 process.on("uncaughtException", (err) => {
   console.log(`Error: ${err.message}`);
-  console.log(`shutting down the server for handling UNCAUGHT EXCEPTION! 💥`);
+  console.log(`shutting down the server for handling UNCAUGHT EXCEPTION!`);
+  server.close(() => {
+    process.exit(1);
+  });
 });
 
 // unhandled promise rejection

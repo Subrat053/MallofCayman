@@ -1,11 +1,14 @@
 const cloudinary = require('cloudinary').v2;
 const path = require('path');
 
-// Configure Cloudinary
+// Configure Cloudinary - credentials must come from environment variables
+if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+  console.error('WARNING: Missing Cloudinary credentials in environment variables');
+}
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dqnhnh4ui',
-  api_key: process.env.CLOUDINARY_API_KEY || '268697133277383',
-  api_secret: process.env.CLOUDINARY_API_SECRET || 'FtESff8YUxx6em8eG5uvK-2_E4o'
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 // Helper function to detect file type

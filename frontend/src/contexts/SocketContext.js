@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import io from 'socket.io-client';
+import { socket_url } from '../server';
 
 const SocketContext = createContext();
 
@@ -32,7 +33,7 @@ export const SocketProvider = ({ children }) => {
       
       // Create socket connection
       const newSocket = io(
-        process.env.REACT_APP_SOCKET_URL || "http://localhost:8000",
+        socket_url,
         {
           transports: ['websocket', 'polling'],
           reconnectionAttempts: 5,

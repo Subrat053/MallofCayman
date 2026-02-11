@@ -15,31 +15,45 @@ router.post(
     try {
       const { amount } = req.body;
 
-      const data = {
+      // Validate withdrawal amount
+      if (!amount || typeof amount !== 'number' || amount <= 0) {
+        return next(new ErrorHandler("Please enter a valid withdrawal amount", 400));
+      }
+
+      const shop = await Shop.findById(req.seller._id);
+      if (!shop) {
+        return next(new ErrorHandler("Shop not found", 404));
+      }
+
+      if (amount > shop.availableBalance) {
+        return next(new ErrorHandler("Insufficient balance for this withdrawal", 400));
+      }
+
+      // Use atomic operation to prevent race condition
+      const updatedShop = await Shop.findOneAndUpdate(
+        { _id: req.seller._id, availableBalance: { $gte: amount } },
+        { $inc: { availableBalance: -amount } },
+        { new: true }
+      );
+
+      if (!updatedShop) {
+        return next(new ErrorHandler("Insufficient balance or concurrent request. Please try again.", 400));
+      }
+
+      const withdraw = await Withdraw.create({
         seller: req.seller,
         amount,
-      };
+      });
 
       try {
         await sendMail({
           email: req.seller.email,
           subject: "Withdraw Request",
-          message: `Hello ${req.seller.name}, Your withdraw request of ${amount}$ is processing. It will take 3days to 7days to processing! `,
-        });
-        res.status(201).json({
-          success: true,
+          message: `Hello ${req.seller.name}, Your withdraw request of $${amount} is processing. It will take 3 to 7 days to process!`,
         });
       } catch (error) {
-        return next(new ErrorHandler(error.message, 500));
+        console.error("Failed to send withdrawal email:", error.message);
       }
-
-      const withdraw = await Withdraw.create(data);
-
-      const shop = await Shop.findById(req.seller._id);
-
-      shop.availableBalance = shop.availableBalance - amount;
-
-      await shop.save();
 
       res.status(201).json({
         success: true,

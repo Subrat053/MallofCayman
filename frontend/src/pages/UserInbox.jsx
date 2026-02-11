@@ -3,7 +3,7 @@ import Header from "../components/Layout/Header";
 import { useSelector } from "react-redux";
 import socketIO from "socket.io-client";
 import { format } from "timeago.js";
-import { backend_url, server } from "../server";
+import { backend_url, server, socket_url } from "../server";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { getAvatarUrl } from "../utils/mediaUtils";
@@ -25,7 +25,7 @@ import { BsEmojiSmile, BsMic, BsThreeDots } from "react-icons/bs";
 import { RiAttachment2 } from "react-icons/ri";
 import { MdOutlineMarkUnreadChatAlt, MdMarkChatRead } from "react-icons/md";
 import styles from "../styles/styles";
-const ENDPOINT = process.env.SOCKET_URL ||  "http://localhost:4000"
+const ENDPOINT = socket_url;
 const socketId = socketIO(ENDPOINT, { transports: ["websocket"] });
 
 const UserInbox = () => {

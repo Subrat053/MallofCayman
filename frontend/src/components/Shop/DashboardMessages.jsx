@@ -17,7 +17,8 @@ import { HiOutlinePhotograph } from "react-icons/hi";
 import { BsCircleFill } from "react-icons/bs";
 import socketIO from "socket.io-client";
 import { format } from "timeago.js";
-const ENDPOINT = process.env.SOCKET_URL || "http://localhost:4000";
+import { socket_url } from "../../server";
+const ENDPOINT = socket_url;
 const socketId = socketIO(ENDPOINT, { transports: ["websocket"] });
 
 const DashboardMessages = () => {

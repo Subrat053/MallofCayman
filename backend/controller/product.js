@@ -513,6 +513,11 @@ router.delete(
         return next(new ErrorHandler("Product not found with this id!", 404));
       }
 
+      // Check ownership - seller can only delete their own products
+      if (productData.shopId && productData.shopId.toString() !== req.seller._id.toString()) {
+        return next(new ErrorHandler("You are not authorized to delete this product!", 403));
+      }
+
       // Delete images from Cloudinary
       if (productData.images && productData.images.length > 0) {
         for (const image of productData.images) {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { formatDistanceToNow, format } from "date-fns";
 import axios from "axios";
-import { server } from "../../../server";
+import { server, socket_url } from "../../../server";
 import { toast } from "react-toastify";
 import io from "socket.io-client";
 import VideoCallInterface from "../Shop/VideoCall/VideoCallInterface";
@@ -21,7 +21,7 @@ const CustomerCallHistory = () => {
   useEffect(() => {
     // Initialize socket connection
     const newSocket = io(
-      process.env.REACT_APP_SOCKET_URL || "http://localhost:4000"
+      socket_url
     );
     setSocket(newSocket);
 
