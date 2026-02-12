@@ -131,7 +131,7 @@ const FeaturedProduct = () => {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 py-16">
+      <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 py-16 rounded-xl">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center py-20">
             <div className="relative">
@@ -150,7 +150,7 @@ const FeaturedProduct = () => {
   }
 
   return (
-    <section className="bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 py-6 sm:py-8">
+    <section className="bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 py-6 sm:py-8 rounded-xl shadow-xl">
       <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8">
         {/* Modern Header Section */}
         <div className="text-center mb-6">
@@ -181,8 +181,8 @@ const FeaturedProduct = () => {
           </p>
 
           {/* Stats Row */}
-          <div className="flex justify-center items-center space-x-6 mt-6">
-            <div className="flex items-center space-x-1 text-slate-700">
+          <div className="flex justify-center items-center space-x-2 lg:space-x-6 mt-6">
+            <div className="flex items-center lg:space-x-1 text-slate-700">
               <HiStar className="w-4 h-4 text-yellow-500" />
               <span className="text-sm font-medium">Premium Quality</span>
             </div>
@@ -209,7 +209,7 @@ const FeaturedProduct = () => {
                   {data.map((product, index) => (
                     <div
                       key={index}
-                      className="flex-shrink-0 w-[180px]"
+                      className="flex-shrink-0 w-1/2"
                       style={{
                         animationDelay: `${index * 150}ms`,
                         animation: "fadeInUp 0.6s ease-out forwards",

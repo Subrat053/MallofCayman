@@ -227,8 +227,8 @@ const MallDirectory = () => {
   const goldMembersCount = mallStores.filter(s => s.type === 'gold').length;
 
   return (
-    <section className="py-2 lg:py-4 lg:rounded-2xl bg-gradient-to-b from-gray-50 to-white">
-      <div className="container mx-auto px-4 max-w-7xl">
+    <section className=" lg:py-4 rounded-xl bg-gradient-to-b from-gray-50 to-white">
+      <div className="container mx-auto lg:px-4 max-w-7xl">
         {/* Section Header */}
         {/* <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-10">
           <div>
@@ -250,11 +250,11 @@ const MallDirectory = () => {
           {/* Left Sidebar - Categories */}
           <div className="lg:col-span-3 space-y-2">
             {/* Categories Card */}
-            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
               {/* Category Header */}
               <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
                     <Store className="w-6 h-6 text-white" />
                   </div>
                   <div className=''>
@@ -339,43 +339,43 @@ const MallDirectory = () => {
           {/* Center - Interactive Mall Map */}
           <div className="lg:col-span-9">
             {/* Mall Directory Header */}
-            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 rounded-3xl shadow-2xl overflow-hidden mb-6">
-              <div className="relative p-6">
+            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 rounded-xl shadow-2xl overflow-hidden mb-6">
+              <div className="relative p-3 lg:p-6">
                 {/* Decorative Elements */}
                 <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
                 
                 <div className="relative z-10">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                    <div className="flex items-start gap-4">
-                      <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+                    <div className="flex items-start gap-2 lg:gap-4">
+                      <div className="w-18 h-18 lg:h-16 lg:w-16 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
                         <ShoppingBag className="w-8 h-8 text-white" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-xl md:text-2xl font-bold text-white">Mall Directory</h3>
-                          <span className="px-3 py-1 bg-amber-400 text-amber-900 text-xs font-bold rounded-full uppercase">
+                          <h3 className="text-md md:text-2xl font-bold text-white">Mall Directory</h3>
+                          <span className="px-3 py-1 bg-amber-400 text-amber-900 text-[10px] lg:text-xs font-bold rounded-full uppercase">
                             Interactive
                           </span>
                         </div>
-                        <p className="text-blue-100 text-start text-md">Explore our premium stores & discover amazing deals</p>
+                        <p className="text-blue-100 text-start text-sm lg:text-md">Explore our premium stores & discover amazing deals</p>
                       </div>
                     </div>
 
-                    <div className="flex gap-4">
-                      <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 text-center">
+                    <div className="flex gap-4 justify-evenly">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-xl  px-6 py-4 text-center">
                         <div className="flex items-center gap-2 justify-center text-white mb-1">
                           <Store className="w-5 h-5" />
-                          <span className="text-3xl font-bold">{mallStores.length}+</span>
+                          <span className="text-xl lg:text-3xl font-bold">{mallStores.length}+</span>
                         </div>
-                        <p className="text-blue-200 text-sm font-medium">STORES</p>
+                        <p className="text-blue-200 text-[12px] lg:text-sm font-medium">STORES</p>
                       </div>
-                      <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 text-center">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-xl px-6 py-4 text-center">
                         <div className="flex items-center gap-2 justify-center text-white mb-1">
                           <ShoppingBag className="w-5 h-5" />
-                          <span className="text-3xl font-bold">1+</span>
+                          <span className="text-xl lg:text-3xl font-bold">1+</span>
                         </div>
-                        <p className="text-blue-200 text-sm font-medium">PRODUCTS</p>
+                        <p className="text-blue-200 text-[12px] lg:text-sm font-medium">PRODUCTS</p>
                       </div>
                     </div>
                   </div>
@@ -384,10 +384,10 @@ const MallDirectory = () => {
             </div>
 
             {/* Map Location Header */}
-            <div className="bg-white rounded-xl p-2 mb-6 shadow-md border border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+            <div className="bg-white rounded-xl px-3 py-2 mb-6 shadow-md border border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-2 lg:gap-3">
                 <MapPin className="w-5 h-5 text-blue-600" />
-                <span className="font-semibold text-gray-700">Mall of Cayman - Promenade Level</span>
+                <span className="font-semibold text-[14px] lg:text-base text-gray-700">Mall of Cayman - Promenade Level</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -409,11 +409,11 @@ const MallDirectory = () => {
             </div>
 
             {/* Interactive Virtual Mall Map */}
-            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border-2 border-gray-200">
+            <div className="bg-white rounded-xl  shadow-2xl overflow-hidden border-2 border-gray-200">
               {/* Mall Map Container */}
               <div className="relative bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-50 p-2 md:p-4 lg:p-6 overflow-x-auto">
                 {/* Parking Area Label */}
-                <div className="absolute top-1 left-1/2 -translate-x-1/2 bg-gray-400/80 backdrop-blur-sm text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg z-10">
+                <div className="absolute top-1 left-1/2 -translate-x-1/2 bg-gray-400/80 backdrop-blur-sm text-white px-6 py-2.5 rounded-xl text-[10px] lg:text-sm font-bold shadow-lg z-10">
                   🅿️ PARKING AREA
                 </div>
 
@@ -482,9 +482,9 @@ const MallDirectory = () => {
 
                     {/* Mall Entrance (Main - South) */}
                     <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 bg-gradient-to-t from-emerald-600 to-emerald-500 rounded-t-2xl shadow-2xl border-4 border-white overflow-hidden group hover:scale-110 transition-transform">
-                      <div className="px-4 py-2 text-center">
-                        <DoorOpen className="w-7 h-7 text-white mx-auto mb-1" />
-                        <p className="text-white font-bold text-xs whitespace-nowrap">MAIN ENTRANCE</p>
+                      <div className="px-1 md:px-2 lg:px-4 py-2 text-center flex items-center justify-center gap-2">
+                        <DoorOpen className="w-3 h-3 lg:w-7 lg:h-7 text-white mx-auto mb-1" />
+                        <p className="text-white font-bold text-[10px] lg:text-xs whitespace-nowrap">MAIN ENTRANCE</p>
                       </div>
                     </div>
 
@@ -633,8 +633,8 @@ const MallDirectory = () => {
                     const Icon = item.icon;
                     const count = mallStores.filter(s => s.type === item.type).length;
                     return (
-                      <div key={item.type} className="flex items-center gap-2 bg-white rounded-xl p-1 lg:p-2 shadow-md hover:shadow-lg transition-shadow">
-                        <div className={`w-8 h-8 rounded-lg ${item.color} flex items-center justify-center flex-shrink-0`}>
+                      <div key={item.type} className="flex items-center gap-2 bg-white rounded-xl p-2  shadow-md hover:shadow-lg transition-shadow">
+                        <div className={`w-8 h-8 rounded-xl ${item.color} flex items-center justify-center flex-shrink-0`}>
                           <Icon className="w-5 h-5 text-white" />
                         </div>
                         <div>
@@ -671,23 +671,23 @@ const MallDirectory = () => {
             </div>
 
             {/* Premium Sellers Banner */}
-            <div className="mt-6 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 rounded-2xl p-6 border-2 border-amber-200 shadow-lg">
+            <div className="mt-6 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 rounded-xl p-6 border-2 border-amber-200 shadow-lg">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0">
                     <Crown className="w-7 h-7 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-900 text-lg">{goldMembersCount} Premium Gold Sellers Featured</h4>
-                    <p className="text-gray-600">Top rated stores with verified quality</p>
+                    <h4 className="font-bold text-gray-900 text-sm md:text-md lg:text-lg">{goldMembersCount} Premium Gold Sellers Featured</h4>
+                    <p className="text-gray-600 text-xs lg:text-base">Top rated stores with verified quality</p>
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <Link to="/stores" className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-semibold px-6 py-3 rounded-xl transition-all shadow-md">
+                  <Link to="/stores" className="inline-flex items-center gap-2 text-sm lg:text-base bg-white hover:bg-gray-50 text-gray-700 font-semibold px-3 py-2 lg:px-6 lg:py-3 rounded-xl transition-all shadow-md">
                     <Store className="w-5 h-5" />
                     View All Stores
                   </Link>
-                  <Link to="/mall" className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-lg shadow-blue-500/30">
+                  <Link to="/mall" className="inline-flex items-center gap-2 text-sm lg:text-base bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-3 py-2 lg:px-6 lg:py-3 rounded-xl transition-all shadow-lg shadow-blue-500/30">
                     <ShoppingBag className="w-5 h-5" />
                     Shop Now
                   </Link>

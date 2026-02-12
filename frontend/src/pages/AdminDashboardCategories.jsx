@@ -14,7 +14,7 @@ const AdminDashboardCategories = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 w-full px-2 sm:px-4 800px:ml-[290px] 800px:px-0">
+        <div className="flex-1 w-full mt-6 px-2 sm:px-4 800px:ml-[290px] h-[calc(100vh-4rem)] overflow-y-auto ] 800px:px-0">
           <AdminCategoryManager />
         </div>
       </div>

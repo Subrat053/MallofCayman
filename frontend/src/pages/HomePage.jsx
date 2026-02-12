@@ -21,7 +21,7 @@ const HomePage = () => {
       {/* Leaderboard Ad Banner with Right Sidebar Ad */}
       <div className="hidden lg:block  w-full bg-blue-50/80 border-b-2 border-blue-100 py-2 sm:py-4">
         <div className="max-w-[1400px] w-[1500px] mx-auto px-4">
-          <div className="flex items-center flex-start gap-4">
+          <div className="flex items-center gap-4 justify-center">
             {/* Leaderboard Ad */}
             <div className="flex-1 max-w-[728px]">
               <AdvertisementBanners adType="leaderboard" />
@@ -35,7 +35,7 @@ const HomePage = () => {
       </div>
 
       {/* Main 2-Column Layout */}
-      <div className="max-w-[1400px] mx-auto px-4 py-6">
+      <div className="max-w-[1500px] mx-auto px-4 py-4">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
           {/* Center Content Area */}
           <main className="space-y-5 min-w-0">
@@ -60,7 +60,7 @@ const HomePage = () => {
             </div>
 
             {/* Mall Map Section - Premium Design */}
-            <div className="relative">
+            <div className="block">
               {/* Section Header */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -129,18 +129,18 @@ const HomePage = () => {
                     Choose from our flexible subscription plans and reach
                     thousands of customers
                   </p>
-                  <div className="flex flex-wrap gap-3 mt-3 text-xs">
-                    <span className="bg-white/20 px-3 py-1 rounded-full">
+                  <div className="flex flex-wrap gap-2 mt-3 text-xs">
+                    <span className="bg-white/20 px-2 py-1 rounded-full">
                       💎 3 Subscription Plans
                     </span>
-                    <span className="bg-white/20 px-3 py-1 rounded-full">
+                    <span className="bg-white/20 px-2 py-1 rounded-full">
                       📦 Inventory Alerts
                     </span>
                   </div>
                 </div>
                 <a
                   href="/shop/subscriptions"
-                  className="bg-accent-500 hover:bg-accent-600 text-white font-bold px-8 py-3 rounded-lg transition-all duration-200 hover:scale-105 shadow-lg whitespace-nowrap"
+                  className="bg-accent-500 hover:bg-accent-600 text-white text-sm font-semibold lg:font-bold px-6 py-2 lg:px-8 lg:py-3 rounded-lg transition-all duration-200 hover:scale-105 shadow-lg whitespace-nowrap"
                 >
                   View Plans →
                 </a>
@@ -148,7 +148,7 @@ const HomePage = () => {
             </div>
 
             {/* Best Deals */}
-            <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-sm p-5 border-l-4 border-l-primary-500 border border-blue-200">
+            <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-sm lg:p-5 border-l-4 border-l-primary-500 border border-blue-200">
               <BestDeals />
             </div>
 
@@ -160,12 +160,12 @@ const HomePage = () => {
             </div>
 
             {/* Featured Products */}
-            <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-sm p-5 border-l-4 border-l-red-500 border border-blue-200">
+            <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-sm lg:p-5 border-l-4 border-l-red-500 border border-blue-200">
               <FeaturedProduct />
             </div>
 
             {/* Events */}
-            <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-sm p-5 border-l-4 border-l-primary-500 border border-blue-200">
+            <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-sm lg:p-5 border-l-4 border-l-primary-500 border border-blue-200">
               <Events />
             </div>
           

@@ -140,6 +140,61 @@ const Events = () => {
       setIsSubscribing(false);
     }
   };
+// Lunch of website is on 1st April 2026, so countdown timer is set to that date
+  const [timeLeft, setTimeLeft] = useState({
+        days: '00',
+        hours: '00',
+        minutes: '00',
+        seconds: '00',
+    });
+
+    useEffect(() => {
+        const countDownDate = new Date('2026-03-01T00:00:00-05:00').getTime();
+
+        const interval = setInterval(() => {
+            const now = new Date().getTime();
+            const distance = countDownDate - now;
+
+            if (distance < 0) {
+                clearInterval(interval);
+                setTimeLeft({ days: '00', hours: '00', minutes: '00', seconds: '00' });
+            } else {
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                setTimeLeft({
+                    days: String(days).padStart(2, '0'),
+                    hours: String(hours).padStart(2, '0'),
+                    minutes: String(minutes).padStart(2, '0'),
+                    seconds: String(seconds).padStart(2, '0'),
+                });
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -10% 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+
+        return () => observer.disconnect();
+    }, []);
 
   if (isLoading) {
     return (
@@ -162,7 +217,7 @@ const Events = () => {
   }
 
   return (
-    <section className="bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 py-4 sm:py-6">
+    <section className="bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 py-4 sm:py-6 rounded-xl shadow-xl">
       <div className="max-w-4xl sm:max-w-5xl mx-auto px-3 sm:px-6 lg:px-8">
         {/* Modern Header Section */}
         <div className="text-center mb-4 sm:mb-6">
@@ -439,38 +494,73 @@ const Events = () => {
           </div>
         ) : (
           // Enhanced Empty State
-          <div className="text-center py-12">
-            <div className="max-w-sm mx-auto">
-              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-red-100 to-orange-100 rounded-full flex items-center justify-center shadow-md">
-                <HiOutlineClock className="w-10 h-10 text-slate-400" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">
-                No Events Available Right Now
-              </h3>
-              <p className="text-sm text-slate-600 mb-4 leading-relaxed">
-                Stay tuned for exciting events and special offers coming soon!
-                We're preparing something amazing for you.
-              </p>
-              <Link to="/products">
-                <button className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold text-sm rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 transform">
-                  <span>Browse Products Instead</span>
-                  <svg
-                    className="ml-2 w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
-              </Link>
-            </div>
-          </div>
+          // <div className="text-center py-12">
+          //   <div className="max-w-sm mx-auto">
+          //     <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-red-100 to-orange-100 rounded-full flex items-center justify-center shadow-md">
+          //       <HiOutlineClock className="w-10 h-10 text-slate-400" />
+          //     </div>
+          //     <h3 className="text-lg font-bold text-slate-900 mb-2">
+          //       No Events Available Right Now
+          //     </h3>
+          //     <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+          //       Stay tuned for exciting events and special offers coming soon!
+          //       We're preparing something amazing for you.
+          //     </p>
+          //     <Link to="/products">
+          //       <button className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold text-sm rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 transform">
+          //         <span>Browse Products Instead</span>
+          //         <svg
+          //           className="ml-2 w-4 h-4"
+          //           fill="none"
+          //           stroke="currentColor"
+          //           viewBox="0 0 24 24"
+          //         >
+          //           <path
+          //             strokeLinecap="round"
+          //             strokeLinejoin="round"
+          //             strokeWidth={2}
+          //             d="M9 5l7 7-7 7"
+          //           />
+          //         </svg>
+          //       </button>
+          //     </Link>
+          //   </div>
+          // </div>
+          <div className="relative z-10 max-w-7xl mx-auto lg:px-6 py-6 lg:py-8 text-center animate-on-scroll">
+                    {/* Countdown Timer */}
+                    <p className="mb-3 text-sm lg:text-md bg-red-200 text-red-500 p-1 rounded-xl max-w-[200px] lg:max-w-md mx-auto">We are launching </p>
+                    <div className="countdown-container inline-flex items-center gap-2 lg:gap-4 bg-gradient-to-r from-indigo-500 to-cyan-500 backdrop-blur-xl border border-white/20 rounded-2xl px-3 lg:px-8 py-6 mb-8 shadow-2xl">
+                        <div className="countdown-item text-center bg-white/30 rounded-lg p-2 ">
+                            <div className="countdown-value text-3xl md:text-6xl font-bold text-white" id="days">{timeLeft.days}</div>
+                            <div className="countdown-label text-xs md:text-sm text-slate-700/70 uppercase tracking-widest mt-1">Days</div>
+                        </div>
+                        <div className="countdown-separator text-4xl md:text-6xl text-slate-800 font-light">:</div>
+                        <div className="countdown-item text-center bg-white/20 rounded-lg p-2 ">
+                            <div className="countdown-value text-3xl md:text-6xl font-bold text-white" id="hours">{timeLeft.hours}</div>
+                            <div className="countdown-label text-xs md:text-sm text-slate-700/70 uppercase tracking-widest mt-1">Hours</div>
+                        </div>
+                        <div className="countdown-separator text-3xl md:text-5xl text-slate-800 font-light">:</div>
+                        <div className="countdown-item text-center bg-white/20 rounded-lg p-2">
+                            <div className="countdown-value text-3xl md:text-5xl font-bold text-white" id="minutes">{timeLeft.minutes}</div>
+                            <div className="countdown-label text-xs md:text-sm text-slate-700/70 uppercase tracking-widest mt-1">Minutes</div>
+                        </div>
+                        <div className="countdown-separator text-4xl md:text-6xl text-slate-800 font-light hidden md:block">:</div>
+                        <div className="countdown-item text-center hidden md:block bg-white/20 rounded-lg p-2 ">
+                            <div className="countdown-value text-3xl md:text-6xl font-bold text-white" id="seconds">{timeLeft.seconds}</div>
+                            <div className="countdown-label text-xs md:text-sm text-slate-700/70 uppercase tracking-widest mt-1">Seconds</div>
+                        </div>
+                    </div>
+
+                    {/* <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-blue-500 mb-3 lg:mb-6 leading-tight">
+                        Mall of Cayman
+                    </h1> */}
+                    <div className="flex justify-center">
+                      <img src="/logo (10).png" alt="" className="w-42 h-16 object-contain scale-125" />
+                    </div>
+                    <p className="text-sm md:text-md lg:text-xl text-black/90 max-w-3xl mx-auto mb-4 lg:mb-8 font-medium">
+                        Where Cayman's Next Business Leaders Begin
+                    </p>
+                </div>
         )}
       </div>
     </section>

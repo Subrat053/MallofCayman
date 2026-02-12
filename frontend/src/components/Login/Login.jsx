@@ -101,14 +101,14 @@ const Login = () => {
 
       {/* Header */}
       <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-lg">
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-2 lg:mb-4">
           <div className="group relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-            <div className="relative w-32 h-32 bg-white/90 backdrop-blur-sm rounded-3xl flex items-center justify-center shadow-2xl border border-white/20 p-3 transition-all duration-300 group-hover:scale-105 group-hover:shadow-3xl">
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
+            <div className="relative w-38 h-14 lg:w-48 lg:h-16 bg-white/90 backdrop-blur-sm rounded-3xl flex items-center justify-center shadow-2xl border border-white/20 p-1 lg:p-2 transition-all duration-300 group-hover:scale-110 group-hover:shadow-3xl">
               <img
                 src="/logo (10).png"
                 alt="Brand Logo"
-                className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-110"
+                className="h-full w-full object-contain transition-transform duration-300 scale-125 lg:scale-115 group-hover:scale-120"
                 style={{
                   filter: "drop-shadow(0 4px 12px rgba(99, 102, 241, 0.15))",
                 }}
@@ -116,18 +116,18 @@ const Login = () => {
             </div>
           </div>
         </div>
-        <div className="text-center mb-8">
-          <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-900 via-indigo-900 to-purple-900 bg-clip-text text-transparent mb-4">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl lg:text-4xl font-bold bg-gradient-to-r from-slate-900 via-indigo-900 to-purple-900 bg-clip-text text-transparent mb-2">
             Welcome back
           </h2>
-          <p className="text-lg text-slate-600 leading-relaxed">
+          <p className="text-sm lg:text-lg text-slate-600 leading-relaxed">
             Sign in to your account to continue your journey
           </p>
-          <div className="flex items-center justify-center mt-4 gap-2">
+          {/* <div className="flex items-center justify-center mt-2 gap-2">
             <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full animate-pulse"></div>
             <div className="w-16 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></div>
             <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full animate-pulse"></div>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -139,12 +139,12 @@ const Login = () => {
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-indigo-100/20 to-transparent rounded-full blur-2xl"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-purple-100/20 to-transparent rounded-full blur-2xl"></div>
 
-          <form className="relative z-10 space-y-8" onSubmit={handleSubmit}>
+          <form className="relative z-10 space-y-4 lg:space-y-6" onSubmit={handleSubmit}>
             {/* Email Field */}
             <div className="space-y-2">
               <label
                 htmlFor="email"
-                className="block text-sm font-semibold text-gray-800 tracking-wide"
+                className="block text-sm font-semibold text-gray-800 tracking-wide lg:ml-2"
               >
                 Email address
               </label>
@@ -158,7 +158,7 @@ const Login = () => {
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:outline-none text-gray-900 bg-white/70 backdrop-blur-sm placeholder-gray-500 transition-all duration-300 hover:border-indigo-300 group-hover:shadow-lg focus:shadow-xl focus:bg-white/90 text-sm font-medium hover:bg-white/80 focus:scale-[1.02]"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none text-gray-900 bg-white/70 backdrop-blur-sm placeholder-gray-500 transition-all duration-300 hover:border-indigo-300 group-hover:shadow-lg focus:shadow-xl focus:bg-white/90 text-sm font-medium hover:bg-white/80 focus:scale-[1.02]"
                 />
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500/0 via-indigo-500/0 to-indigo-500/0 group-focus-within:from-indigo-500/5 group-focus-within:via-purple-500/5 group-focus-within:to-indigo-500/5 transition-all duration-500 pointer-events-none"></div>
               </div>
@@ -168,7 +168,7 @@ const Login = () => {
             <div className="space-y-2">
               <label
                 htmlFor="password"
-                className="block text-sm font-semibold text-gray-800 tracking-wide"
+                className="block text-sm font-semibold text-gray-800 tracking-wide lg:ml-2"
               >
                 Password
               </label>
@@ -182,7 +182,7 @@ const Login = () => {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:outline-none text-gray-900 bg-white/70 backdrop-blur-sm placeholder-gray-500 transition-all duration-300 hover:border-indigo-300 group-hover:shadow-lg focus:shadow-xl focus:bg-white/90 text-sm font-medium hover:bg-white/80 focus:scale-[1.02]"
+                  className="w-full px-4 py-3 pr-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none text-gray-900 bg-white/70 backdrop-blur-sm placeholder-gray-500 transition-all duration-300 hover:border-indigo-300 group-hover:shadow-lg focus:shadow-xl focus:bg-white/90 text-sm font-medium hover:bg-white/80 focus:scale-[1.02]"
                 />
                 <button
                   type="button"
@@ -200,17 +200,17 @@ const Login = () => {
             </div>
 
             {/* Remember me & Forgot password */}
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-center group">
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center group lg:ml-2">
                 <input
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded-lg transition-all duration-200 cursor-pointer hover:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20"
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded-lg transition-all duration-200 cursor-pointer hover:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20"
                 />
                 <label
                   htmlFor="remember-me"
-                  className="ml-3 block text-sm text-gray-700 cursor-pointer group-hover:text-indigo-600 transition-colors duration-200 font-medium"
+                  className="ml-2 block text-sm text-gray-700 cursor-pointer group-hover:text-indigo-600 transition-colors duration-200 font-medium"
                 >
                   Remember me
                 </label>
@@ -227,16 +227,16 @@ const Login = () => {
             </div>
 
             {/* Submit Button */}
-            <div className="pt-4">
+            <div className="pt-3">
               <button
                 type="submit"
                 disabled={loading}
-                className={`group relative w-full flex justify-center items-center py-4 px-5 border-0 rounded-2xl text-sm font-semibold text-white transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 tracking-wide ${loading
+                className={`group relative w-full flex justify-center items-center py-4 px-4 border-0 rounded-2xl text-sm font-semibold text-white transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 tracking-wide ${loading
                     ? "bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed shadow-lg"
                     : "bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 hover:from-indigo-700 hover:via-indigo-800 hover:to-purple-700 hover:shadow-2xl hover:shadow-indigo-500/25 hover:scale-105 focus:scale-105 active:scale-95 shadow-xl"
                   }`}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/0 to-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 to-white/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 {loading ? (
                   <>
                     <svg
@@ -268,7 +268,7 @@ const Login = () => {
             </div>
 
             {/* Sign up link */}
-            <div className="text-center pt-6 mt-4 border-t border-gray-200/50 backdrop-blur-sm">
+            <div className="text-center pt-4 mt-2 border-t border-gray-200/50 backdrop-blur-sm">
               <p className="text-sm text-gray-600 font-medium">
                 Don't have an account?{" "}
                 <Link
@@ -281,8 +281,8 @@ const Login = () => {
             </div>
 
             {/* Supplier Login Link */}
-            <div className="text-center pt-6">
-              <div className="relative mb-6">
+            <div className="text-center">
+              <div className="relative mb-2">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-200/70"></div>
                 </div>

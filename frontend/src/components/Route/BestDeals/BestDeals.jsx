@@ -139,7 +139,7 @@ const BestDeals = () => {
   }
 
   return (
-    <section className="bg-gradient-to-br from-blue-50 via-white to-red-50 py-6 sm:py-8 relative overflow-hidden">
+    <section className="bg-gradient-to-br from-blue-50 via-white to-red-50 py-2 sm:py-8 relative overflow-hidden rounded-xl">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-200 to-primary-200 rounded-full opacity-20 animate-pulse"></div>
@@ -176,13 +176,13 @@ const BestDeals = () => {
 
           {/* Main Title with Enhanced Animation */}
           <div className="mb-3">
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 mb-2 leading-tight">
+            <h2 className="text-md md:text-3xl lg:text-4xl font-black text-slate-900 mb-2 leading-tight">
               <span className="inline-block animate-pulse">💥</span>
-              <span className="mx-2">Best Deals of the</span>
+              <span className="mx-1 lg:mx-2">Best Deals of the</span>
               <span className="bg-gradient-to-r from-primary-600 via-red-600 to-red-500 bg-clip-text text-transparent animate-pulse">
                 Day
               </span>
-              <span className="inline-block animate-pulse">💥</span>
+              <span className="inline-block animate-pulse ml-1">💥</span>
             </h2>
             <div className="flex justify-center mt-2">
               <div className="h-1 w-24 bg-gradient-to-r from-primary-500 to-red-500 rounded-full animate-pulse"></div>
@@ -227,7 +227,7 @@ const BestDeals = () => {
             {/* Enhanced Timer Banner with Glow Effect */}
             <div className="relative mb-6">
               <div className="absolute inset-0 bg-gradient-to-r from-primary-500 via-red-500 to-red-600 rounded-xl blur-lg opacity-75 animate-pulse"></div>
-              <div className="relative bg-gradient-to-r from-primary-500 via-red-500 to-red-600 rounded-xl p-3 shadow-xl">
+              <div className="relative bg-gradient-to-r from-indigo-500 via-cyan-500 to-purple-600 rounded-xl p-3 shadow-xl">
                 <div className="text-center text-white">
                   <div className="flex items-center justify-center mb-2">
                     <HiClock className="w-4 h-4 mr-1.5 animate-pulse" />
@@ -298,7 +298,7 @@ const BestDeals = () => {
                   {data.map((product, index) => (
                     <div
                       key={index}
-                      className="flex-shrink-0 w-[220px]"
+                      className="flex-shrink-0 w-full"
                       style={{
                         animationDelay: `${index * 100}ms`,
                         animation: "fadeInUp 0.5s ease-out forwards",
@@ -351,8 +351,8 @@ const BestDeals = () => {
             {/* Enhanced CTA Section */}
             <div className="text-center">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-200 to-red-200 rounded-2xl blur-xl opacity-50"></div>
-                <div className="relative bg-white rounded-2xl p-6 shadow-2xl border-2 border-blue-100">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-200 to-red-200 rounded-xl blur-xl opacity-50"></div>
+                <div className="relative bg-white rounded-xl lg:rounded-2xl p-6 shadow-2xl border-2 border-blue-100">
                   <div className="mb-3">
                     <span className="text-3xl">🎁</span>
                   </div>

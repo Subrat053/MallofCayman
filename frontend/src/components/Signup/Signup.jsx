@@ -86,12 +86,12 @@ const Signup = () => {
 
       {/* Header */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center mb-6">
-          <div className="w-28 h-28 bg-gradient-to-br from-white to-gray-50 rounded-3xl flex items-center justify-center shadow-2xl border border-gray-100 p-2 hover:scale-105 transition-all duration-300">
+        <div className="flex justify-center mb-3 lg:mb-5">
+          <div className="w-48 h-16 bg-gradient-to-br from-white to-gray-50 rounded-3xl flex items-center justify-center shadow-2xl border border-gray-100 p-1 hover:scale-105 transition-all duration-300">
             <img
               src="/logo (10).png"
               alt="Brand Logo"
-              className="h-full w-full object-contain filter drop-shadow-lg"
+              className="h-full w-full object-contain filter drop-shadow-lg scale-125"
               style={{
                 filter:
                   "drop-shadow(0 4px 8px rgba(0,0,0,0.1)) brightness(1.1) contrast(1.1)",
@@ -99,20 +99,20 @@ const Signup = () => {
             />
           </div>
         </div>
-        <h2 className="text-center text-3xl font-bold text-text-primary mb-2">
+        <h2 className="text-center text-2xl lg:text-3xl font-bold text-text-primary mb-2">
           Create your account
         </h2>
-        <p className="text-center text-text-secondary">
+        <p className="text-center text-text-secondary text-sm lg:text-base">
           Join thousands of sellers and start your journey
         </p>
       </div>
 
       {/* Registration Form */}
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-10 px-6 shadow-unacademy-lg rounded-2xl border border-secondary-200">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+      <div className="mt-5 lg:mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 lg:py-10 px-6 shadow-unacademy-lg rounded-2xl border border-secondary-200">
+          <form className="space-y-4" onSubmit={handleSubmit}>
             {/* Avatar Upload */}
-            <div className="flex flex-col items-center mb-6">
+            <div className="flex flex-col items-center mb-5">
               <div className="relative">
                 <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-secondary-200 bg-secondary-50 flex items-center justify-center">
                   {avatar ? (
@@ -164,7 +164,7 @@ const Signup = () => {
                 placeholder="Enter your full name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 placeholder-text-muted bg-white text-text-primary"
+                className="w-full px-3 py-2 lg:px-4 lg:py-3 border text-sm lg:text-md border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 placeholder-text-muted bg-white text-text-primary"
               />
             </div>
 
@@ -185,7 +185,7 @@ const Signup = () => {
                 placeholder="Enter your email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 placeholder-text-muted bg-white text-text-primary"
+                className="w-full px-3 py-2 lg:px-4 lg:py-3 text-sm lg:text-md border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 placeholder-text-muted bg-white text-text-primary"
               />
             </div>
 
@@ -207,7 +207,7 @@ const Signup = () => {
                   placeholder="Create a strong password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 placeholder-text-muted bg-white text-text-primary"
+                  className="w-full px-3 py-2 lg:px-4 lg:py-3 pr-12 text-sm lg:text-md border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 placeholder-text-muted bg-white text-text-primary"
                 />
                 <button
                   type="button"
@@ -303,7 +303,7 @@ const Signup = () => {
             </button>
 
             {/* Sign in link */}
-            <div className="text-center pt-4 border-t border-secondary-200">
+            <div className="text-center pt-4 border-t border-secondary-200 text-sm lg:text-base">
               <span className="text-text-secondary">
                 Already have an account?{" "}
               </span>

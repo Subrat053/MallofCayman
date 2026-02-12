@@ -13,7 +13,7 @@ const AdminAdPlanManagementPage = () => {
           <div className="hidden 800px:block w-[80px] 800px:w-[300px] sticky top-16 h-[calc(100vh-4rem)] flex-shrink-0">
             <AdminSideBar active={23} />
           </div>
-          <div className="w-full justify-center flex overflow-y-auto ml-[290px]">
+          <div className="w-full justify-center flex overflow-y-auto h-[calc(100vh-4rem)] lg:ml-[290px]">
             <AdminAdPlanManagement />
           </div>
         </div>

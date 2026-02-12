@@ -170,13 +170,13 @@ const ProductCard = ({ data, isEvent, isCompact = false }) => {
 
           {/* Discount Badge */}
           {discountPercent > 0 && (
-            <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+            <span className="absolute top-1 left-1 lg:top-2 lg:left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
               {discountPercent}% OFF
             </span>
           )}
 
           {/* Actions */}
-          <div className="absolute top-2 right-2 flex flex-col gap-1.5">
+          <div className="absolute top-1 right-1 lg:top-2 lg:right-2 flex flex-col gap-1.5">
             <button
               onClick={() =>
                 click
@@ -259,7 +259,7 @@ const ProductCard = ({ data, isEvent, isCompact = false }) => {
             <button
               onClick={buyNowHandler}
               disabled={data.stock < 1}
-              className={`flex-1 py-2 text-xs font-bold rounded transition-colors ${
+              className={`flex-1 py-1 lg:py-2 text-[10px] md:text-sm lg:text-xs font-bold rounded transition-colors ${
                 data.stock < 1
                   ? "bg-gray-200 text-gray-400"
                   : "bg-red-600 text-white hover:bg-red-700"
@@ -270,7 +270,7 @@ const ProductCard = ({ data, isEvent, isCompact = false }) => {
             <button
               onClick={() => addToCartHandler(data._id)}
               disabled={data.stock < 1}
-              className={`flex-1 py-2 text-xs font-bold rounded flex items-center justify-center gap-1 border-2 transition-colors ${
+              className={`flex-1 py-1 lg:py-2 text-[10px] md:text-sm lg:text-xs font-bold rounded flex items-center justify-center gap-1 border-2 transition-colors ${
                 data.stock < 1
                   ? "bg-gray-200 text-gray-400 border-gray-200"
                   : "bg-white text-primary-600 border-primary-600 hover:bg-primary-50"
