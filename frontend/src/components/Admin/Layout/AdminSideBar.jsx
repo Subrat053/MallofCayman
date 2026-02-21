@@ -25,6 +25,8 @@ import {
   HiOutlineIdentification,
   HiOutlineMail,
   HiOutlinePencilAlt,
+  HiOutlineHome,
+  HiOutlineChatAlt2,
 } from "react-icons/hi";
 import { logoutUser } from "../../../redux/actions/user";
 import { toast } from "react-toastify";
@@ -178,6 +180,22 @@ const AdminSideBar = ({ active, onItemClick, isMobileOverlay = false }) => {
       url: "/admin-blog",
       color: "bg-teal-500",
       roles: ["Admin", "Manager"], // Manager can manage content
+    },
+    {
+      id: 30,
+      name: "Real Estate",
+      icon: HiOutlineHome,
+      url: "/admin-real-estate",
+      color: "bg-blue-600",
+      roles: ["Admin", "Manager"],
+    },
+    {
+      id: 31,
+      name: "Property Leads",
+      icon: HiOutlineChatAlt2,
+      url: "/admin-leads",
+      color: "bg-indigo-500",
+      roles: ["Admin", "Manager"],
     },
     {
       id: 7,
@@ -390,6 +408,10 @@ const AdminSideBar = ({ active, onItemClick, isMobileOverlay = false }) => {
                           "Manage frequently asked questions"}
                         {item.name === "Blog Management" &&
                           "Create & manage blog posts"}
+                        {item.name === "Real Estate" &&
+                          "Manage property listings"}
+                        {item.name === "Property Leads" &&
+                          "View & manage inquiries"}
                         {item.name === "Analytics" && "Reports & insights"}
                         {item.name === "Subscription Management" &&
                           "Seller subscriptions"}

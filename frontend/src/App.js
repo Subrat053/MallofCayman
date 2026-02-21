@@ -19,6 +19,10 @@ import ReviewsPage from "./pages/ReviewsPage";
 import BlogPage from "./pages/BlogPage";
 import BlogDetailPage from "./pages/BlogDetailPage";
 import AdminBlogPage from "./pages/AdminBlogPage";
+import RealEstatePage from "./pages/RealEstatePage";
+import PropertyDetailsPage from "./pages/PropertyDetailsPage";
+import AdminRealEstatePage from "./pages/AdminRealEstatePage";
+import AdminLeadsPage from "./pages/AdminLeadsPage";
 import {
   LoginPage,
   SignupPage,
@@ -244,6 +248,8 @@ const App = () => {
         <Route path="/reviews" element={<ReviewsPage />} />
         <Route path="/blog" element={<BlogPage />} />
         <Route path="/blog/:slug" element={<BlogDetailPage />} />
+        <Route path="/real-estate" element={<RealEstatePage />} />
+        <Route path="/real-estate/:slug" element={<PropertyDetailsPage />} />
         <Route path="/forgot-password" element={<UserForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<UserResetPasswordPage />} />
         <Route
@@ -967,6 +973,22 @@ const App = () => {
           element={
             <ProtectedAdminRoute>
               <AdminBlogPage />
+            </ProtectedAdminRoute>
+          }
+        />
+        <Route
+          path="/admin-real-estate"
+          element={
+            <ProtectedAdminRoute>
+              <AdminRealEstatePage />
+            </ProtectedAdminRoute>
+          }
+        />
+        <Route
+          path="/admin-leads"
+          element={
+            <ProtectedAdminRoute>
+              <AdminLeadsPage />
             </ProtectedAdminRoute>
           }
         />

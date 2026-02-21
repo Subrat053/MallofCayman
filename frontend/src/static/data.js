@@ -18,7 +18,7 @@ export const navItems = [
   },
   {
     title: "Become a Seller",
-    url: "/shop-create",
+    url: "/shop-create",  
   },
   {
     title: "Blog",
@@ -31,6 +31,10 @@ export const navItems = [
   {
     title: "Contact Us",
     url: "/contact",
+  },
+  {
+    title: "Real Estate",
+    url: "/real-estate",
   },
 ];
 
