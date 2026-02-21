@@ -24,6 +24,7 @@ import {
   HiOutlineLocationMarker,
   HiOutlineIdentification,
   HiOutlineMail,
+  HiOutlinePencilAlt,
 } from "react-icons/hi";
 import { logoutUser } from "../../../redux/actions/user";
 import { toast } from "react-toastify";
@@ -168,6 +169,14 @@ const AdminSideBar = ({ active, onItemClick, isMobileOverlay = false }) => {
       icon: HiOutlineQuestionMarkCircle,
       url: "/admin-faq",
       color: "bg-blue-500",
+      roles: ["Admin", "Manager"], // Manager can manage content
+    },
+    {
+      id: 29,
+      name: "Blog Management",
+      icon: HiOutlinePencilAlt,
+      url: "/admin-blog",
+      color: "bg-teal-500",
       roles: ["Admin", "Manager"], // Manager can manage content
     },
     {
@@ -379,6 +388,8 @@ const AdminSideBar = ({ active, onItemClick, isMobileOverlay = false }) => {
                           "Configure site information"}
                         {item.name === "FAQ Management" &&
                           "Manage frequently asked questions"}
+                        {item.name === "Blog Management" &&
+                          "Create & manage blog posts"}
                         {item.name === "Analytics" && "Reports & insights"}
                         {item.name === "Subscription Management" &&
                           "Seller subscriptions"}

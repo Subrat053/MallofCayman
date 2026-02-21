@@ -16,6 +16,9 @@ import RefundPolicyPage from "./pages/RefundPolicyPage";
 import ShippingPolicyPage from "./pages/ShippingPolicyPage";
 import AboutUsPage from "./pages/AboutUsPage";
 import ReviewsPage from "./pages/ReviewsPage";
+import BlogPage from "./pages/BlogPage";
+import BlogDetailPage from "./pages/BlogDetailPage";
+import AdminBlogPage from "./pages/AdminBlogPage";
 import {
   LoginPage,
   SignupPage,
@@ -239,6 +242,8 @@ const App = () => {
         <Route path="/shipping" element={<ShippingPolicyPage />} />
         <Route path="/about" element={<AboutUsPage />} />
         <Route path="/reviews" element={<ReviewsPage />} />
+        <Route path="/blog" element={<BlogPage />} />
+        <Route path="/blog/:slug" element={<BlogDetailPage />} />
         <Route path="/forgot-password" element={<UserForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<UserResetPasswordPage />} />
         <Route
@@ -954,6 +959,14 @@ const App = () => {
           element={
             <ProtectedAdminRoute>
               <AdminFAQPage />
+            </ProtectedAdminRoute>
+          }
+        />
+        <Route
+          path="/admin-blog"
+          element={
+            <ProtectedAdminRoute>
+              <AdminBlogPage />
             </ProtectedAdminRoute>
           }
         />

@@ -92,7 +92,7 @@ const ContactPage = () => {
 
   return (
     <>
-      <Header activeHeading={7} />
+      <Header activeHeading={8} />
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 py-12">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">

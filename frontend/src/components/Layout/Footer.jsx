@@ -231,22 +231,22 @@ const Footer = () => {
                 </li>
                 <li>
                   <Link
+                    to="/blog"
+                    onClick={scrollToTop}
+                    className="text-gray-300 hover:text-white hover:pl-3 transition-all duration-300 text-sm block py-1 group"
+                  >
+                    <span className="opacity-0 group-hover:opacity-100 transition-opacity mr-2">→</span>
+                    Blog
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     to="/shop-create"
                     onClick={scrollToTop}
                     className="text-gray-300 hover:text-white hover:pl-3 transition-all duration-300 text-sm block py-1 group"
                   >
                     <span className="opacity-0 group-hover:opacity-100 transition-opacity mr-2">→</span>
                     Become a Seller
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/faq"
-                    onClick={scrollToTop}
-                    className="text-gray-300 hover:text-white hover:pl-3 transition-all duration-300 text-sm block py-1 group"
-                  >
-                    <span className="opacity-0 group-hover:opacity-100 transition-opacity mr-2">→</span>
-                    FAQ
                   </Link>
                 </li>
               </ul>

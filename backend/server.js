@@ -115,6 +115,7 @@ const storeManager = require("./routes/storeManager");
 const vendorDelivery = require("./routes/vendorDelivery");
 const emailTemplate = require("./controller/emailTemplate");
 const storeManagerAdvertisement = require("./routes/storeManagerAdvertisement");
+const blog = require("./controller/blog");
 
 // endpoints
 app.use("/api/v2/user", user);
@@ -152,6 +153,7 @@ app.use("/api/v2/store-manager", storeManager);
 app.use("/api/v2/vendor-delivery", vendorDelivery);
 app.use("/api/v2/email-template", emailTemplate);
 app.use("/api/v2/store-manager-advertisement", storeManagerAdvertisement);
+app.use("/api/v2/blog", blog);
 
 // error handler middleware
 app.use(ErrorHandler);

@@ -64,7 +64,7 @@ if (typeof document !== "undefined") {
 const FAQPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <Header activeHeading={6} />
+      <Header activeHeading={7} />
       <Faq />
       <Footer />
     </div>

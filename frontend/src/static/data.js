@@ -21,6 +21,10 @@ export const navItems = [
     url: "/shop-create",
   },
   {
+    title: "Blog",
+    url: "/blog",
+  },
+  {
     title: "FAQ",
     url: "/faq",
   },
