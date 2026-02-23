@@ -43,9 +43,36 @@ import {
   LinkOutlined as LinkIcon,
   Close as CloseIcon,
 } from "@material-ui/icons";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import "../../styles/blog-quill-content.css";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import useBlog from "../../hooks/useBlog";
+
+const QUILL_MODULES = {
+  toolbar: [
+    [{ header: [1, 2, 3, 4, false] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ color: [] }, { background: [] }],
+    [{ list: "ordered" }, { list: "bullet" }],
+    [{ indent: "-1" }, { indent: "+1" }],
+    [{ align: [] }],
+    ["link", "image"],
+    ["blockquote", "code-block"],
+    ["clean"],
+  ],
+};
+
+const QUILL_FORMATS = [
+  "header",
+  "bold", "italic", "underline", "strike",
+  "color", "background",
+  "list", "bullet", "indent",
+  "align",
+  "link", "image",
+  "blockquote", "code-block",
+];
 
 const BLOG_CATEGORIES = [
   "news",
@@ -107,6 +134,8 @@ const AdminBlogManagement = () => {
   const [coverImageFile, setCoverImageFile] = useState(null); // File object
   const [coverImageFilePreview, setCoverImageFilePreview] = useState(""); // blob URL
   const [coverImageMode, setCoverImageMode] = useState("url"); // "url" | "file"
+  // Content editor mode: "editor" | "html" | "preview"
+  const [contentTab, setContentTab] = useState(0); // 0=visual, 1=html, 2=preview
 
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
 
@@ -138,6 +167,7 @@ const AdminBlogManagement = () => {
     setCoverImageFile(null);
     setCoverImageFilePreview("");
     setCoverImageMode("url");
+    setContentTab(0);
     setOpenDialog(true);
   };
 
@@ -160,6 +190,7 @@ const AdminBlogManagement = () => {
     setCoverImageFile(null);
     setCoverImageFilePreview("");
     setCoverImageMode("url");
+    setContentTab(0);
     setOpenDialog(true);
   };
 
@@ -171,6 +202,7 @@ const AdminBlogManagement = () => {
     if (coverImageFilePreview) URL.revokeObjectURL(coverImageFilePreview);
     setCoverImageFilePreview("");
     setCoverImageMode("url");
+    setContentTab(0);
   };
 
   // ─── Form Helpers ─────────────────────────────────────────────────────────
@@ -214,7 +246,9 @@ const AdminBlogManagement = () => {
       toast.error("Title is required");
       return;
     }
-    if (!formData.content.trim()) {
+    // Quill returns "<p><br></p>" for empty content — strip tags to check real content
+    const contentText = formData.content.replace(/<[^>]*>/g, "").trim();
+    if (!contentText) {
       toast.error("Content is required");
       return;
     }
@@ -616,7 +650,7 @@ const AdminBlogManagement = () => {
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
-        maxWidth="md"
+        maxWidth="lg"
         fullWidth
         PaperProps={{ style: { borderRadius: 20, padding: 0 } }}
       >
@@ -664,17 +698,103 @@ const AdminBlogManagement = () => {
 
             {/* Content */}
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Content * (HTML or plain text)"
-                variant="outlined"
-                multiline
-                rows={8}
-                value={formData.content}
-                onChange={handleChange("content")}
-                placeholder="Write your blog content here. You can use HTML tags like <h2>, <p>, <strong>, <ul>, <li>, <a>..."
-                helperText="Supports HTML markup for rich formatting"
-              />
+              <div className="mb-1">
+                <p className="text-sm font-semibold text-slate-700 mb-2">
+                  Content <span className="text-red-500">*</span>
+                </p>
+                {/* Tab bar */}
+                <div className="flex items-center gap-1 mb-2 bg-slate-100 rounded-xl p-1 w-fit">
+                  {[
+                    { label: "✏️ Visual Editor", idx: 0 },
+                    { label: "</> HTML Source", idx: 1 },
+                    { label: "👁 Preview", idx: 2 },
+                  ].map(({ label, idx }) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setContentTab(idx)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                        contentTab === idx
+                          ? "bg-white text-indigo-700 shadow-sm"
+                          : "text-slate-500 hover:text-slate-700"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Visual Editor */}
+                {contentTab === 0 && (
+                  <div
+                    className="rounded-xl overflow-hidden border border-slate-300 focus-within:border-indigo-500 transition-colors"
+                    style={{ minHeight: 340 }}
+                  >
+                    <ReactQuill
+                      theme="snow"
+                      value={formData.content}
+                      onChange={(value) =>
+                        setFormData((prev) => ({ ...prev, content: value }))
+                      }
+                      modules={QUILL_MODULES}
+                      formats={QUILL_FORMATS}
+                      placeholder="Write your blog content here. Use the toolbar to format headings, add lists, insert images, links, and more..."
+                      style={{ minHeight: 280 }}
+                    />
+                  </div>
+                )}
+
+                {/* HTML Source mode */}
+                {contentTab === 1 && (
+                  <div>
+                    <TextField
+                      fullWidth
+                      variant="outlined"
+                      multiline
+                      rows={12}
+                      value={formData.content}
+                      onChange={handleChange("content")}
+                      placeholder="<h2>Heading</h2>&#10;<p>Your content...</p>"
+                      inputProps={{
+                        style: {
+                          fontFamily: '"Fira Code", "Courier New", monospace',
+                          fontSize: 13,
+                          lineHeight: 1.6,
+                        },
+                      }}
+                      helperText="Edit raw HTML directly. Switch back to Visual Editor to continue formatting."
+                    />
+                  </div>
+                )}
+
+                {/* Preview mode */}
+                {contentTab === 2 && (
+                  <div
+                    className="rounded-xl border border-slate-200 bg-white p-6 overflow-auto"
+                    style={{ minHeight: 280, maxHeight: 480 }}
+                  >
+                    {formData.content ? (
+                      <div
+                        className="ql-editor blog-content-preview prose prose-sm sm:prose max-w-none"
+                        dangerouslySetInnerHTML={{ __html: formData.content }}
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-40 text-slate-400">
+                        <p className="text-sm">No content to preview yet.</p>
+                        <p className="text-xs mt-1">Switch to Visual Editor and start writing.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {contentTab !== 2 && (
+                  <p className="text-xs text-slate-400 mt-1">
+                    {contentTab === 0
+                      ? "Use the toolbar to format your blog post. Switch to HTML Source for raw editing or Preview to see how it looks."
+                      : "Raw HTML source. Switch to Visual Editor to use the formatting toolbar."}
+                  </p>
+                )}
+              </div>
             </Grid>
 
             {/* Cover Image — URL or File Upload */}

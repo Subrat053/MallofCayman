@@ -13,6 +13,8 @@ import {
   HiOutlineBookOpen,
   HiOutlineChevronRight,
 } from "react-icons/hi";
+import "react-quill/dist/quill.snow.css";
+import "../styles/blog-quill-content.css";
 
 const CATEGORY_COLORS = {
   news: { bg: "bg-blue-100", text: "text-blue-700" },
@@ -34,21 +36,22 @@ const formatDate = (dateStr) => {
   });
 };
 
-// Renders static plain-text content or simple HTML safely
+// Renders Quill-generated HTML (or plain text) safely with proper styling
 const BlogContent = ({ content }) => {
   if (!content) return null;
-  // If content looks like HTML, render it; otherwise render as paragraphs
+  // If content looks like HTML (Quill or otherwise), render it with blog-content classes
   const isHTML = /<[a-z][\s\S]*>/i.test(content);
   if (isHTML) {
     return (
       <div
-        className="prose prose-lg max-w-none prose-headings:text-slate-900 prose-p:text-slate-700 prose-a:text-indigo-600 prose-strong:text-slate-900 prose-img:rounded-2xl"
+        className="blog-content"
         dangerouslySetInnerHTML={{ __html: content }}
       />
     );
   }
+  // Plain text fallback: render as paragraphs
   return (
-    <div className="space-y-5">
+    <div className="blog-content space-y-5">
       {content.split("\n\n").map((para, i) => (
         <p key={i} className="text-slate-700 leading-relaxed text-base lg:text-lg">
           {para}

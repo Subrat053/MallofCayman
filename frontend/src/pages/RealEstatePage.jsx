@@ -73,7 +73,7 @@ const PropertyCard = ({ property }) => {
     "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80";
 
   return (
-    <div className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-400 hover:-translate-y-1 border border-gray-100">
+    <div className="group relative bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-400 hover:-translate-y-1 border border-gray-100">
       {/* Image */}
       <div className="relative h-52 overflow-hidden">
         <img
@@ -169,7 +169,7 @@ const PropertyCard = ({ property }) => {
         {/* CTA */}
         <Link
           to={`/real-estate/${property.slug}`}
-          className="block w-full text-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-2.5 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md text-sm"
+          className="block w-full text-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-2.5 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md text-sm"
         >
           View Details
         </Link>
