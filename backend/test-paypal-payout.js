@@ -93,7 +93,7 @@ async function testPayPalSetup() {
     const payoutRequest = {
       sender_batch_header: {
         sender_batch_id: senderBatchId,
-        email_subject: 'Test Payout from Wanttar',
+        email_subject: 'Test Payout from Mall of Cayman',
         email_message: 'This is a test payout',
       },
       items: [

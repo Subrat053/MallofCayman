@@ -1072,3 +1072,109 @@ exports.autoRenewAdvertisements = async () => {
     console.error('Error auto-renewing advertisements:', error);
   }
 };
+
+// ────── Stripe Advertisement Payment ──────
+const getAdStripeClient = () => {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new ErrorHandler('Stripe is not configured on server', 500);
+  }
+  return require('stripe')(process.env.STRIPE_SECRET_KEY);
+};
+
+// Create a Stripe Checkout Session for an advertisement payment
+exports.createStripeAdPaymentSession = catchAsyncErrors(async (req, res, next) => {
+  const { advertisementId, returnPath } = req.body;
+
+  const advertisement = await Advertisement.findById(advertisementId);
+  if (!advertisement) return next(new ErrorHandler('Advertisement not found', 404));
+
+  if (advertisement.shopId.toString() !== req.seller._id.toString()) {
+    return next(new ErrorHandler('Unauthorized', 403));
+  }
+
+  if (advertisement.paymentStatus === 'completed') {
+    return next(new ErrorHandler('This advertisement is already paid', 400));
+  }
+
+  // Sanitize returnPath to prevent open-redirect
+  const safeReturn = /^\/[a-zA-Z0-9\-_/]*$/.test(returnPath || '') ? returnPath : '/dashboard-advertisements';
+
+  const stripe = getAdStripeClient();
+  const session = await stripe.checkout.sessions.create({
+    mode: 'payment',
+    success_url: `${process.env.FRONTEND_URL}/stripe/ad-payment-success?session_id={CHECKOUT_SESSION_ID}&advertisementId=${advertisementId}&returnPath=${encodeURIComponent(safeReturn)}`,
+    cancel_url: `${process.env.FRONTEND_URL}${safeReturn}`,
+    payment_method_types: ['card'],
+    line_items: [{
+      quantity: 1,
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: `Ad: ${advertisement.title}`,
+          description: `${advertisement.adType} – ${advertisement.duration} month(s)`,
+        },
+        unit_amount: Math.round((advertisement.totalPrice || 0) * 100),
+      },
+    }],
+    metadata: {
+      advertisementId: advertisementId,
+      shopId: req.seller._id.toString(),
+    },
+  });
+
+  res.status(200).json({ success: true, checkoutUrl: session.url, sessionId: session.id });
+});
+
+// Confirm Stripe ad payment after successful checkout
+exports.confirmStripeAdPayment = catchAsyncErrors(async (req, res, next) => {
+  const { sessionId, advertisementId } = req.body;
+
+  if (!sessionId || !advertisementId) {
+    return next(new ErrorHandler('Session ID and advertisement ID are required', 400));
+  }
+
+  const advertisement = await Advertisement.findById(advertisementId);
+  if (!advertisement) return next(new ErrorHandler('Advertisement not found', 404));
+
+  if (advertisement.shopId.toString() !== req.seller._id.toString()) {
+    return next(new ErrorHandler('Unauthorized', 403));
+  }
+
+  if (advertisement.paymentStatus === 'completed') {
+    // Idempotent: already confirmed
+    return res.status(200).json({ success: true, message: 'Payment already processed', advertisement });
+  }
+
+  const stripe = getAdStripeClient();
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  if (session.payment_status !== 'paid') {
+    return next(new ErrorHandler('Payment not completed', 400));
+  }
+
+  const Subscription = require('../model/subscription');
+  const subscription = await Subscription.findOne({
+    shop: req.seller._id,
+    status: { $in: ['active', 'pending'] },
+  });
+  const hasAdPreApproval = subscription?.features?.adPreApproval || false;
+
+  advertisement.paymentStatus = 'completed';
+  advertisement.paymentId = session.id;
+  advertisement.paymentMethod = 'stripe';
+
+  if (hasAdPreApproval) {
+    advertisement.status = 'active';
+    advertisement.approvedAt = new Date();
+    advertisement.approvalNote = 'Auto-approved (Gold Plan – Ad Pre-Approval feature)';
+  } else {
+    advertisement.status = 'pending';
+  }
+
+  await advertisement.save();
+
+  const message = hasAdPreApproval
+    ? 'Payment processed. Advertisement is now LIVE (Gold Plan – Auto-Approved)!'
+    : 'Payment processed. Advertisement pending admin approval.';
+
+  res.status(200).json({ success: true, message, advertisement, autoApproved: hasAdPreApproval });
+});

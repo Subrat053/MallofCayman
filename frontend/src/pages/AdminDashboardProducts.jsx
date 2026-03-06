@@ -9,12 +9,12 @@ const AdminDashboardProducts = () => {
       <AdminHeader activeMenuItem={5} />
       <div className="flex pt-16 sm:pt-20">
         {/* Sidebar - Fixed positioning for better responsiveness */}
-        <div className="hidden 800px:block w-64 fixed left-0 top-20 h-full z-10">
+        <div className="hidden 800px:block w-[310px] fixed left-0 top-16 h-full z-10">
           <AdminSideBar active={5} />
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 w-full px-2 sm:px-4 800px:ml-64 800px:px-6 py-4">
+        <div className="flex-1 w-full 800px:ml-[310px] 800px:px-4 py-4">
           <div className="max-w-full">
             <div className="mb-4 sm:mb-6">
               <h1 className="text-xl sm:text-2xl 800px:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">

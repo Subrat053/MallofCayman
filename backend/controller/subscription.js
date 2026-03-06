@@ -1032,4 +1032,152 @@ router.delete(
   })
 );
 
+// ────── Stripe Subscription Payment ──────
+const getStripeClientForSubscription = () => {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new ErrorHandler('Stripe is not configured on server', 500);
+  }
+  return require('stripe')(process.env.STRIPE_SECRET_KEY);
+};
+
+// Create Stripe Checkout Session for subscription payment
+router.post(
+  '/stripe/create-subscription-payment',
+  isSeller,
+  catchAsyncErrors(async (req, res, next) => {
+    const { plan, billingCycle } = req.body;
+
+    const existingActive = await Subscription.findOne({ shop: req.seller._id, status: 'active' });
+    if (existingActive) {
+      return next(new ErrorHandler('You already have an active subscription. Please cancel it first.', 400));
+    }
+
+    await Subscription.deleteMany({ shop: req.seller._id, status: 'pending' });
+
+    const planDoc = await SubscriptionPlan.findOne({ planKey: plan, isActive: true });
+    if (!planDoc) return next(new ErrorHandler('Invalid subscription plan', 400));
+
+    const discount = getBillingCycleDiscount(billingCycle);
+    const monthlyPrice = planDoc.monthlyPrice;
+    const months = billingCycle === '3-months' ? 3 : billingCycle === '6-months' ? 6 : billingCycle === '12-months' ? 12 : 1;
+    const totalBeforeDiscount = monthlyPrice * months;
+    const discountAmount = (totalBeforeDiscount * discount) / 100;
+    const finalPrice = totalBeforeDiscount - discountAmount;
+
+    const startDate = new Date();
+    const endDate = calculateEndDate(startDate, billingCycle);
+
+    const subscription = await Subscription.create({
+      shop: req.seller._id,
+      plan,
+      maxProducts: planDoc.maxProducts,
+      features: planDoc.features,
+      monthlyPrice,
+      billingCycle,
+      discountPercent: discount,
+      finalPrice,
+      status: 'pending',
+      startDate,
+      endDate,
+      nextBillingDate: endDate,
+    });
+
+    const stripe = getStripeClientForSubscription();
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      success_url: `${process.env.FRONTEND_URL}/seller/subscription-success-stripe?session_id={CHECKOUT_SESSION_ID}&subscriptionId=${subscription._id}`,
+      cancel_url: `${process.env.FRONTEND_URL}/seller/subscription-cancel`,
+      payment_method_types: ['card'],
+      line_items: [{
+        quantity: 1,
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: `${planDoc.name} Plan – ${billingCycle}`,
+            description: `Mall of Cayman Subscription${discount > 0 ? ` (${discount}% discount)` : ''}`,
+          },
+          unit_amount: Math.round(finalPrice * 100),
+        },
+      }],
+      metadata: {
+        subscriptionId: subscription._id.toString(),
+        shopId: req.seller._id.toString(),
+        plan,
+        billingCycle,
+      },
+    });
+
+    subscription.stripeSessionId = session.id;
+    await subscription.save();
+
+    res.status(200).json({
+      success: true,
+      checkoutUrl: session.url,
+      sessionId: session.id,
+      subscriptionId: subscription._id,
+    });
+  })
+);
+
+// Activate subscription after successful Stripe payment
+router.post(
+  '/stripe/activate-subscription',
+  isSeller,
+  catchAsyncErrors(async (req, res, next) => {
+    const { sessionId, subscriptionId } = req.body;
+
+    if (!sessionId || !subscriptionId) {
+      return next(new ErrorHandler('Session ID and subscription ID are required', 400));
+    }
+
+    const stripe = getStripeClientForSubscription();
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['payment_intent'],
+    });
+
+    if (session.payment_status !== 'paid') {
+      return next(new ErrorHandler('Payment has not been completed', 400));
+    }
+
+    const subscription = await Subscription.findById(subscriptionId);
+    if (!subscription || subscription.shop.toString() !== req.seller._id.toString()) {
+      return next(new ErrorHandler('Subscription not found', 404));
+    }
+
+    if (subscription.status === 'active') {
+      return res.status(200).json({ success: true, message: 'Subscription already active', subscription });
+    }
+
+    const paymentIntentId =
+      typeof session.payment_intent === 'string'
+        ? session.payment_intent
+        : session.payment_intent?.id;
+
+    subscription.status = 'active';
+    subscription.paymentMethod = 'stripe';
+    subscription.stripeSessionId = sessionId;
+    subscription.lastPaymentDate = new Date();
+    subscription.lastPaymentAmount = subscription.finalPrice;
+    subscription.paymentHistory.push({
+      amount: subscription.finalPrice,
+      status: 'success',
+      transactionId: paymentIntentId || sessionId,
+      billingPeriodStart: subscription.startDate,
+      billingPeriodEnd: subscription.endDate,
+    });
+    await subscription.save();
+
+    const shop = await Shop.findById(req.seller._id);
+    shop.subscriptionPlan = subscription.plan;
+    shop.currentSubscription = subscription._id;
+    await shop.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Subscription activated successfully',
+      subscription,
+    });
+  })
+);
+
 module.exports = router;

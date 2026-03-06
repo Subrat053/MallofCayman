@@ -276,7 +276,7 @@ const AdminAdPlanManagement = () => {
   }
 
   return (
-    <div className="w-full mx-2 sm:mx-4 800px:mx-8 pt-1 mt-4 sm:mt-10 bg-white rounded-lg shadow-md">
+    <div className="mx-2 sm:mx-3 800px:mx-4 pt-1 mt-4 sm:mt-10 bg-white rounded-lg shadow-md">
       {/* Header */}
       <div className="p-3 sm:p-6 border-b bg-gradient-to-r from-purple-600 to-indigo-600">
         <div className="flex items-center space-x-2 sm:space-x-3">

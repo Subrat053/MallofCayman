@@ -5,7 +5,7 @@ const siteSettingsSchema = new mongoose.Schema({
   branding: {
     favicon: {
       type: String,
-      default: "/WANTTA (7).png"
+      default: "/logo (10).png"
     },
     faviconPublicId: {
       type: String,
@@ -13,7 +13,7 @@ const siteSettingsSchema = new mongoose.Schema({
     },
     appleTouchIcon: {
       type: String,
-      default: "/logo192.png"
+      default: "/logo (10).png"
     },
     appleTouchIconPublicId: {
       type: String,
@@ -29,7 +29,7 @@ const siteSettingsSchema = new mongoose.Schema({
     },
     siteTitle: {
       type: String,
-      default: "Wanttar"
+      default: "MallofCayman"
     }
   },
   // Currency Settings
@@ -95,13 +95,13 @@ const siteSettingsSchema = new mongoose.Schema({
     email: {
       type: String,
       required: true,
-      default: "support@wanttar.in"
+      default: "support@mallofcayman.com"
     }
   },
   companyInfo: {
     name: {
       type: String,
-      default: "Wanttar"
+      default: "MallofCayman"
     },
     description: {
       type: String,
@@ -109,7 +109,7 @@ const siteSettingsSchema = new mongoose.Schema({
     },
     website: {
       type: String,
-      default: "https://www.wanttar.in"
+      default: "https://www.mallofcayman.com"
     }
   },
   socialMedia: {

@@ -12,7 +12,7 @@ dotenv.config({
 const adminUsers = [
   {
     name: "SubAdmin User",
-    email: "subadmin@wanttar.in",
+    email: "subadmin@mallofcayman.com",
     password: "SubAdmin@123",
     role: "SubAdmin",
     phoneNumber: 9876543210,
@@ -34,7 +34,7 @@ const adminUsers = [
   },
   {
     name: "Manager User",
-    email: "manager@wanttar.in",
+    email: "manager@mallofcayman.com",
     password: "Manager@123",
     role: "Manager",
     phoneNumber: 9876543211,
@@ -104,12 +104,12 @@ const seedAdminRoles = async () => {
     
     console.log("\n📋 Login Credentials:");
     console.log("\n🔹 SubAdmin:");
-    console.log("   Email: subadmin@wanttar.in");
+    console.log("   Email: subadmin@mallofcayman.com");
     console.log("   Password: SubAdmin@123");
     console.log("   Permissions: Vendor/Product/Ad Approvals, Review Moderation");
     
     console.log("\n🔹 Manager:");
-    console.log("   Email: manager@wanttar.in");
+    console.log("   Email: manager@mallofcayman.com");
     console.log("   Password: Manager@123");
     console.log("   Permissions: Orders, Products, Coupons, Categories, Users, Content");
     

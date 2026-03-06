@@ -595,7 +595,7 @@ const AdminSubscriptions = () => {
           No subscriptions found
         </div>
       )}
-      {/* Change Subscription Modal */}}
+      {/* Change Subscription Modal */}
       {changeModalOpen && selectedSubscription && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">

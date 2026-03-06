@@ -400,7 +400,7 @@ router.put(
           await sendMail({
             email: seller.email,
             subject: "PayPal Withdrawal Completed",
-            message: `Hello ${seller.name},\n\nGreat news! Your withdrawal request of $${withdraw.amount} has been successfully processed via PayPal.\n\nPayment Details:\n- Amount: $${withdraw.amount}\n- PayPal Email: ${seller.paypalEmail}\n- Batch ID: ${payoutResult.batchId}\n- Status: ${payoutResult.status}\n\nThe money should appear in your PayPal account within a few minutes.\n\nThank you for being a valued seller!\n\nBest regards,\nWanttar Team`,
+            message: `Hello ${seller.name},\n\nGreat news! Your withdrawal request of $${withdraw.amount} has been successfully processed via PayPal.\n\nPayment Details:\n- Amount: $${withdraw.amount}\n- PayPal Email: ${seller.paypalEmail}\n- Batch ID: ${payoutResult.batchId}\n- Status: ${payoutResult.status}\n\nThe money should appear in your PayPal account within a few minutes.\n\nThank you for being a valued seller!\n\nBest regards,\nMallofCayman Team`,
           });
         } catch (emailError) {
           console.error('Failed to send payout success email:', emailError);

@@ -344,7 +344,7 @@ const AdminAdvertisements = () => {
   }));
 
   return (
-    <div className="w-full mx-2 sm:mx-4 800px:mx-8 pt-1 mt-4 sm:mt-10 bg-white rounded-lg shadow-md">
+    <div className="pt-1 mt-4 sm:mt-10 bg-white shadow-md">
       <div className="p-3 sm:p-6 border-b">
         <h2 className="text-lg sm:text-2xl font-bold text-gray-800">
           Advertisement Management
@@ -439,7 +439,7 @@ const AdminAdvertisements = () => {
       </div>
 
       {/* Data Grid */}
-      <div className="p-2 sm:p-6 overflow-x-auto">
+      <div className="p-2 sm:p-4 overflow-x-auto">
         <DataGrid
           rows={rows}
           columns={columns}

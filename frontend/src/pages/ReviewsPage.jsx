@@ -161,7 +161,7 @@ const ReviewsPage = () => {
           </h1>
           <p className="text-xl text-blue-100 max-w-2xl mx-auto mb-8">
             Discover what our customers are saying about their shopping
-            experience with Wanttar
+            experience with Mall of Cayman. Read honest reviews and ratings to help you make informed decisions on your next purchase. Your feedback helps us improve and serve you better!
           </p>
 
           {/* Stats */}

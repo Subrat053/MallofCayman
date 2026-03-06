@@ -174,8 +174,8 @@ orderSchema.pre('save', async function(next) {
       // Get the total count of existing orders
       const count = await this.constructor.countDocuments();
       
-      // Generate order number with format: wanttar-00001, wanttar-00002, etc.
-      this.orderNumber = `wanttar-${String(count + 1).padStart(5, '0')}`;
+      // Generate order number with format: mallofcayman-00001, mallofcayman-00002, etc.
+      this.orderNumber = `mallofcayman-${String(count + 1).padStart(5, '0')}`;
       
       next();
     } catch (error) {

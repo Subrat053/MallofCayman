@@ -474,12 +474,12 @@ const AdminDashboardOrders = () => {
       <AdminHeader activeMenuItem={2} />
       <div className="flex pt-20">
         {/* Sidebar - Fixed positioning for better responsiveness */}
-        <div className="hidden 800px:block w-64 fixed left-0 top-20 h-full z-10">
+        <div className="hidden 800px:block w-[310px] fixed left-0 top-16 h-[calc(100vh-4rem)] z-10">
           <AdminSideBar active={2} />
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 800px:ml-64 p-3 sm:p-4 800px:p-6">
+        <div className="flex-1 800px:ml-[310px] p-3 sm:p-4 800px:p-6">
           <div className="max-w-full">
             {/* Header */}
             <div className="mb-4 sm:mb-6">

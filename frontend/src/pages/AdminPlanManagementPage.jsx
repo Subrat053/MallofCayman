@@ -7,13 +7,13 @@ const AdminPlanManagementPage = () => {
   return (
     <div className="h-screen overflow-hidden bg-gray-50">
       <AdminHeader />
-      <div className="flex h-[calc(100vh-80px)] mt-[80px]">
+      <div className="flex mt-[80px]">
         {/* Sidebar - Fixed */}
-        <div className="hidden md:block w-[80px] 800px:w-[320px] fixed h-[calc(100vh-80px)] overflow-y-auto">
+        <div className="hidden md:block w-[80px] 800px:w-[310px] fixed h-[calc(100vh-80px)] overflow-y-auto">
           <AdminSideBar active={18} />
         </div>
         {/* Main Content - Scrollable */}
-        <div className="flex-1 h-full overflow-y-auto p-4 800px:p-6 ml-[320px]">
+        <div className="flex-1 ml-[310px]">
           <AdminPlanManagement />
         </div>
       </div>

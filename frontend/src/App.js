@@ -107,6 +107,9 @@ import CreateVideoBannerPage from "./pages/CreateVideoBannerPage";
 import PhonePeSuccessPage from "./pages/PhonePeSuccessPage";
 import PhonePeFailedPage from "./pages/PhonePeFailedPage";
 import PhonePeTestPayment from "./pages/PhonePeTestPayment";
+import StripeOrderSuccessPage from "./pages/StripeOrderSuccessPage";
+import SubscriptionStripeSuccessPage from "./pages/SubscriptionStripeSuccessPage";
+import StripeAdPaymentSuccessPage from "./pages/StripeAdPaymentSuccessPage";
 import SubscriptionPlansPage from "./pages/SubscriptionPlansPage";
 import CommissionDashboardPage from "./pages/CommissionDashboardPage";
 import InventoryAlertsPage from "./pages/InventoryAlertsPage";
@@ -153,27 +156,16 @@ import SMHomepageAdPricingPage from "./pages/StoreManager/SMHomepageAdPricingPag
 import { getAllProducts } from "./redux/actions/product";
 import { getAllEvents } from "./redux/actions/event";
 import { server } from "./server";
-import { Elements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
+
 import CustomerVideoCall from "./components/Customer/CustomerVideoCall";
 import SellerVideoCall from "./components/Shop/SellerVideoCall";
 import { SocketProvider } from "./contexts/SocketContext";
 
 const App = () => {
-  const [stripeApikey, setStripeApiKey] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
   
   // Initialize Google Translate
   useGoogleTranslate();
-
-  async function getStripeApikey() {
-    try {
-      const { data } = await axios.get(`${server}/payment/stripeapikey`);
-      setStripeApiKey(data.stripeApikey);
-    } catch (error) {
-      console.log("Error loading stripe key:", error);
-    }
-  }
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -187,7 +179,6 @@ const App = () => {
         // Load other data
         Store.dispatch(getAllProducts());
         Store.dispatch(getAllEvents());
-        getStripeApikey();
         
         setIsInitialized(true);
       } catch (error) {
@@ -217,25 +208,41 @@ const App = () => {
     <SocketProvider>
       <BrowserRouter>
         <BanModal />
-        {stripeApikey && (
-        <Elements stripe={loadStripe(stripeApikey)}>
-          <Routes>
-            <Route
-              path="/payment"
-              element={
-                <ProtectedRoute>
-                  <BanProtection>
-                    <PaymentPage />
-                  </BanProtection>
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </Elements>
-      )}
 
-      <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Routes>
+          <Route
+            path="/payment"
+            element={
+              <ProtectedRoute>
+                <BanProtection>
+                  <PaymentPage />
+                </BanProtection>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/stripe/order-success"
+            element={
+              <ProtectedRoute>
+                <BanProtection>
+                  <StripeOrderSuccessPage />
+                </BanProtection>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/seller/subscription-success-stripe"
+            element={
+              <SellerProtectedRoute>
+                <SubscriptionStripeSuccessPage />
+              </SellerProtectedRoute>
+            }
+          />
+          <Route
+            path="/stripe/ad-payment-success"
+            element={<StripeAdPaymentSuccessPage />}
+          />
+          <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/sign-up" element={<SignupPage />} />
         <Route path="/terms" element={<TermsOfServicePage />} />

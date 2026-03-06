@@ -37,7 +37,7 @@ const testOrderNumbers = async () => {
     });
     
     console.log('\n✅ Order numbering system test completed!');
-    console.log('\nNext orders will have sequential numbers like: wanttar-00001, wanttar-00002, etc.');
+    console.log('\nNext orders will have sequential numbers like: mallofcayman-00001, mallofcayman-00002, etc.');
     
   } catch (error) {
     console.error('❌ Test failed:', error);

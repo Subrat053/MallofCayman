@@ -9,11 +9,11 @@ const AdminCurrencySettingsPage = () => {
       <AdminHeader activeMenuItem={25} />
       <div className="flex pt-20">
         {/* Sidebar */}
-        <div className="lg:w-[300px] min-h-screen bg-white shadow-sm border-r border-gray-200 hidden 800px:block sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
+        <div className="lg:w-[310px] fixed left-0 top-16 h-[calc(100vh-4rem)] z-10">
           <AdminSideBar active={25} />
         </div>
         {/* Main Content */}
-        <div className="flex-1 p-6 ml-[290px]">
+        <div className="flex-1 lg:ml-[310px]">
           <AdminCurrencySettings />
         </div>
       </div>

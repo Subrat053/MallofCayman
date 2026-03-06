@@ -11,7 +11,7 @@ dotenv.config({
 // Manager user configuration
 const managerUser = {
   name: "Manager User",
-  email: "manager@wanttar.in",
+  email: "manager@mallofcayman.com",
   password: "Manager@123",
   role: "Manager",
   phoneNumber: 9876543211,
@@ -75,7 +75,7 @@ const seedManager = async () => {
     
     console.log("\n📋 Manager Login Credentials:");
     console.log("─".repeat(40));
-    console.log("   Email:    manager@wanttar.in");
+    console.log("   Email:    manager@mallofcayman.com");
     console.log("   Password: Manager@123");
     console.log("─".repeat(40));
     

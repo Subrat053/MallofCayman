@@ -526,7 +526,7 @@ const AdminSiteSettings = () => {
                 onChange={(e) =>
                   handleInputChange("branding", "siteTitle", e.target.value)
                 }
-                placeholder="e.g., Wanttar"
+                placeholder="e.g., Mall of Cayman"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -1026,7 +1026,7 @@ const AdminSiteSettings = () => {
                 onChange={(e) =>
                   handleInputChange("footerAddress", "email", e.target.value)
                 }
-                placeholder="e.g., support@wanttar.in"
+                placeholder="e.g., support@mallofcayman.com"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -1117,7 +1117,7 @@ const AdminSiteSettings = () => {
                 onChange={(e) =>
                   handleInputChange("companyInfo", "name", e.target.value)
                 }
-                placeholder="e.g., Wanttar"
+                placeholder="e.g., Mall of Cayman"
               />
             </Grid>
             <Grid item xs={12} sm={8}>
@@ -1149,7 +1149,7 @@ const AdminSiteSettings = () => {
                 onChange={(e) =>
                   handleInputChange("companyInfo", "website", e.target.value)
                 }
-                placeholder="e.g., https://www.wanttar.in"
+                placeholder="e.g., https://www.mallofcayman.com"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">

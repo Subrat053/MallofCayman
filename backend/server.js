@@ -44,6 +44,36 @@ if (!fs.existsSync(uploadsDir)) {
   console.log('Uploads directory created:', uploadsDir);
 }
 
+// ── Stripe webhook – raw body required, MUST be before express.json() ──
+app.post('/api/v2/payment/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  let event;
+  try {
+    if (webhookSecret && sig && process.env.STRIPE_SECRET_KEY) {
+      const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    } else {
+      // Dev/test: parse without signature verification
+      event = JSON.parse(req.body.toString());
+    }
+  } catch (err) {
+    console.error('Stripe webhook signature error:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+  switch (event.type) {
+    case 'checkout.session.completed':
+      console.log('Stripe checkout.session.completed:', event.data.object.id);
+      break;
+    case 'payment_intent.payment_failed':
+      console.log('Stripe payment_intent.payment_failed:', event.data.object.id);
+      break;
+    default:
+      break;
+  }
+  res.status(200).json({ received: true });
+});
+
 // middlewares
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));

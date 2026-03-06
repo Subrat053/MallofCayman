@@ -157,7 +157,7 @@ const RefundPolicyPage = () => {
             <strong>Effective Date:</strong> 20.09.2025
           </p>
           <p style="font-size: 18px; color: #374151; margin-bottom: 24px;">
-            At Wanttar, customer satisfaction is important.
+            At Mall of Cayman, customer satisfaction is important.
           </p>
         </div>
 
@@ -205,7 +205,7 @@ const RefundPolicyPage = () => {
           <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px;">
             <p style="color: #374151;">Business: Manohar Enterprises</p>
             <p style="color: #374151;">📞 +91 7349727270</p>
-            <p style="color: #374151;">📧 support@wanttar.in</p>
+            <p style="color: #374151;">📧 support@mallofcayman.com</p>
             <p style="color: #374151;">
               Address: 5-25 , 15th main road,3rd stage,4th block,
               Basaveswaranagar,near Guru sagar hotel, Bangalore 560079
@@ -215,7 +215,7 @@ const RefundPolicyPage = () => {
       </div>
     `,
     metaDescription:
-      "Return & Refund Policy for Wanttar - Multi-vendor E-commerce Platform",
+      "Return & Refund Policy for Mall of Cayman - Multi-vendor E-commerce Platform",
   };
 
   if (loading) {

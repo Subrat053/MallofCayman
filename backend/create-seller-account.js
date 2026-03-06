@@ -59,7 +59,7 @@ const createSellerAccount = async () => {
 
     // Create seller account
     const newShop = await Shop.create({
-      name: "Test Shop",
+      name: "MRX Shop",
       email: sellerEmail,
       password: hashedPassword,
       phoneNumber: "1234567890",
@@ -70,7 +70,7 @@ const createSellerAccount = async () => {
         url: "https://via.placeholder.com/150",
       },
       paypalEmail: sellerEmail, // Required for payments
-      accountHolderName: "Subhankar Dash",
+      accountHolderName: "Subrat Hota",
       accountNumber: "1234567890",
       bankName: "Test Bank",
       ifscCode: "TEST0001234",

@@ -15,6 +15,7 @@ const SMHomepageAdPayment = () => {
   const [ad, setAd] = useState(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [stripeLoading, setStripeLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("paypal");
 
   useEffect(() => {
@@ -75,6 +76,26 @@ const SMHomepageAdPayment = () => {
       toast.error(error.response?.data?.message || "Payment failed");
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const handleStripePayment = async () => {
+    try {
+      setStripeLoading(true);
+      const { data } = await axios.post(
+        `${server}/advertisement/stripe/create-ad-payment-session`,
+        {
+          advertisementId: id,
+          returnPath: "/store-manager/homepage-ads",
+        },
+        { withCredentials: true },
+      );
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to initiate Stripe payment");
+      setStripeLoading(false);
     }
   };
 
@@ -243,16 +264,39 @@ const SMHomepageAdPayment = () => {
                       <span className="font-medium">PayPal</span>
                     </span>
                   </label>
+
+                  <label
+                    className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition-colors ${
+                      paymentMethod === "stripe"
+                        ? "border-indigo-500 bg-indigo-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="stripe"
+                      checked={paymentMethod === "stripe"}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="w-4 h-4 text-indigo-600"
+                    />
+                    <span className="ml-3 flex items-center gap-2">
+                      <svg className="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                      <span className="font-medium">Card (Stripe)</span>
+                    </span>
+                  </label>
                 </div>
               </div>
 
               {/* Pay Button */}
               <button
-                onClick={handlePayment}
-                disabled={processing}
+                onClick={paymentMethod === "stripe" ? handleStripePayment : handlePayment}
+                disabled={processing || stripeLoading}
                 className="w-full py-3 px-6 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
-                {processing ? (
+                {(processing || stripeLoading) ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                     Processing...

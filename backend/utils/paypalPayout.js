@@ -58,7 +58,7 @@ const createPayPalPayout = async (payoutData) => {
     const payoutRequest = {
       sender_batch_header: {
         sender_batch_id: senderBatchId,
-        email_subject: 'You have received a payment from Wanttar',
+        email_subject: 'You have received a payment from Mall of Cayman',
         email_message: note || 'Congratulations! You have received a withdrawal payment.',
       },
       items: [

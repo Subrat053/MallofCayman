@@ -16,7 +16,7 @@
 
 ## 🚀 Project Overview
 
-**Wanttar** is a comprehensive multi-vendor e-commerce platform designed to facilitate online marketplace operations with support for multiple sellers, customers, and administrative management. The platform provides a complete solution for modern e-commerce needs with advanced features like real-time tracking, dynamic pricing, and AI-powered assistance.
+**Mall of Cayman** is a comprehensive multi-vendor e-commerce platform designed to facilitate online marketplace operations with support for multiple sellers, customers, and administrative management. The platform provides a complete solution for modern e-commerce needs with advanced features like real-time tracking, dynamic pricing, and AI-powered assistance.
 
 ### Key Highlights
 - **Multi-vendor Architecture**: Support for multiple sellers with individual dashboards
@@ -838,9 +838,9 @@ npm run test:coverage
 - **DevOps Team**: Infrastructure management
 
 ### Contact Information
-- **Email**: support@wanttar.in
+- **Email**: support@mallofcayman.com
 - **Phone**: +91-XXXXXXXXXX
-- **Website**: https://www.wanttar.in
+- **Website**: https://www.mallofcayman.com
 
 ### Issue Reporting
 For bug reports and feature requests, please use the GitHub issues section or contact the development team directly.

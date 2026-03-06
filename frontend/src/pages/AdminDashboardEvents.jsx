@@ -14,7 +14,7 @@ const AdminDashboardEvents = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 800px:ml-[290px] p-4 800px:p-6">
+        <div className="flex-1 800px:ml-[310px] ">
           <div className="max-w-full">
             <div className="mb-6">
               <h1 className="text-2xl 800px:text-3xl font-bold text-gray-900 mb-2">

@@ -39,7 +39,7 @@ async function testOrderNumbering() {
     console.log(`📅 Created At: ${testOrder.createdAt}`);
     
     // Verify format
-    if (testOrder.orderNumber && testOrder.orderNumber.startsWith('wanttar-')) {
+    if (testOrder.orderNumber && testOrder.orderNumber.startsWith('mallofcayman-')) {
       console.log('✅ Order number format is correct!');
       
       // Extract the numeric part
@@ -49,7 +49,7 @@ async function testOrderNumbering() {
       if (numericPart === expectedNumber) {
         console.log('✅ Order numbering sequence is correct!');
       } else {
-        console.log(`❌ Expected: wanttar-${expectedNumber}, Got: ${testOrder.orderNumber}`);
+        console.log(`❌ Expected: mallofcayman-${expectedNumber}, Got: ${testOrder.orderNumber}`);
       }
     } else {
       console.log('❌ Order number format is incorrect!');

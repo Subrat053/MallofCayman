@@ -397,7 +397,7 @@ const generateInvoiceHTML = async (order, shop) => {
                 <img src="${logoBase64}" alt="Company Logo" />
             </div>` : ''}
             <div class="company-info">
-                <div class="company-name">Sold By: ${safeGet(shop, 'name') || 'WantTar Platform'}</div>
+                <div class="company-name">Sold By: ${safeGet(shop, 'name') || 'Mall of Cayman'}</div>
                 <div class="company-details">
                     <strong>Ship-from Address:</strong> ${safeGet(shop, 'address')}<br>
                     Email: ${safeGet(shop, 'email')}<br>
@@ -774,7 +774,7 @@ const generateInvoiceHTML = async (order, shop) => {
         </div>
         
         <div class="company-footer">
-            ${safeGet(shop, 'name') || 'WantTar E-Commerce Platform'}
+            ${safeGet(shop, 'name') || 'Mall of Cayman, E-Commerce Platform'}
         </div>
     </div>
 </body>

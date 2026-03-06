@@ -11,7 +11,7 @@ dotenv.config({
 // SubAdmin user configuration
 const subAdminUser = {
   name: "SubAdmin User",
-  email: "subadmin@wanttar.in",
+  email: "subadmin@mallofcayman.com",
   password: "SubAdmin@123",
   role: "SubAdmin",
   phoneNumber: 9876543212,
@@ -75,7 +75,7 @@ const seedSubAdmin = async () => {
     
     console.log("\n📋 SubAdmin Login Credentials:");
     console.log("─".repeat(40));
-    console.log("   Email:    subadmin@wanttar.in");
+    console.log("   Email:    subadmin@mallofcayman.com");
     console.log("   Password: SubAdmin@123");
     console.log("─".repeat(40));
     

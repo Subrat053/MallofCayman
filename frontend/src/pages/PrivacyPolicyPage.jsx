@@ -160,7 +160,7 @@ const PrivacyPolicyPage = () => {
             <strong>Last Updated:</strong> 20.09.2025
           </p>
           <p style="font-size: 18px; color: #374151; margin-bottom: 24px;">
-            Wanttar values your privacy. This Privacy Policy explains how
+            Mall of Cayman values your privacy. This Privacy Policy explains how
             we collect, use, and protect your personal information.
           </p>
         </div>
@@ -212,7 +212,7 @@ const PrivacyPolicyPage = () => {
           <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px;">
             <p style="color: #374151;">Business: Manohar Enterprises</p>
             <p style="color: #374151;">📞 +91 7349727270</p>
-            <p style="color: #374151;">📧 support@wanttar.in</p>
+            <p style="color: #374151;">📧 support@mallofcayman.com</p>
             <p style="color: #374151;">
               Address: 5-25 , 15th main road,3rd stage,4th block,
               Basaveswaranagar,near Guru sagar hotel, Bangalore 560079
@@ -222,7 +222,7 @@ const PrivacyPolicyPage = () => {
       </div>
     `,
     metaDescription:
-      "Privacy Policy for Wanttar - Multi-vendor E-commerce Platform",
+      "Privacy Policy for Mall of Cayman - Multi-vendor E-commerce Platform",
   };
 
   if (loading) {

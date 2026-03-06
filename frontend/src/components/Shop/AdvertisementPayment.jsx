@@ -137,6 +137,7 @@ const AdvertisementPayment = () => {
   const [advertisement, setAdvertisement] = useState(null);
   const [loading, setLoading] = useState(true);
   const [hasAdPreApproval, setHasAdPreApproval] = useState(false);
+  const [stripeLoading, setStripeLoading] = useState(false);
 
   useEffect(() => {
     fetchAdvertisement();
@@ -186,6 +187,28 @@ const AdvertisementPayment = () => {
     setTimeout(() => {
       navigate("/dashboard-advertisements");
     }, 2000);
+  };
+
+  const handleStripePayment = async () => {
+    setStripeLoading(true);
+    try {
+      const { data } = await axios.post(
+        `${server}/advertisement/stripe/create-ad-payment-session`,
+        {
+          advertisementId,
+          returnPath: "/dashboard-advertisements",
+        },
+        { withCredentials: true }
+      );
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to initiate Stripe payment"
+      );
+      setStripeLoading(false);
+    }
   };
 
   if (loading) {
@@ -343,6 +366,43 @@ const AdvertisementPayment = () => {
                     onPaymentSuccess={handlePaymentSuccess}
                     hasAdPreApproval={hasAdPreApproval}
                   />
+                </div>
+
+                {/* Divider */}
+                <div className="flex items-center gap-3 my-2">
+                  <div className="flex-1 border-t border-gray-200"></div>
+                  <span className="text-sm text-gray-400 font-medium">OR</span>
+                  <div className="flex-1 border-t border-gray-200"></div>
+                </div>
+
+                {/* Stripe Payment */}
+                <div className="bg-white border-2 border-indigo-200 rounded-xl p-6">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                    Pay with Card (Stripe)
+                  </h3>
+                  <div className="mb-4 p-4 bg-indigo-50 rounded-lg">
+                    <p className="text-sm text-indigo-800">
+                      Pay <strong>${advertisement.totalPrice?.toFixed(2)}</strong> securely
+                      using your credit or debit card via Stripe.
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleStripePayment}
+                    disabled={stripeLoading}
+                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+                  >
+                    {stripeLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        Redirecting...
+                      </>
+                    ) : (
+                      "Pay with Card"
+                    )}
+                  </button>
                 </div>
 
                 {/* Security Notice */}

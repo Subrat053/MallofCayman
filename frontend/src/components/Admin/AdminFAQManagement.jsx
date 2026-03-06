@@ -370,7 +370,7 @@ const AdminFAQManagement = () => {
         container
         spacing={1}
         style={{ marginBottom: "12px" }}
-        className="sm:!gap-2 sm:!mb-5"
+        className="sm:!gap-1 sm:!mb-5"
       >
         <Grid item xs={6} sm={6} md={3}>
           <Card
@@ -539,7 +539,7 @@ const AdminFAQManagement = () => {
           border: "1px solid #e5e7eb",
           overflow: "hidden",
         }}
-        className="sm:!rounded-2xl sm:!mb-8"
+        className="sm:!rounded-xl sm:!mb-8"
       >
         <Box
           style={{

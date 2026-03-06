@@ -1,7 +1,7 @@
 // Helper function to get order number for display
 export const getOrderNumber = (order) => {
   if (order?.orderNumber) {
-    return order.orderNumber; // Return formatted number like "wanttar-00001"
+    return order.orderNumber; // Return formatted number like "mallofcayman-00001"
   }
   
   // Fallback for existing orders without orderNumber field

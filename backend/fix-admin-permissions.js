@@ -24,8 +24,8 @@ const fixAdminPermissions = async () => {
     console.log("   Removed explicit permissions to use role-based defaults");
 
     // Verify the changes
-    const subAdmin = await User.findOne({ email: "subadmin@wanttar.in" });
-    const manager = await User.findOne({ email: "manager@wanttar.in" });
+    const subAdmin = await User.findOne({ email: "subadmin@mallofcayman.com" });
+    const manager = await User.findOne({ email: "manager@mallofcayman.com" });
 
     console.log("\n📋 Verification:");
     console.log("\nSubAdmin User:");

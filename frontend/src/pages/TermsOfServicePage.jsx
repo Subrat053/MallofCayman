@@ -93,8 +93,8 @@ const TermsOfServicePage = () => {
             <strong>Last Updated:</strong> 20.09.2025
           </p>
           <p style="font-size: 18px; color: #374151; margin-bottom: 24px;">
-            Welcome to Wanttar ("Website" and "App"), operated by Wanttar.
-            By accessing or using www.wanttar.in
+            Welcome to Mall of Cayman ("Website" and "App"), operated by Mall of Cayman.
+            By accessing or using www.mallofcayman.com
           </p>
         </div>
 
@@ -134,12 +134,12 @@ const TermsOfServicePage = () => {
             3. Multivendor Marketplace
           </h2>
           <ul style="list-style-type: disc; margin-left: 20px; color: #4b5563; margin-bottom: 16px; line-height: 1.6;">
-            <li style="margin-bottom: 8px;">Wanttar is a platform connecting buyers and sellers.</li>
+            <li style="margin-bottom: 8px;">Mall of Cayman is a platform connecting buyers and sellers.</li>
             <li style="margin-bottom: 8px;">
               We are not the manufacturer of products; vendors are responsible for product quality, warranty, and compliance.
             </li>
             <li style="margin-bottom: 8px;">
-              Any disputes must be resolved between buyer and vendor, though Wanttar may assist in mediation.
+              Any disputes must be resolved between buyer and vendor, though Mall of Cayman may assist in mediation.
             </li>
           </ul>
         </section>
@@ -151,7 +151,7 @@ const TermsOfServicePage = () => {
           <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px;">
             <p style="color: #374151;">Business: Manohar Enterprises</p>
             <p style="color: #374151;">📞 +91 7349727270</p>
-            <p style="color: #374151;">📧 support@wanttar.in</p>
+            <p style="color: #374151;">📧 support@mallofcayman.com</p>
             <p style="color: #374151;">
               Address: 5-25 , 15th main road,3rd stage,4th block,
               Basaveswaranagar,near Guru sagar hotel, Bangalore 560079
@@ -161,7 +161,7 @@ const TermsOfServicePage = () => {
       </div>
     `,
     metaDescription:
-      "Terms of Service for Wanttar - Multi-vendor E-commerce Platform",
+      "Terms of Service for Mall of Cayman - Multi-vendor E-commerce Platform",
   };
 
   if (loading) {

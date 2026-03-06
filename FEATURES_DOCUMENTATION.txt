@@ -1,0 +1,142 @@
+Mall of Cayman - Feature Documentation
+====================================
+
+User Roles
+----------
+- Admin: Platform owner/staff with full access.
+- Seller (Vendor): Shop owners who sell products.
+- Customer/User: Shoppers/buyers.
+- Store Manager: Manages a seller’s shop (optional, paid service).
+
+1. User Management
+------------------
+| Feature                      | Used By         | Description |
+|------------------------------|-----------------|-------------|
+| User Registration/Login      | Customer        | Sign up, activate via email, login/logout, password reset. |
+| Seller Registration/Login    | Seller          | Register shop, upload trade license, activate via email, login/logout, password reset. |
+| Admin User Management        | Admin           | Create, edit, delete users (Admin, SubAdmin, Manager, Seller, Customer). |
+| Role Assignment/Change       | Admin           | Change user roles, promote/demote users, assign permissions. |
+| Ban/Unban Users              | Admin           | Temporarily disable user accounts. |
+| Profile Management           | All             | Update profile info, avatar, addresses, password. |
+| Store Manager Service        | Seller, Manager | Sellers can request a store manager; managers can be assigned to shops. |
+
+2. Product Management
+----------------------
+| Feature                      | Used By         | Description |
+|------------------------------|-----------------|-------------|
+| Product Creation/Editing     | Seller, Manager, Admin | Add/edit products, upload images/videos, set attributes, manage inventory. |
+| Product Approval Workflow    | Admin           | Approve/reject seller products before they go live. |
+| Product Deletion             | Seller, Manager, Admin | Remove products from shop/platform. |
+| Product Reviews              | Customer        | Leave reviews/ratings for purchased products. |
+| Product Search & Listing     | All             | Browse/search products, filter by category, shop, etc. |
+| Product Variations           | Seller, Manager | Add size, color, and other variations. |
+
+3. Shop & Seller Management
+---------------------------
+| Feature                      | Used By         | Description |
+|------------------------------|-----------------|-------------|
+| Shop Creation/Activation     | Seller          | Register shop, upload documents, activate via email. |
+| Shop Approval Workflow       | Admin           | Approve/reject new shops, manage seller status. |
+| Shop Profile Management      | Seller, Manager | Update shop info, avatar, address, payment methods. |
+| Shop Deletion                | Admin           | Remove shops and all associated data. |
+| Shop Listing                 | All             | View all approved shops, featured stores, shop details. |
+| Store Manager Dashboard      | Manager         | Manage assigned shop’s products, orders, ads, etc. |
+
+4. Order Management
+--------------------
+| Feature                      | Used By         | Description |
+|------------------------------|-----------------|-------------|
+| Place Order                  | Customer        | Add to cart, checkout, select shipping/payment, place order. |
+| Order Tracking               | Customer        | View order status, track delivery, download invoice. |
+| Order Management             | Seller, Manager | View/manage orders, update status, process refunds, print/download invoices. |
+| Order Management             | Admin           | View all orders, manage disputes, process refunds. |
+| Refund Requests              | Customer, Seller| Request/approve refunds, manage refund workflow. |
+
+5. Payment & Withdrawal
+------------------------
+| Feature                      | Used By         | Description |
+|------------------------------|-----------------|-------------|
+| Multiple Payment Methods      | Customer        | PayPal, COD, Stripe, PhonePe, etc. |
+| Seller Withdrawals            | Seller          | Request withdrawal of earnings (bank, UPI, PayPal). |
+| Withdrawal Approval           | Admin           | Approve/reject withdrawals, process payouts (PhonePe, PayPal). |
+| Commission System             | Seller, Admin   | Platform takes commission on sales, revenue share plans. |
+
+6. Subscription & Plans
+------------------------
+| Feature                      | Used By         | Description |
+|------------------------------|-----------------|-------------|
+| Subscription Plans            | Seller          | Bronze, Silver, Gold, Revenue Share; manage plan, billing, features. |
+| Plan Management               | Admin           | Create/edit/delete plans, manage seller subscriptions. |
+| Subscription Payment          | Seller          | Pay for plans via PayPal, manage billing cycle, discounts. |
+
+7. Advertising & Promotion
+---------------------------
+| Feature                      | Used By         | Description |
+|------------------------------|-----------------|-------------|
+| Banner Ads                   | Seller, Manager | Purchase banner ad slots (leaderboard, sidebar, etc.), upload images, set duration. |
+| Featured Store/Product        | Seller, Manager | Promote store/product on homepage/spotlight. |
+| Ad Approval Workflow          | Admin           | Approve/reject ads, manage ad slots, process refunds. |
+| Ad Analytics                  | Seller, Manager | View ad performance (views, clicks, CTR). |
+| Newsletter/Editorial Ads      | Seller, Manager | Purchase newsletter or editorial write-up promotions. |
+
+8. Video Call System
+---------------------
+| Feature                      | Used By         | Description |
+|------------------------------|-----------------|-------------|
+| Video Call Initiation         | Seller, Customer| Start video calls for support, order issues, or general inquiry. |
+| Video Call Management         | Seller, Customer| Accept/decline/end calls, view call history, analytics. |
+| Video Call Scheduling         | Seller, Customer| Schedule calls for later, manage upcoming calls. |
+| Call Analytics                | Seller, Admin   | Track call quality, duration, and statistics. |
+
+9. Content & Communication
+---------------------------
+| Feature                      | Used By         | Description |
+|------------------------------|-----------------|-------------|
+| Blog/News System             | Admin           | Create/edit/delete blog posts, manage content. |
+| Blog/News Viewing            | All             | Read blog posts, news, and updates. |
+| FAQ, Legal, Policy Pages     | All             | View platform policies, terms, privacy, refund, shipping, etc. |
+| Real-time Messaging          | Seller, Customer| Chat between sellers and customers, order-related communication. |
+| Notifications                | All             | Receive system, order, and promotional notifications. |
+
+10. Admin Dashboard
+--------------------
+| Feature                      | Used By         | Description |
+|------------------------------|-----------------|-------------|
+| Analytics Dashboard          | Admin           | View platform stats, sales, user activity, etc. |
+| User/Seller Management       | Admin           | Approve/reject, ban/unban, edit/delete users and sellers. |
+| Order/Product/Event Management| Admin          | Oversee all orders, products, events, and refunds. |
+| Content Management           | Admin           | Manage banners, categories, legal pages, email templates, etc. |
+| Staff Management             | Admin           | Create/edit/delete sub-admins, managers, assign permissions. |
+| Commission/Subscription Management| Admin      | Oversee commissions, subscriptions, and plan settings. |
+
+11. Store Manager Features
+---------------------------
+| Feature                      | Used By         | Description |
+|------------------------------|-----------------|-------------|
+| Product Management           | Store Manager   | Add/edit/delete products for assigned shop. |
+| Order Management             | Store Manager   | View/manage orders, update status, process refunds. |
+| Ad Management                | Store Manager   | Purchase/manage ads for assigned shop. |
+| Inventory Management         | Store Manager   | Track and update inventory for assigned shop. |
+
+12. Frontend Page Mapping (Key Routes)
+---------------------------------------
+- Customer/User: Home, Products, Product Details, Cart, Checkout, Orders, Profile, Inbox, Video Calls, Blog, FAQ, Policies, Contact.
+- Seller: Shop Dashboard, Product/Event/Order/Refund/Ad Management, Settings, Video Calls, Store Manager, Subscription, Analytics.
+- Admin: Admin Dashboard, Users, Sellers, Orders, Products, Events, Withdrawals, Banners, Categories, Staff, Analytics, Subscriptions, Reviews, Ads, Plans, Legal, FAQ, Site Settings.
+- Store Manager: Dashboard, Products, Orders, Ads, Inventory, Analytics for assigned shop.
+
+13. Key Workflow Examples
+-------------------------
+- Seller Onboarding: Register shop → Upload documents → Email activation → Admin approval → Access dashboard.
+- Product Lifecycle: Seller/Manager creates product → Admin approves → Product visible to customers.
+- Order Flow: Customer places order → Seller/Manager processes → Status updates → Delivery/refund as needed.
+- Ad Purchase: Seller/Manager selects ad type/slot → Uploads creative → Pays (if required) → Admin approval → Ad goes live.
+- Subscription: Seller selects plan → Pays via PayPal → Features unlocked as per plan.
+
+14. References
+---------------
+- See PROJECT_OVERVIEW.md, VENDOR_BUSINESS_MODEL.md, SELLER_APPROVAL_SYSTEM.md, ADVERTISING_SYSTEM.md, VIDEO_CALL_IMPLEMENTATION.md for more details.
+- Backend: See controllers in backend/controller/ for API endpoints and logic.
+- Frontend: See route files in frontend/src/routes/ for page/component mapping.
+
+This documentation provides a full overview of all major features, their user mappings, and the workflow for each role in the system. If you need a more detailed breakdown of any specific feature or API, let me know!

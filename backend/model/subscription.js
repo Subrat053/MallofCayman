@@ -70,6 +70,9 @@ const subscriptionSchema = new mongoose.Schema({
   paypalSubscriptionId: {
     type: String,
   },
+  stripeSessionId: {
+    type: String,
+  },
   lastPaymentDate: {
     type: Date,
   },

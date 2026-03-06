@@ -55,7 +55,7 @@ export const generateInvoice = async (order) => {
         doc.setTextColor(...primaryGreen);
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
-        doc.text('WANTTAR', 25, 28);
+        doc.text('MALL OF CAYMAN', 25, 28);
         doc.setFontSize(8);
         doc.text('E-COMMERCE', 25, 37);
       }
@@ -67,7 +67,7 @@ export const generateInvoice = async (order) => {
       doc.setTextColor(...primaryGreen);
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.text('WANTTAR', 25, 28);
+      doc.text('MALL OF CAYMAN', 25, 28);
       doc.setFontSize(8);
       doc.text('E-COMMERCE', 25, 37);
     }
@@ -76,7 +76,7 @@ export const generateInvoice = async (order) => {
     doc.setTextColor(...white);
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
-    doc.text('WANTTAR', 75, 25);
+    doc.text('MALL OF CAYMAN', 75, 25);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
     doc.text('Multi-Vendor E-commerce Platform', 75, 35);
@@ -105,7 +105,7 @@ export const generateInvoice = async (order) => {
     
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.text('Wanttar E-commerce', 20, detailsY + 12);
+    doc.text('Mall of Cayman', 20, detailsY + 12);
     
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
@@ -413,7 +413,7 @@ export const generateInvoice = async (order) => {
     doc.setTextColor(...primaryGreen);
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('THANK YOU FOR SHOPPING WITH WANTTAR!', 20, termsY + 45);
+    doc.text('THANK YOU FOR SHOPPING WITH MALL OF CAYMAN!', 20, termsY + 45);
     
     // Footer with contact info
     const footerY = pageHeight - 30;

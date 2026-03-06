@@ -198,7 +198,7 @@ const ShippingPolicyPage = () => {
           </h2>
           <ul style="list-style-type: disc; margin-left: 20px; color: #4b5563; margin-bottom: 16px; line-height: 1.6;">
             <li style="margin-bottom: 8px;">
-              Wanttar is not responsible for courier delays due to natural
+              Mall of Cayman is not responsible for courier delays due to natural
               disasters, strikes, or unforeseen issues.
             </li>
           </ul>
@@ -211,7 +211,7 @@ const ShippingPolicyPage = () => {
           <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px;">
             <p style="color: #374151;">Business: Manohar Enterprises</p>
             <p style="color: #374151;">📞 +91 7349727270</p>
-            <p style="color: #374151;">📧 support@wanttar.in</p>
+            <p style="color: #374151;">📧 support@mallofcayman.com</p>
             <p style="color: #374151;">
               Address: 5-25 , 15th main road,3rd stage,4th block,
               Basaveswaranagar,near Guru sagar hotel, Bangalore 560079
@@ -221,7 +221,7 @@ const ShippingPolicyPage = () => {
       </div>
     `,
     metaDescription:
-      "Shipping & Delivery Policy for Wanttar - Multi-vendor E-commerce Platform",
+      "Shipping & Delivery Policy for Mall of Cayman - Multi-vendor E-commerce Platform",
   };
 
   if (loading) {

@@ -132,6 +132,34 @@ const SubscriptionPlans = ({ isPublic = false }) => {
     }
   };
 
+  const handleStripeSubscribe = async (plan) => {
+    if (!isSeller) {
+      toast.info("Please login as a seller to subscribe");
+      navigate("/shop-login", { state: { redirectTo: "/shop/subscriptions" } });
+      return;
+    }
+
+    setSelectedPlan(plan);
+    setProcessingPayment(true);
+
+    try {
+      const { data } = await axios.post(
+        `${server}/subscription/stripe/create-subscription-payment`,
+        { plan, billingCycle },
+        { withCredentials: true }
+      );
+
+      if (data.success && data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to create Stripe subscription"
+      );
+      setProcessingPayment(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px] bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -296,6 +324,7 @@ const SubscriptionPlans = ({ isPublic = false }) => {
                 pricing={calculatePrice(planKey)}
                 billingCycle={billingCycle}
                 onSubscribe={handleSubscribe}
+                onStripeSubscribe={handleStripeSubscribe}
                 isProcessing={processingPayment && selectedPlan === planKey}
                 isCurrent={currentSubscription?.plan === planKey}
                 recommended={planKey === "silver"}
@@ -337,6 +366,7 @@ const PlanCard = ({
   pricing,
   billingCycle,
   onSubscribe,
+  onStripeSubscribe,
   isProcessing,
   isCurrent,
   recommended = false,
@@ -526,6 +556,31 @@ const PlanCard = ({
               )}
             </span>
           </button>
+
+          {/* Stripe payment button — only shown when not current plan */}
+          {!isCurrent && (
+            <>
+              <div className="flex items-center gap-2 my-2">
+                <div className="flex-1 border-t border-slate-200/50"></div>
+                <span className="text-xs text-slate-400 font-medium">OR</span>
+                <div className="flex-1 border-t border-slate-200/50"></div>
+              </div>
+              <button
+                onClick={() => onStripeSubscribe(plan)}
+                disabled={isProcessing}
+                className="w-full py-3 rounded-2xl text-sm font-bold bg-white border-2 border-indigo-300 text-indigo-600 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                {isProcessing ? (
+                  <AiOutlineLoading3Quarters className="animate-spin w-4 h-4" />
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                )}
+                Pay with Card (Stripe)
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

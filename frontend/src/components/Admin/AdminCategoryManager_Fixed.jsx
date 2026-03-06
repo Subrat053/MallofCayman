@@ -105,7 +105,7 @@ const AdminCategoryManager = () => {
   }
 
   return (
-    <div className="w-full p-6">
+    <div className="w-full p-2 lg:p-4">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
