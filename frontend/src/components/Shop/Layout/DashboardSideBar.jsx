@@ -616,8 +616,8 @@ const DashboardSideBar = ({ active }) => {
     <>
       {/* Desktop Sidebar */}
       <div
-        className={`hidden lg:flex flex-col fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white/95 backdrop-blur-md border-r border-gray-200/80 shadow-xl transition-all duration-300 z-20 overflow-hidden ${
-          isCollapsed ? "w-20" : "w-64"
+        className={`hidden lg:flex flex-col fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white/95 backdrop-blur-md border-r border-gray-200/80 shadow-xl transition-all duration-300 z-10 overflow-hidden ${
+          isCollapsed ? "w-20" : "w-[300px]"
         }`}
       >
         <SidebarContent />
