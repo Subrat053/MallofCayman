@@ -1,21 +1,15 @@
 import React from "react";
-import DashboardHeader from "../../components/Shop/Layout/DashboardHeader";
-import DashboardSideBar from "../../components/Shop/Layout/DashboardSideBar";
+import ShopDashboardLayout from "../../components/Shop/Layout/ShopDashboardLayout";
 import EditVideoBanner from "../../components/Shop/EditVideoBanner";
 
 const DashboardEditVideoBannerPage = () => {
   return (
-    <div>
-      <DashboardHeader />
-      <div className="flex items-start justify-between w-full">
-        <div className="">
-          <DashboardSideBar active={12} />
-        </div>
+    <ShopDashboardLayout active={9}>
+      <div className="p-3 sm:p-4 lg:p-6">
         <EditVideoBanner />
       </div>
-    </div>
+    </ShopDashboardLayout>
   );
 };
 
 export default DashboardEditVideoBannerPage;
-

@@ -1,27 +1,15 @@
 import React from "react";
-import DashboardHeader from "../../components/Shop/Layout/DashboardHeader";
-import DashboardSideBar from "../../components/Shop/Layout/DashboardSideBar";
+import ShopDashboardLayout from "../../components/Shop/Layout/ShopDashboardLayout";
 import EditProduct from "../../components/Shop/EditProduct";
 
 const ShopEditProductPage = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <DashboardHeader />
-      <div className="flex items-center justify-between w-full">
-        <div className="">
-          <DashboardSideBar active={4} />
-        </div>
-        <div className="w-full justify-center flex mobile-content-padding">
-          <EditProduct />
-        </div>
+    <ShopDashboardLayout active={4}>
+      <div className="p-3 sm:p-4 lg:p-6">
+        <EditProduct />
       </div>
-      {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden">
-        <DashboardSideBar active={4} />
-      </div>
-    </div>
+    </ShopDashboardLayout>
   );
 };
 
 export default ShopEditProductPage;
-

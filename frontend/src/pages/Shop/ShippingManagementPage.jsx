@@ -1,27 +1,15 @@
 import React from "react";
+import ShopDashboardLayout from "../../components/Shop/Layout/ShopDashboardLayout";
 import ShippingManagement from "../../components/Shop/ShippingManagement";
-import DashboardHeader from "../../components/Shop/Layout/DashboardHeader";
-import DashboardSideBar from "../../components/Shop/Layout/DashboardSideBar";
 
 const ShippingManagementPage = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <DashboardHeader />
-      <div className="flex items-start justify-between w-full">
-        <div className="">
-          <DashboardSideBar active={11} />
-        </div>
-        <div className="flex-1 mobile-content-padding">
-          <ShippingManagement />
-        </div>
+    <ShopDashboardLayout active={14}>
+      <div className="p-3 sm:p-4 lg:p-6">
+        <ShippingManagement />
       </div>
-      {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden">
-        <DashboardSideBar active={11} />
-      </div>
-    </div>
+    </ShopDashboardLayout>
   );
 };
 
 export default ShippingManagementPage;
-

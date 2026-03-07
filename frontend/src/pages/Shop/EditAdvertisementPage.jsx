@@ -1,21 +1,14 @@
 import React from "react";
-import DashboardHeader from "../../components/Shop/Layout/DashboardHeader";
-import DashboardSideBar from "../../components/Shop/Layout/DashboardSideBar";
+import ShopDashboardLayout from "../../components/Shop/Layout/ShopDashboardLayout";
 import EditAdvertisement from "../../components/Shop/EditAdvertisement";
 
 const EditAdvertisementPage = () => {
   return (
-    <div>
-      <DashboardHeader />
-      <div className="flex justify-between w-full">
-        <div className="w-[80px] 800px:w-[330px]">
-          <DashboardSideBar active={11} />
-        </div>
-        <div className="w-full justify-center flex">
-          <EditAdvertisement />
-        </div>
+    <ShopDashboardLayout active={20}>
+      <div className="p-3 sm:p-4 lg:p-6">
+        <EditAdvertisement />
       </div>
-    </div>
+    </ShopDashboardLayout>
   );
 };
 

@@ -1,19 +1,14 @@
 import React from "react";
-import DashboardHeader from "../../components/Shop/Layout/DashboardHeader";
-import DashboardSideBar from "../../components/Shop/Layout/DashboardSideBar";
+import ShopDashboardLayout from "../../components/Shop/Layout/ShopDashboardLayout";
 import AllVideoBanners from "../../components/Shop/AllVideoBanners";
 
 const DashboardVideoBannersPage = () => {
   return (
-    <div>
-      <DashboardHeader />
-      <div className="flex items-start justify-between w-full">
-        <div className="">
-          <DashboardSideBar active={9} />
-        </div>
+    <ShopDashboardLayout active={9}>
+      <div className="p-3 sm:p-4 lg:p-6">
         <AllVideoBanners />
       </div>
-    </div>
+    </ShopDashboardLayout>
   );
 };
 

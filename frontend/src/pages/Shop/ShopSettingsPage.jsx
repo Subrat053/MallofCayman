@@ -1,27 +1,15 @@
 import React from "react";
+import ShopDashboardLayout from "../../components/Shop/Layout/ShopDashboardLayout";
 import ShopSettings from "../../components/Shop/ShopSettings";
-import DashboardHeader from "../../components/Shop/Layout/DashboardHeader";
-import DashboardSideBar from "../../components/Shop/Layout/DashboardSideBar";
 
 const ShopSettingsPage = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <DashboardHeader />
-      <div className="flex items-start justify-between w-full">
-        <div className="">
-          <DashboardSideBar active={12} />
-        </div>
-        <div className="flex-1 mobile-content-padding">
-          <ShopSettings />
-        </div>
+    <ShopDashboardLayout active={16}>
+      <div className="p-3 sm:p-4 lg:p-6">
+        <ShopSettings />
       </div>
-      {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden">
-        <DashboardSideBar active={12} />
-      </div>
-    </div>
+    </ShopDashboardLayout>
   );
 };
 
 export default ShopSettingsPage;
-

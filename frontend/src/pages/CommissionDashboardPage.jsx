@@ -1,17 +1,14 @@
 import React from "react";
-import DashboardHeader from "../components/Shop/Layout/DashboardHeader";
-import DashboardSideBar from "../components/Shop/Layout/DashboardSideBar";
+import ShopDashboardLayout from "../components/Shop/Layout/ShopDashboardLayout";
 import CommissionDashboard from "../components/Shop/CommissionDashboard";
 
 const CommissionDashboardPage = () => {
   return (
-    <div>
-      <DashboardHeader />
-      <DashboardSideBar active={12} />
-      <div className="w-full lg:ml-64 p-4">
+    <ShopDashboardLayout active={12}>
+      <div className="p-3 sm:p-4 lg:p-6">
         <CommissionDashboard />
       </div>
-    </div>
+    </ShopDashboardLayout>
   );
 };
 

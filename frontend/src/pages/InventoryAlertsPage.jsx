@@ -1,17 +1,14 @@
 import React from "react";
-import DashboardHeader from "../components/Shop/Layout/DashboardHeader";
-import DashboardSideBar from "../components/Shop/Layout/DashboardSideBar";
+import ShopDashboardLayout from "../components/Shop/Layout/ShopDashboardLayout";
 import InventoryAlerts from "../components/Shop/InventoryAlerts";
 
 const InventoryAlertsPage = () => {
   return (
-    <div>
-      <DashboardHeader />
-      <DashboardSideBar active={19} />
-      <div className="w-full lg:ml-64 p-4">
+    <ShopDashboardLayout active={19}>
+      <div className="p-3 sm:p-4 lg:p-6">
         <InventoryAlerts />
       </div>
-    </div>
+    </ShopDashboardLayout>
   );
 };
 
