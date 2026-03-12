@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
 require("dotenv").config({ path: "./config/.env" });
 
 // Import models
@@ -24,6 +23,13 @@ const createSellerAccount = async () => {
       console.log("Shop ID:", existingSeller._id);
       console.log("Shop Name:", existingSeller.name);
       console.log("Email:", existingSeller.email);
+
+      // Always reset the password so any previous double-hash corruption is fixed.
+      // We fetch with +password so we can overwrite it; the pre-save hook will hash once.
+      const shopForPasswordReset = await Shop.findOne({ email: sellerEmail }).select("+password");
+      shopForPasswordReset.password = "password123";
+      await shopForPasswordReset.save();
+      console.log("🔑 Password reset to 'password123' (re-hashed correctly by hook)");
       
       // Check subscription
       const existingSubscription = await Subscription.findOne({ shop: existingSeller._id });
@@ -54,27 +60,26 @@ const createSellerAccount = async () => {
 
     console.log("📝 Creating new seller account...\n");
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash("password123", 10);
-
-    // Create seller account
+    // Create seller account (password hashing handled by pre-save hook in model)
     const newShop = await Shop.create({
       name: "MRX Shop",
       email: sellerEmail,
-      password: hashedPassword,
-      phoneNumber: "1234567890",
+      password: "password123",
+      phoneNumber: 1234567890,
       address: "Test Address, Bangalore, Karnataka",
-      zipCode: "560001",
+      zipCode: 560001,
       avatar: {
         public_id: "default",
         url: "https://via.placeholder.com/150",
       },
       paypalEmail: sellerEmail, // Required for payments
-      accountHolderName: "Subrat Hota",
-      accountNumber: "1234567890",
-      bankName: "Test Bank",
-      ifscCode: "TEST0001234",
-      accountType: "savings",
+      bankAccountDetails: {
+        accountHolderName: "Subrat Hota",
+        accountNumber: "1234567890",
+        bankName: "Test Bank",
+        ifscCode: "TEST0001234",
+        accountType: "savings",
+      },
       latitude: "12.9716",
       longitude: "77.5946",
       role: "Seller",

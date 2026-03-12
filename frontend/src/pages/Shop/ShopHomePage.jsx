@@ -1,6 +1,5 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import styles from "../../styles/styles";
 import ShopInfo from "../../components/Shop/ShopInfo";
 import ShopProfileData from "../../components/Shop/ShopProfileData";
 import ShopCustomContent from "../../components/Shop/ShopCustomContent";
@@ -9,16 +8,22 @@ const ShopHomePage = () => {
   const { id } = useParams();
 
   return (
-    <div className={`${styles.section} bg-[#f5f5f5]`}>
-      <div className="w-full 800px:flex py-10 justify-between">
-        <div className="800px:w-[25%] bg-[#fff] rounded-[4px] shadow-sm 800px:overflow-y-scroll 800px:h-[90vh] 800px:sticky top-10 left-0 z-10">
-          <ShopInfo isOwner={true} />
-        </div>
-        <div className="800px:w-[72%] mt-5 800px:mt-['unset'] rounded-[4px]">
-          {/* Custom HTML/CSS Content (Gold Plan Feature) */}
-          <ShopCustomContent shopId={id} />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+          {/* Sidebar */}
+          <div className="w-full lg:w-72 flex-shrink-0">
+            <div className="sticky top-20">
+              <ShopInfo isOwner={true} />
+            </div>
+          </div>
 
-          <ShopProfileData isOwner={true} />
+          {/* Main Content */}
+          <div className="flex-1 min-w-0 space-y-6">
+            {/* Custom HTML/CSS Content (Gold Plan Feature) */}
+            <ShopCustomContent shopId={id} />
+            <ShopProfileData isOwner={true} />
+          </div>
         </div>
       </div>
     </div>

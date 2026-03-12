@@ -211,7 +211,7 @@ const Hero = () => {
                     }}
                   />
                   {/* Overlay Badge */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-purple-900/20 to-transparent flex flex-col justify-end p-6">
+                  {/* <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-purple-900/20 to-transparent flex flex-col justify-end p-6">
                     <div className="bg-gradient-to-r from-cyan-500/90 to-blue-600/90 backdrop-blur-sm rounded-2xl p-4 border border-cyan-400/30">
                       <span className="text-white text-lg font-bold block mb-1">
                         Coming Soon
@@ -220,7 +220,7 @@ const Hero = () => {
                         Site under Construction
                       </span>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               )}
             </div>

@@ -17,6 +17,28 @@ const EmailTemplate = require("../model/emailTemplate");
 const sendShopToken = require("../utils/shopToken");
 const { uploadShopRegistration } = require("../multer");
 
+// Create Stripe PaymentIntent for vendor registration (public - no auth required)
+router.post("/registration-payment-intent", catchAsyncErrors(async (req, res, next) => {
+  const { amount } = req.body;
+  if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+    return next(new ErrorHandler("Invalid payment amount", 400));
+  }
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return next(new ErrorHandler("Payment is not configured on this server", 500));
+  }
+  const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: Math.round(Number(amount) * 100), // cents
+    currency: "usd",
+    metadata: { purpose: "vendor_registration" },
+  });
+  res.status(200).json({
+    success: true,
+    client_secret: paymentIntent.client_secret,
+    publishable_key: process.env.STRIPE_API_KEY,
+  });
+}));
+
 // create shop
 router.post("/create-shop", uploadShopRegistration, async (req, res, next) => {
   try {
@@ -54,7 +76,7 @@ router.post("/create-shop", uploadShopRegistration, async (req, res, next) => {
       }
     }
 
-    // Handle trade license uploads (mandatory)
+    // Handle trade license uploads (optional but recommended)
     let tradeLicensesData = [];
     if (req.files && req.files['tradeLicenses'] && req.files['tradeLicenses'].length > 0) {
       try {
@@ -79,9 +101,8 @@ router.post("/create-shop", uploadShopRegistration, async (req, res, next) => {
         console.error('Trade license upload error:', error);
         return next(new ErrorHandler(`Trade license upload failed: ${error.message}`, 400));
       }
-    } else {
-      return next(new ErrorHandler("Trade and Business License documents are required", 400));
     }
+    // Trade license is optional — no error if not provided
 
     const seller = {
       name: req.body.name,
@@ -92,7 +113,6 @@ router.post("/create-shop", uploadShopRegistration, async (req, res, next) => {
       zipCode: req.body.zipCode,
       latitude: req.body.latitude,
       longitude: req.body.longitude,
-      gstNumber: req.body.gstNumber,
       paypalEmail: req.body.paypalEmail, // REQUIRED
       wantStoreManager: req.body.wantStoreManager === 'true', // Store Manager service option
       tradeLicenses: tradeLicensesData, // Trade and Business License documents
@@ -265,7 +285,7 @@ router.post(
       if (!newSeller) {
         return next(new ErrorHandler("Invalid token", 400));
       }
-      const { name, email, password, avatar, zipCode, address, phoneNumber, latitude, longitude, gstNumber, wantStoreManager, tradeLicenses } =
+      const { name, email, password, avatar, zipCode, address, phoneNumber, latitude, longitude, wantStoreManager, tradeLicenses } =
         newSeller;
 
       let seller = await Shop.findOne({ email });
@@ -283,7 +303,6 @@ router.post(
         phoneNumber,
         latitude,
         longitude,
-        gstNumber,
         tradeLicenses: tradeLicenses || [], // Trade and Business License documents
       };
 
@@ -1260,6 +1279,45 @@ router.put(
         return next(new ErrorHandler("Seller is already approved", 400));
       }
 
+      // Sanitize legacy/malformed fields to avoid schema validation errors
+      try {
+        // Avatar: must be an object or null — never a primitive.
+        // NOTE: do NOT use `seller.avatar &&` here; empty string "" is falsy
+        // but still causes Mongoose nested-object validation to fail on save().
+        if (typeof seller.avatar !== 'object') {
+          const raw = seller.avatar;
+          seller.avatar = (typeof raw === 'string' && raw.trim())
+            ? { url: raw.trim(), public_id: null }
+            : null;
+        }
+
+        // Phone: coerce to Number if possible (strip non-digits)
+        if (seller.phoneNumber && typeof seller.phoneNumber !== 'number') {
+          const digits = String(seller.phoneNumber).replace(/\D+/g, '');
+          if (digits.length > 0) {
+            seller.phoneNumber = Number(digits);
+          } else {
+            seller.phoneNumber = null;
+          }
+        }
+
+        // GST field removed — unset any existing value to avoid stale validation
+        seller.gstNumber = undefined;
+
+        if (!Array.isArray(seller.tradeLicenses)) {
+          seller.tradeLicenses = [];
+        } else {
+          seller.tradeLicenses = seller.tradeLicenses.filter(t => t && typeof t === 'object' && t.url && t.public_id);
+        }
+      } catch (sanErr) {
+        // If sanitization unexpectedly fails, ensure we don't block approval.
+        // typeof check (not truthiness) so empty string "" is also handled.
+        seller.avatar = typeof seller.avatar === 'object' ? seller.avatar : null;
+        seller.tradeLicenses = Array.isArray(seller.tradeLicenses) ? seller.tradeLicenses : [];
+        seller.phoneNumber = typeof seller.phoneNumber === 'number' ? seller.phoneNumber : null;
+        seller.gstNumber = undefined;
+      }
+
       seller.approvalStatus = 'approved';
       seller.approvedBy = req.user._id;
       seller.approvedAt = new Date();
@@ -1413,6 +1471,18 @@ router.put(
       seller.rejectionReason = rejectionReason;
       seller.approvedBy = null;
       seller.approvedAt = null;
+
+      // Sanitize legacy fields that may cause validation errors.
+      // Important: do NOT guard with `seller.avatar &&` — empty string is falsy
+      // but still fails Mongoose nested-object validation at save() time.
+      if (typeof seller.avatar !== 'object') {
+        const raw = seller.avatar;
+        seller.avatar = (typeof raw === 'string' && raw.trim())
+          ? { url: raw.trim(), public_id: null }
+          : null;
+      }
+      seller.gstNumber = undefined; // field removed from schema
+      if (!Array.isArray(seller.tradeLicenses)) seller.tradeLicenses = [];
 
       await seller.save();
 

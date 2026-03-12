@@ -11,19 +11,19 @@ const ShopPreviewPage = () => {
   const { id } = useParams();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <div className="min-h-screen bg-gray-50">
       <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
           {/* Shop Info Sidebar */}
-          <div className="lg:w-80 flex-shrink-0">
-            <div className="sticky top-8">
+          <div className="w-full lg:w-72 flex-shrink-0">
+            <div className="sticky top-20">
               <ShopInfo isOwner={false} />
             </div>
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 min-w-0 space-y-8">
+          <div className="flex-1 min-w-0 space-y-6">
             {/* Custom HTML/CSS Content (Gold Plan Feature) */}
             <ShopCustomContent shopId={id} />
 

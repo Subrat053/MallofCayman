@@ -110,7 +110,7 @@ import PhonePeTestPayment from "./pages/PhonePeTestPayment";
 import StripeOrderSuccessPage from "./pages/StripeOrderSuccessPage";
 import SubscriptionStripeSuccessPage from "./pages/SubscriptionStripeSuccessPage";
 import StripeAdPaymentSuccessPage from "./pages/StripeAdPaymentSuccessPage";
-import SubscriptionPlansPage from "./pages/SubscriptionPlansPage";
+import SubscriptionPlansPage from "./pages/Shop/SubscriptionPlansPage";
 import CommissionDashboardPage from "./pages/CommissionDashboardPage";
 import InventoryAlertsPage from "./pages/InventoryAlertsPage";
 import SubscriptionSuccessPage from "./pages/SubscriptionSuccessPage";
@@ -159,6 +159,7 @@ import { server } from "./server";
 
 import CustomerVideoCall from "./components/Customer/CustomerVideoCall";
 import SellerVideoCall from "./components/Shop/SellerVideoCall";
+import FloatingVideoWidget from "./components/Layout/FloatingVideoWidget";
 import { SocketProvider } from "./contexts/SocketContext";
 
 const App = () => {
@@ -1171,6 +1172,9 @@ const App = () => {
       
       {/* Seller Video Call Component - Global */}
       <SellerVideoCall />
+
+      {/* Floating Video Banner Widget - Global */}
+      <FloatingVideoWidget />
       
       <ToastContainer
         position="bottom-center"

@@ -260,7 +260,7 @@ const AdminSubscriptions = () => {
   }
 
   return (
-    <div className="w-full bg-white rounded-lg shadow-sm p-3 sm:p-6 overflow-hidden">
+    <div className="w-full bg-white rounded-none sm:rounded-lg shadow-sm p-3 sm:p-6 min-h-screen">
       <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
         Subscription Management
       </h2>

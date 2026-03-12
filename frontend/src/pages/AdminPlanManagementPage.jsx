@@ -5,7 +5,7 @@ import AdminPlanManagement from "../components/Admin/AdminPlanManagement";
 
 const AdminPlanManagementPage = () => {
   return (
-    <div className="h-screen overflow-hidden bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <AdminHeader />
       <div className="flex mt-[80px]">
         {/* Sidebar - Fixed */}

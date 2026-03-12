@@ -35,122 +35,106 @@ const ShopProfileData = ({ isOwner }) => {
     products && products.map((product) => product.reviews).flat();
 
   return (
-    <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden">
-      {/* Header with Navigation Tabs */}
-      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 border-b border-gray-200">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          {/* Navigation Tabs */}
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setActive(1)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${
-                active === 1
-                  ? "bg-indigo-500 text-white shadow-lg transform scale-105"
-                  : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-              }`}
-            >
-              <MdStore className="text-lg" />
-              <span>Products ({products?.length || 0})</span>
-            </button>
-
-            <button
-              onClick={() => setActive(2)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${
-                active === 2
-                  ? "bg-purple-500 text-white shadow-lg transform scale-105"
-                  : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-              }`}
-            >
-              <MdEvent className="text-lg" />
-              <span>Events ({events?.length || 0})</span>
-            </button>
-
-            <button
-              onClick={() => setActive(3)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${
-                active === 3
-                  ? "bg-amber-500 text-white shadow-lg transform scale-105"
-                  : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-              }`}
-            >
-              <MdStar className="text-lg" />
-              <span>Reviews ({allReviews?.length || 0})</span>
-            </button>
+    <div className="w-full bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      {/* Classic Tab Bar */}
+      <div className="border-b border-gray-200 bg-white px-6 pt-5">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-0">
+          {/* Tabs */}
+          <div className="flex gap-0">
+            {[
+              { id: 1, label: "Products", count: products?.length || 0, icon: MdStore },
+              { id: 2, label: "Events", count: events?.length || 0, icon: MdEvent },
+              { id: 3, label: "Reviews", count: allReviews?.length || 0, icon: MdStar },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActive(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors duration-200 ${
+                  active === tab.id
+                    ? "border-slate-800 text-slate-800"
+                    : "border-transparent text-gray-500 hover:text-slate-700 hover:border-gray-300"
+                }`}
+              >
+                <tab.icon className="text-base" />
+                <span>{tab.label}</span>
+                <span
+                  className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
+                    active === tab.id
+                      ? "bg-slate-800 text-white"
+                      : "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              </button>
+            ))}
           </div>
 
-          {/* Dashboard Button for Owner */}
+          {/* Dashboard Button */}
           {isOwner && (
-            <Link to="/dashboard" className="block">
-              <button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 transform hover:scale-105 flex items-center gap-2 shadow-lg">
-                <MdDashboard className="text-lg" />
-                <span>Go Dashboard</span>
+            <Link to="/dashboard" className="mb-1 self-end sm:self-auto">
+              <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                <MdDashboard className="text-base" />
+                Dashboard
               </button>
             </Link>
           )}
         </div>
       </div>
 
-      {/* Content Area */}
+      {/* Tab Content */}
       <div className="p-6">
-        {/* Products Tab */}
+        {/* ── Products Tab ── */}
         {active === 1 && (
           <div>
-            {/* Stats Header */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
-                <div className="flex items-center gap-3">
-                  <div className="bg-blue-500 p-2 rounded-lg">
-                    <MdStore className="text-white text-xl" />
-                  </div>
+            {/* Quick Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+              {[
+                {
+                  label: "Total Products",
+                  value: products?.length || 0,
+                  icon: MdStore,
+                  bg: "bg-blue-50 border-blue-100",
+                  icon_color: "text-blue-600",
+                },
+                {
+                  label: "Total Sales",
+                  value:
+                    products?.reduce(
+                      (acc, product) => acc + (product.sold_out || 0),
+                      0
+                    ) || 0,
+                  icon: MdTrendingUp,
+                  bg: "bg-emerald-50 border-emerald-100",
+                  icon_color: "text-emerald-600",
+                },
+                {
+                  label: "Categories",
+                  value: new Set(products?.map((p) => p.category)).size || 0,
+                  icon: HiOutlineChartBar,
+                  bg: "bg-purple-50 border-purple-100",
+                  icon_color: "text-purple-600",
+                },
+              ].map((stat, i) => (
+                <div
+                  key={i}
+                  className={`flex items-center gap-3 rounded-xl p-4 border ${stat.bg}`}
+                >
+                  <stat.icon className={`text-2xl flex-shrink-0 ${stat.icon_color}`} />
                   <div>
-                    <p className="text-gray-500 text-sm font-medium">
-                      Total Products
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
+                      {stat.label}
                     </p>
                     <p className="text-2xl font-bold text-gray-800">
-                      {products?.length || 0}
+                      {stat.value}
                     </p>
                   </div>
                 </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl border border-green-100">
-                <div className="flex items-center gap-3">
-                  <div className="bg-green-500 p-2 rounded-lg">
-                    <MdTrendingUp className="text-white text-xl" />
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-sm font-medium">
-                      Total Sales
-                    </p>
-                    <p className="text-2xl font-bold text-gray-800">
-                      {products?.reduce(
-                        (acc, product) => acc + (product.sold_out || 0),
-                        0
-                      ) || 0}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-xl border border-purple-100">
-                <div className="flex items-center gap-3">
-                  <div className="bg-purple-500 p-2 rounded-lg">
-                    <HiOutlineChartBar className="text-white text-xl" />
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-sm font-medium">
-                      Categories
-                    </p>
-                    <p className="text-2xl font-bold text-gray-800">
-                      {new Set(products?.map((p) => p.category)).size || 0}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
 
             {/* Products Grid */}
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {products &&
                 products.map((i, index) => (
                   <ProductCard data={i} key={index} isShop={true} />
@@ -158,12 +142,12 @@ const ShopProfileData = ({ isOwner }) => {
             </div>
 
             {(!products || products.length === 0) && (
-              <div className="text-center py-12">
-                <MdStore className="mx-auto text-6xl text-gray-300 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">
+              <div className="text-center py-16">
+                <MdStore className="mx-auto text-5xl text-gray-200 mb-3" />
+                <p className="text-base font-semibold text-gray-500">
                   No Products Yet
-                </h3>
-                <p className="text-gray-500">
+                </p>
+                <p className="text-sm text-gray-400 mt-1">
                   This shop hasn't added any products yet.
                 </p>
               </div>
@@ -171,26 +155,17 @@ const ShopProfileData = ({ isOwner }) => {
           </div>
         )}
 
-        {/* Events Tab */}
+        {/* ── Events Tab ── */}
         {active === 2 && (
           <div>
-            {/* Events Header */}
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-purple-500 p-3 rounded-xl">
-                <IoSparkles className="text-white text-2xl" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-800">
-                  Running Events
-                </h2>
-                <p className="text-gray-600">
-                  Special offers and promotional events
-                </p>
-              </div>
+            <div className="flex items-center gap-2 mb-6 pb-4 border-b border-gray-100">
+              <IoSparkles className="text-amber-500 text-lg" />
+              <h2 className="text-base font-bold text-gray-800">
+                Running Events &amp; Promotions
+              </h2>
             </div>
 
-            {/* Events Grid */}
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {events &&
                 events.map((i, index) => (
                   <ProductCard
@@ -203,79 +178,68 @@ const ShopProfileData = ({ isOwner }) => {
             </div>
 
             {(!events || events.length === 0) && (
-              <div className="text-center py-12">
-                <MdEvent className="mx-auto text-6xl text-gray-300 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                  No Events Running
-                </h3>
-                <p className="text-gray-500">
-                  This shop doesn't have any active events at the moment.
+              <div className="text-center py-16">
+                <MdEvent className="mx-auto text-5xl text-gray-200 mb-3" />
+                <p className="text-base font-semibold text-gray-500">
+                  No Active Events
+                </p>
+                <p className="text-sm text-gray-400 mt-1">
+                  This shop doesn't have any running events.
                 </p>
               </div>
             )}
           </div>
         )}
 
-        {/* Reviews Tab */}
+        {/* ── Reviews Tab ── */}
         {active === 3 && (
           <div>
-            {/* Reviews Header */}
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-amber-500 p-3 rounded-xl">
-                <MdStar className="text-white text-2xl" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-800">
-                  Customer Reviews
-                </h2>
-                <p className="text-gray-600">
-                  What customers are saying about this shop
-                </p>
-              </div>
+            <div className="flex items-center gap-2 mb-6 pb-4 border-b border-gray-100">
+              <MdStar className="text-amber-500 text-lg" />
+              <h2 className="text-base font-bold text-gray-800">
+                Customer Reviews
+              </h2>
             </div>
 
-            {/* Reviews List */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               {allReviews &&
                 allReviews.map((item, index) => (
                   <div
                     key={index}
-                    className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors duration-200"
+                    className="flex gap-4 p-4 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-all duration-150"
                   >
-                    <div className="flex gap-4">
-                      <img
-                        src={getAvatarUrl(item.user.avatar, backend_url)}
-                        className="w-12 h-12 rounded-full border-2 border-white shadow-sm flex-shrink-0"
-                        alt={item.user.name}
-                      />
-                      <div className="flex-1">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-                          <h4 className="font-semibold text-gray-800">
-                            {item.user.name}
-                          </h4>
-                          <div className="flex items-center gap-2">
-                            <Ratings rating={item.rating} />
-                            <span className="text-sm text-gray-500">
-                              {new Date(item.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
+                    <img
+                      src={getAvatarUrl(item.user.avatar, backend_url)}
+                      className="w-10 h-10 rounded-full border border-gray-200 flex-shrink-0 object-cover"
+                      alt={item.user.name}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                        <span className="font-semibold text-sm text-gray-800">
+                          {item.user.name}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <Ratings rating={item.rating} />
+                          <span className="text-xs text-gray-400">
+                            {new Date(item.createdAt).toLocaleDateString()}
+                          </span>
                         </div>
-                        <p className="text-gray-700 leading-relaxed">
-                          {item?.comment}
-                        </p>
                       </div>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        {item?.comment}
+                      </p>
                     </div>
                   </div>
                 ))}
             </div>
 
             {(!allReviews || allReviews.length === 0) && (
-              <div className="text-center py-12">
-                <MdStar className="mx-auto text-6xl text-gray-300 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">
+              <div className="text-center py-16">
+                <MdStar className="mx-auto text-5xl text-gray-200 mb-3" />
+                <p className="text-base font-semibold text-gray-500">
                   No Reviews Yet
-                </h3>
-                <p className="text-gray-500">
+                </p>
+                <p className="text-sm text-gray-400 mt-1">
                   This shop hasn't received any reviews yet.
                 </p>
               </div>

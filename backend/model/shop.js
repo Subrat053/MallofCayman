@@ -28,20 +28,6 @@ const shopSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  gstNumber: {
-    type: String,
-    required: false,
-    validate: {
-      validator: function(gst) {
-        // Allow empty string or null for optional field
-        if (!gst) return true;
-        // GST number format validation (15 characters: 2 state code + 10 PAN + 1 entity + 1 check + 1 default)
-        const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
-        return gstRegex.test(gst);
-      },
-      message: 'Please enter a valid GST number (format: 22AAAAA0000A1Z5)'
-    }
-  },
   role: {
     type: String,
     default: "Seller",
@@ -60,16 +46,16 @@ const shopSchema = new mongoose.Schema({
     required: false,
     default: null,
   },
-  // Trade and Business License documents (mandatory)
+  // Trade and Business License documents (optional but recommended)
   tradeLicenses: [
     {
       url: {
         type: String,
-        required: true,
+        required: false,
       },
       public_id: {
         type: String,
-        required: true,
+        required: false,
       },
       originalName: {
         type: String,
@@ -402,7 +388,7 @@ const shopSchema = new mongoose.Schema({
 // Hash password
 shopSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
-    next();
+    return next(); // return prevents falling through to bcrypt below
   }
   this.password = await bcrypt.hash(this.password, 10);
 });

@@ -82,142 +82,108 @@ const ShopInfo = ({ isOwner }) => {
       {isLoading ? (
         <Loader />
       ) : (
-        <div className=" bg-white rounded-xl shadow-lg overflow-hidden">
-          {/* Header Section with Gradient */}
-          <div className="relative bg-gradient-to-br from-teal-500 via-emerald-500 to-cyan-600 p-6">
-            <div className="absolute inset-0 bg-black/10"></div>
-            <div className="relative z-10">
-              {/* Avatar and Badge */}
-              <div className="flex flex-col items-center">
-                <div className="relative">
-                  <img
-                    src={getAvatarUrl(data.avatar, backend_url)}
-                    alt={data.name}
-                    className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-full border-4 border-white shadow-lg"
-                  />
-                  <div className="absolute -bottom-2 -right-2 bg-green-500 p-2 rounded-full border-3 border-white">
-                    <IoShieldCheckmark className="text-white text-lg" />
-                  </div>
-                </div>
-
-                {/* Shop Name and Badge */}
-                <div className="text-center mt-4">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <h3 className="text-white text-xl md:text-2xl font-bold">
-                      {data.name}
-                    </h3>
-                    <HiOutlineBadgeCheck className="text-blue-200 text-xl" />
-                  </div>
-                  <div className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
-                    <span className="text-white text-sm font-medium">
-                      Verified Supplier
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          {/* Cover Band */}
+          <div className="h-20 bg-slate-800 relative">
+            <div
+              className="absolute inset-0 opacity-5"
+              style={{
+                backgroundImage:
+                  "repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 8px)",
+              }}
+            />
           </div>
 
-          {/* Description */}
-          {data.description && (
-            <div className="p-4 border-b border-gray-100">
-              <p className="text-gray-600 text-center leading-relaxed">
+          <div className="px-5 pb-5">
+            {/* Avatar */}
+            <div className="flex justify-center -mt-10 mb-3">
+              <div className="relative">
+                <img
+                  src={getAvatarUrl(data.avatar, backend_url)}
+                  alt={data.name}
+                  className="w-20 h-20 object-cover rounded-full border-4 border-white shadow-md"
+                />
+                <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white" />
+              </div>
+            </div>
+
+            {/* Name + Verified */}
+            <div className="text-center mb-4">
+              <div className="flex items-center justify-center gap-1.5 mb-1.5">
+                <h3 className="text-lg font-bold text-gray-900">{data.name}</h3>
+                <IoShieldCheckmark className="text-emerald-500 text-lg flex-shrink-0" />
+              </div>
+              <span className="inline-block bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1 rounded-full border border-emerald-200">
+                Verified Supplier
+              </span>
+            </div>
+
+            {/* Description */}
+            {data.description && (
+              <p className="text-gray-500 text-sm text-center leading-relaxed mb-4 pb-4 border-b border-gray-100">
                 {data.description}
               </p>
-            </div>
-          )}
+            )}
 
-          {/* Stats Grid */}
-          <div className="px-2 py-0">
-            <div className="grid grid-cols-1 gap-4 mb-6">
-              {/* Total Products */}
-              <div className="bg-gradient-to-br from-teal-50 to-cyan-50 p-4 rounded-xl border border-teal-100">
-                <div className="flex items-center gap-3">
-                  <div className="bg-teal-500 p-2 rounded-lg">
-                    <MdStore className="text-white text-lg" />
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-sm font-medium">
-                      Products
-                    </p>
-                    <p className="text-xl font-bold text-gray-800">
-                      {products?.length || 0}
-                    </p>
-                  </div>
-                </div>
+            {/* Stats Row */}
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              <div className="text-center bg-slate-50 rounded-lg py-3 px-2 border border-slate-100">
+                <p className="text-2xl font-bold text-slate-800">
+                  {products?.length || 0}
+                </p>
+                <p className="text-xs text-slate-500 font-medium mt-0.5 uppercase tracking-wide">
+                  Products
+                </p>
               </div>
-
-              {/* Shop Rating */}
-              <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-xl border border-orange-100">
-                <div className="flex items-center gap-3">
-                  <div className="bg-orange-500 p-2 rounded-lg">
-                    <MdStar className="text-white text-lg" />
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-sm font-medium">Rating</p>
-                    <div className="flex items-center gap-1">
-                      {totalReviewsLength > 0 ? (
-                        <>
-                          <p className="text-xl font-bold text-gray-800">
-                            {averageRating.toFixed(1)}
-                          </p>
-                          <span className="text-orange-500 text-sm">★</span>
-                          <span className="text-gray-400 text-xs ml-1">
-                            ({totalReviewsLength} reviews)
-                          </span>
-                        </>
-                      ) : (
-                        <div className="flex flex-col">
-                          <p className="text-lg font-bold text-gray-500">
-                            No Reviews
-                          </p>
-                          <span className="text-gray-400 text-xs">
-                            Be the first to review!
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
+              <div className="text-center bg-amber-50 rounded-lg py-3 px-2 border border-amber-100">
+                {totalReviewsLength > 0 ? (
+                  <>
+                    <p className="text-2xl font-bold text-slate-800">
+                      {averageRating.toFixed(1)}
+                      <span className="text-amber-400 text-base"> ★</span>
+                    </p>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5 uppercase tracking-wide">
+                      {totalReviewsLength} Reviews
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xl font-semibold text-slate-400">—</p>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5 uppercase tracking-wide">
+                      No Reviews
+                    </p>
+                  </>
+                )}
               </div>
             </div>
 
-            {/* Contact Information */}
-            <div className="space-y-4 mb-6">
-              {/* Address */}
-              <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                <MdLocationOn className="text-gray-400 text-xl mt-0.5 flex-shrink-0" />
+            {/* Info List */}
+            <div className="space-y-3 mb-5 text-sm">
+              <div className="flex items-start gap-3">
+                <MdLocationOn className="text-slate-400 text-base mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">
+                  <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-0.5">
                     Address
                   </p>
-                  <p className="text-gray-800 leading-relaxed">
-                    {data.address}
-                  </p>
+                  <p className="text-slate-700 leading-snug">{data.address}</p>
                 </div>
               </div>
-
-              {/* Phone */}
-              <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                <MdPhone className="text-gray-400 text-xl mt-0.5 flex-shrink-0" />
+              <div className="flex items-start gap-3">
+                <MdPhone className="text-slate-400 text-base mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">
+                  <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-0.5">
                     Phone
                   </p>
-                  <p className="text-gray-800 font-medium">
-                    {data.phoneNumber}
-                  </p>
+                  <p className="text-slate-700">{data.phoneNumber}</p>
                 </div>
               </div>
-
-              {/* Joined Date */}
-              <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                <MdCalendarToday className="text-gray-400 text-xl mt-0.5 flex-shrink-0" />
+              <div className="flex items-start gap-3">
+                <MdCalendarToday className="text-slate-400 text-base mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">
+                  <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-0.5">
                     Member Since
                   </p>
-                  <p className="text-gray-800 font-medium">
+                  <p className="text-slate-700">
                     {new Date(data?.createdAt).toLocaleDateString("en-US", {
                       month: "long",
                       year: "numeric",
@@ -227,42 +193,37 @@ const ShopInfo = ({ isOwner }) => {
               </div>
             </div>
 
-            {/* Action Buttons for Owner */}
+            {/* Trusted Supplier strip */}
+            <div className="flex items-center gap-2.5 p-3 bg-slate-50 border border-slate-100 rounded-lg mb-4 text-sm">
+              <FiTrendingUp className="text-slate-500 text-base flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-slate-700 text-xs">
+                  Trusted Supplier
+                </p>
+                <p className="text-slate-500 text-xs leading-snug">
+                  Verified business with quality products
+                </p>
+              </div>
+            </div>
+
+            {/* Owner Actions */}
             {isOwner && (
-              <div className="space-y-3">
+              <div className="space-y-2 pt-4 border-t border-gray-100">
                 <Link to="/settings" className="block">
-                  <button className="w-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white px-4 py-3 rounded-xl font-medium transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center gap-2 shadow-lg">
-                    <MdEdit className="text-lg" />
-                    <span>Edit Shop</span>
+                  <button className="w-full bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2">
+                    <MdEdit className="text-base" />
+                    Edit Shop
                   </button>
                 </Link>
-
                 <button
                   onClick={logoutHandler}
-                  className="w-full bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white px-4 py-3 rounded-xl font-medium transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center gap-2 shadow-lg"
+                  className="w-full bg-white hover:bg-red-50 text-red-600 border border-red-200 hover:border-red-300 px-4 py-2.5 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
                 >
-                  <MdLogout className="text-lg" />
-                  <span>Log Out</span>
+                  <MdLogout className="text-base" />
+                  Log Out
                 </button>
               </div>
             )}
-
-            {/* Performance Badge */}
-            <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
-              <div className="flex items-center gap-3">
-                <div className="bg-emerald-500 p-2 rounded-lg">
-                  <FiTrendingUp className="text-white text-lg" />
-                </div>
-                <div>
-                  <p className="text-emerald-700 font-semibold text-sm">
-                    Trusted Supplier
-                  </p>
-                  <p className="text-emerald-600 text-xs">
-                    Verified business with quality products
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       )}

@@ -90,7 +90,7 @@ const Header = ({ activeHeading }) => {
       <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 h-1"></div>
 
       {/* Main Header with Logo and Navigation */}
-      <div className="bg-white shadow-lg border-b border-gray-200/50 backdrop-blur-sm">
+      <div className={`bg-white backdrop-blur-sm sticky top-0 z-50 transition-all duration-300 ${active ? "shadow-xl border-b border-purple-200/50" : "shadow-lg border-b border-gray-200/50"}`}>
         <div className={`${styles.section}`}>
           <div className="hidden 800px:flex items-center justify-between py-2 gap-2">
             {/* Logo - Fixed width */}
@@ -186,11 +186,7 @@ const Header = ({ activeHeading }) => {
 
       {/* Search Bar Section */}
       <div
-        className={`${
-          active
-            ? "shadow-xl fixed top-0 left-0 z-50 bg-white/95 backdrop-blur-md border-b border-purple-200/50"
-            : "bg-gradient-to-r from-slate-50 via-blue-50 to-purple-50 border-b border-gray-200/50"
-        } transition-all duration-300 hidden 800px:block w-full`}
+        className="bg-gradient-to-r from-slate-50 via-blue-50 to-purple-50 border-b border-gray-200/50 transition-all duration-300 hidden 800px:block w-full"
       >
         <div className={`${styles.section}`}>
           <div className="flex items-center justify-center py-3">

@@ -248,9 +248,9 @@ const MallDirectory = () => {
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-12 gap-2 lg:gap-4">
           {/* Left Sidebar - Categories */}
-          <div className="lg:col-span-3 space-y-2">
+          <div className="lg:col-span-3 space-y-2 sticky top-20 self-start">
             {/* Categories Card */}
-            <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-md shadow-xl border border-gray-100 overflow-hidden">
               {/* Category Header */}
               <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4">
                 <div className="flex items-center gap-3">
@@ -274,7 +274,7 @@ const MallDirectory = () => {
                     <button
                       key={category.id}
                       onClick={() => setSelectedCategory(isActive ? null : category.id)}
-                      className={`w-full group relative overflow-hidden rounded-2xl transition-all duration-300 ${
+                      className={`w-full group relative overflow-hidden rounded-md transition-all duration-300 ${
                         isActive
                           ? 'bg-gradient-to-r ' + category.color + ' text-white shadow-lg scale-105'
                           : 'bg-gray-50 hover:bg-gray-100 text-gray-700 hover:shadow-md'
@@ -282,7 +282,7 @@ const MallDirectory = () => {
                     >
                       <div className="flex items-center gap-4 p-2">
                         {/* Category Image/Icon */}
-                        <div className={`relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 ${
+                        <div className={`relative w-14 h-14 rounded-md overflow-hidden flex-shrink-0 ${
                           isActive ? 'bg-white/20' : 'bg-white'
                         }`}>
                           <img 
@@ -290,17 +290,17 @@ const MallDirectory = () => {
                             alt={category.name}
                             className="w-full h-full object-cover"
                           />
-                          <div className={`absolute inset-0 flex items-center justify-center ${
+                          {/* <div className={`absolute inset-0 flex items-center justify-center ${
                             isActive ? 'bg-black/20' : 'bg-gradient-to-br ' + category.color + ' opacity-0 group-hover:opacity-90'
                           } transition-opacity`}>
                             <Icon className="w-6 h-6 text-white" />
-                          </div>
+                          </div> */}
                         </div>
 
                         {/* Category Info */}
                         <div className="flex-1 text-left">
                           <p className="font-semibold text-base">{category.name}</p>
-                          <p className={`text-sm ${isActive ? 'text-white/80' : 'text-gray-500'}`}>
+                          <p className={`text-[12px] ${isActive ? 'text-white/80' : 'text-gray-500'}`}>
                             Explore collection
                           </p>
                         </div>
@@ -318,15 +318,15 @@ const MallDirectory = () => {
               {/* Action Buttons */}
               <div className="p-4 pt-0 space-y-3">
                 <Link
-                  to="/all-products"
-                  className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 px-6 rounded-xl transition-all shadow-lg shadow-blue-500/30 hover:shadow-xl"
+                  to="/products"
+                  className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 px-6 rounded-md transition-all shadow-lg shadow-blue-500/30 hover:shadow-xl"
                 >
                   <ShoppingBag className="w-5 h-5" />
                   <span className='text-[13px]'>Browse All Products</span>
                 </Link>
                 <Link
-                  to="/become-seller"
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-semibold py-3.5 px-6 rounded-xl transition-all shadow-lg shadow-pink-500/30 hover:shadow-xl"
+                  to="/shop-create"
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-semibold py-3.5 px-6 rounded-md transition-all shadow-lg shadow-pink-500/30 hover:shadow-xl"
                 >
                   <Store className="w-5 h-5" />
                   <span className='text-[14px]'>Become a Seller</span>
@@ -687,7 +687,7 @@ const MallDirectory = () => {
                     <Store className="w-5 h-5" />
                     View All Stores
                   </Link>
-                  <Link to="/mall" className="inline-flex items-center gap-2 text-sm lg:text-base bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-3 py-2 lg:px-6 lg:py-3 rounded-xl transition-all shadow-lg shadow-blue-500/30">
+                  <Link to="/products" className="inline-flex items-center gap-2 text-sm lg:text-base bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-3 py-2 lg:px-6 lg:py-3 rounded-xl transition-all shadow-lg shadow-blue-500/30">
                     <ShoppingBag className="w-5 h-5" />
                     Shop Now
                   </Link>

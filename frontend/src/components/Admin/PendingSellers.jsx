@@ -799,12 +799,6 @@ const PendingSellers = () => {
                           {viewingSeller.name}
                         </p>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">GST Number</p>
-                        <p className="text-sm font-medium text-gray-900">
-                          {viewingSeller.gstNumber || "Not provided"}
-                        </p>
-                      </div>
                       <div className="md:col-span-2">
                         <p className="text-xs text-gray-500 mb-1">
                           Description

@@ -15,7 +15,8 @@ const createAdminAccount = async () => {
     console.log("✅ Connected to database\n");
 
     const adminEmail = "mallofcayman@mallofcayman.com";
-    const adminPassword = "Wabbitt1970";
+    // const adminPassword = "Wabbitt1970";
+    const adminPassword = "MallofCayman2026";
     
     // Check if admin already exists
     const existingAdmin = await User.findOne({ email: adminEmail });

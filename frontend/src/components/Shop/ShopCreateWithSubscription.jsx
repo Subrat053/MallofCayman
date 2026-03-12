@@ -6,12 +6,78 @@ import { server } from "../../server";
 import { toast } from "react-toastify";
 import { HiOutlineCamera, HiOutlineLocationMarker } from "react-icons/hi";
 import { MdMyLocation } from "react-icons/md";
-import { FiMapPin, FiArrowLeft, FiArrowRight, FiCheck } from "react-icons/fi";
-import { BsCreditCard, BsCheckCircle } from "react-icons/bs";
+import { FiMapPin, FiArrowLeft, FiArrowRight, FiCheck, FiCreditCard, FiLock } from "react-icons/fi";
+import { BsCreditCard, BsCheckCircle, BsPaypal } from "react-icons/bs";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
 // Google Maps Configuration
 const GOOGLE_MAPS_API_KEY = "AIzaSyBecpP3O2kfTa0z-lLIiShmsZE6e1kDmOk";
+
+// ── Stripe inline card form (used inside Elements provider) ──────────────────
+const StripeCardForm = ({ clientSecret, onSuccess, planPrice }) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [processing, setProcessing] = useState(false);
+
+  const handlePay = async () => {
+    if (!stripe || !elements || !clientSecret) return;
+    setProcessing(true);
+    const result = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: { card: elements.getElement(CardElement) },
+    });
+    if (result.error) {
+      toast.error(result.error.message || "Payment failed. Please try again.");
+      setProcessing(false);
+    } else if (result.paymentIntent?.status === "succeeded") {
+      toast.success("Payment successful!");
+      onSuccess();
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="border border-gray-300 rounded-lg p-4 bg-white focus-within:border-slate-500 transition-colors">
+        <CardElement
+          options={{
+            style: {
+              base: {
+                fontSize: "15px",
+                color: "#374151",
+                fontFamily: "system-ui, sans-serif",
+                "::placeholder": { color: "#9ca3af" },
+              },
+              invalid: { color: "#dc2626" },
+            },
+          }}
+        />
+      </div>
+      <div className="flex items-center gap-2 text-xs text-gray-400">
+        <FiLock className="text-gray-400 flex-shrink-0" />
+        <span>Secured by Stripe — your card details are encrypted</span>
+      </div>
+      <button
+        onClick={handlePay}
+        disabled={!stripe || processing}
+        className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-semibold text-sm transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      >
+        {processing ? (
+          <>
+            <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+            Processing…
+          </>
+        ) : (
+          <>
+            <FiLock className="text-base" />
+            Pay ${planPrice} securely
+          </>
+        )}
+      </button>
+    </div>
+  );
+};
+// ────────────────────────────────────────────────────────────────────────────
 
 // Load Google Maps Script
 const loadGoogleMapsScript = (callback) => {
@@ -47,7 +113,6 @@ const ShopCreateWithSubscription = () => {
     email: "",
     name: "",
     phoneNumber: "",
-    gstNumber: "",
     address: "",
     zipCode: "",
     password: "",
@@ -70,6 +135,12 @@ const ShopCreateWithSubscription = () => {
   // Subscription selection
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [billingCycle, setBillingCycle] = useState("monthly");
+
+  // Stripe payment state
+  const [paymentMethod, setPaymentMethod] = useState("paypal"); // 'paypal' | 'stripe'
+  const [stripeClientSecret, setStripeClientSecret] = useState(null);
+  const [stripePromise, setStripePromise] = useState(null);
+  const [stripeInitError, setStripeInitError] = useState(false);
 
   // Google Maps states
   const [showMap, setShowMap] = useState(false);
@@ -373,13 +444,6 @@ const ShopCreateWithSubscription = () => {
       toast.error("Please enter zip code");
       return false;
     }
-    // Validate trade licenses
-    if (tradeLicenses.length === 0) {
-      toast.error(
-        "Please upload at least one Trade and Business License document"
-      );
-      return false;
-    }
     return true;
   };
 
@@ -412,14 +476,6 @@ const ShopCreateWithSubscription = () => {
   };
 
   const handleSubmit = async () => {
-    // Validate trade licenses
-    if (tradeLicenses.length === 0) {
-      toast.error(
-        "Please upload at least one Trade and Business License document"
-      );
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -480,6 +536,31 @@ const ShopCreateWithSubscription = () => {
     }
   };
 
+  // Initialize Stripe PaymentIntent for vendor registration
+  const initializeStripePayment = async () => {
+    try {
+      setStripeInitError(false);
+      const price = getSelectedPlanPrice();
+      if (!price || price <= 0) {
+        toast.error("Invalid plan price");
+        return;
+      }
+      const { data } = await axios.post(`${server}/shop/registration-payment-intent`, {
+        amount: price,
+      });
+      if (data.success) {
+        setStripeClientSecret(data.client_secret);
+        if (data.publishable_key && !stripePromise) {
+          setStripePromise(loadStripe(data.publishable_key));
+        }
+      }
+    } catch (error) {
+      console.error("Stripe init error:", error);
+      setStripeInitError(true);
+      toast.error("Failed to initialize card payment.");
+    }
+  };
+
   const getSelectedPlanPrice = () => {
     if (!selectedPlan) return 0;
     const plan = subscriptionPlans.find((p) => p.id === selectedPlan);
@@ -506,475 +587,206 @@ const ShopCreateWithSubscription = () => {
 
   const renderBasicInfo = () => (
     <div className="space-y-5">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
-        Basic Information
-      </h2>
-
       {/* Avatar Upload */}
-      <div className="flex justify-center mb-6">
+      <div className="flex justify-center">
         <div className="relative">
           {avatar ? (
             <img
               src={URL.createObjectURL(avatar)}
               alt="avatar"
-              className="w-32 h-32 rounded-full object-cover border-4 border-blue-200"
+              className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
             />
           ) : (
-            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center border-4 border-blue-200">
-              <span className="text-4xl text-gray-400">🏪</span>
+            <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center border-2 border-dashed border-slate-300">
+              <span className="text-3xl">🏪</span>
             </div>
           )}
           <label
             htmlFor="file-input"
-            className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 transition-colors shadow-lg"
+            className="absolute bottom-0 right-0 bg-slate-800 text-white p-1.5 rounded-full cursor-pointer hover:bg-slate-700 transition-colors shadow"
           >
-            <HiOutlineCamera className="w-5 h-5" />
+            <HiOutlineCamera className="w-4 h-4" />
           </label>
-          <input
-            type="file"
-            id="file-input"
-            accept=".jpg,.jpeg,.png"
-            onChange={handleFileInputChange}
-            className="hidden"
-          />
+          <input type="file" id="file-input" accept=".jpg,.jpeg,.png" onChange={handleFileInputChange} className="hidden" />
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Shop Name <span className="text-red-500">*</span>
-        </label>
+      <div className="space-y-1">
+        <label className="block text-sm font-medium text-gray-700">Shop Name <span className="text-red-500">*</span></label>
         <input
-          type="text"
-          name="name"
-          value={formData.name}
-          onChange={handleInputChange}
-          className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 hover:border-gray-300 bg-gray-50 focus:bg-white"
-          placeholder="Enter your shop name"
-          required
+          type="text" name="name" value={formData.name} onChange={handleInputChange}
+          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 bg-white transition-all"
+          placeholder="Enter your shop name" required
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Email Address <span className="text-red-500">*</span>
-        </label>
+      <div className="space-y-1">
+        <label className="block text-sm font-medium text-gray-700">Email Address <span className="text-red-500">*</span></label>
         <input
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleInputChange}
-          className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 hover:border-gray-300 bg-gray-50 focus:bg-white"
-          placeholder="shop@example.com"
-          required
+          type="email" name="email" value={formData.email} onChange={handleInputChange}
+          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 bg-white transition-all"
+          placeholder="shop@example.com" required
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Password <span className="text-red-500">*</span>
-        </label>
+      <div className="space-y-1">
+        <label className="block text-sm font-medium text-gray-700">Password <span className="text-red-500">*</span></label>
         <div className="relative">
           <input
-            type={visible ? "text" : "password"}
-            name="password"
-            value={formData.password}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 hover:border-gray-300 bg-gray-50 focus:bg-white"
-            placeholder="Enter your password"
-            required
+            type={visible ? "text" : "password"} name="password" value={formData.password} onChange={handleInputChange}
+            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 bg-white transition-all pr-10"
+            placeholder="At least 6 characters" required
           />
-          <button
-            type="button"
-            onClick={() => setVisible(!visible)}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            {visible ? (
-              <AiOutlineEye className="w-5 h-5" />
-            ) : (
-              <AiOutlineEyeInvisible className="w-5 h-5" />
-            )}
+          <button type="button" onClick={() => setVisible(!visible)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            {visible ? <AiOutlineEye className="w-4 h-4" /> : <AiOutlineEyeInvisible className="w-4 h-4" />}
           </button>
         </div>
-        <p className="text-xs text-gray-500 mt-1.5">
-          Must be at least 8 characters
-        </p>
       </div>
     </div>
   );
 
   const renderAddressInfo = () => (
     <div className="space-y-5">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
-        Address & Location
-      </h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Phone Number <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="number"
-            name="phoneNumber"
-            value={formData.phoneNumber}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 hover:border-gray-300 bg-gray-50 focus:bg-white"
-            placeholder="+1 234 567 8900"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            GST Number <span className="text-gray-400">(Optional)</span>
-          </label>
-          <input
-            type="text"
-            name="gstNumber"
-            value={formData.gstNumber}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 hover:border-gray-300 bg-gray-50 focus:bg-white"
-            placeholder="Enter GST number"
-          />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-gray-700">Phone Number <span className="text-red-500">*</span></label>
+          <input type="number" name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange}
+            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 bg-white"
+            placeholder="+1 234 567 8900" required />
         </div>
       </div>
 
-      {/* PayPal Email - REQUIRED - Enhanced Design */}
-      <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-4 shadow-sm">
-        <div className="flex items-start gap-2 mb-3">
-          <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-            <span className="text-xl">💰</span>
-          </div>
-          <div className="flex-1">
-            <p className="font-bold text-amber-900 text-lg">
-              PayPal Email Required
-            </p>
-            <p className="text-sm text-amber-700 mt-1.5 leading-relaxed">
-              Customer payments will be sent <strong>directly</strong> to your
-              PayPal account. Without this, you won't receive any money from
-              sales!
-            </p>
-          </div>
-        </div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          PayPal Email <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="email"
-          name="paypalEmail"
-          value={formData.paypalEmail}
-          onChange={handleInputChange}
-          className="w-full px-3 py-2.5 border-2 border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 bg-white hover:border-amber-400"
-          placeholder="your@paypal.com"
-          required
-        />
-        <div className="mt-3 flex items-center gap-2 text-xs text-amber-700 bg-amber-100 rounded-lg p-3">
-          <BsCheckCircle className="flex-shrink-0" />
-          <span>Money arrives instantly when customers buy your products</span>
-        </div>
-      </div>
-
-      {/* Bank Account Details - Optional */}
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 shadow-sm">
+      {/* PayPal Email */}
+      <div className="border border-amber-200 bg-amber-50 rounded-xl p-4">
         <div className="flex items-center gap-2 mb-3">
-          <BsCreditCard className="text-blue-600 text-xl" />
-          <h3 className="font-bold text-gray-800 text-lg">
-            Bank Account Details
-          </h3>
-          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
-            Optional
-          </span>
+          <BsPaypal className="text-blue-700 text-lg flex-shrink-0" />
+          <p className="font-semibold text-gray-800 text-sm">PayPal Payout Email <span className="text-red-500">*</span></p>
         </div>
-        <p className="text-sm text-blue-700 mb-4">
-          Provide bank details for backup payment methods or future withdrawals
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Account Holder Name
-            </label>
-            <input
-              type="text"
-              name="accountHolderName"
-              value={formData.accountHolderName}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2.5 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:border-blue-300"
-              placeholder="John Doe"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Account Number
-            </label>
-            <input
-              type="text"
-              name="accountNumber"
-              value={formData.accountNumber}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2.5 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:border-blue-300"
-              placeholder="1234567890"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Bank Name
-            </label>
-            <input
-              type="text"
-              name="bankName"
-              value={formData.bankName}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2.5 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:border-blue-300"
-              placeholder="State Bank of India"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              IFSC Code
-            </label>
-            <input
-              type="text"
-              name="ifscCode"
-              value={formData.ifscCode}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2.5 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:border-blue-300"
-              placeholder="SBIN0001234"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Account Type
-            </label>
-            <select
-              name="accountType"
-              value={formData.accountType}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2.5 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:border-blue-300"
-            >
+        <p className="text-xs text-amber-700 mb-3">Customer payments go directly to this PayPal account. Required to receive sales revenue.</p>
+        <input type="email" name="paypalEmail" value={formData.paypalEmail} onChange={handleInputChange}
+          className="w-full px-3 py-2.5 border border-amber-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+          placeholder="your@paypal.com" required />
+      </div>
+
+      {/* Bank Details */}
+      <div className="border border-gray-200 bg-gray-50 rounded-xl p-4">
+        <div className="flex items-center gap-2 mb-1">
+          <BsCreditCard className="text-gray-500 text-lg flex-shrink-0" />
+          <p className="font-semibold text-gray-800 text-sm">Bank Account Details</p>
+          <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">Optional</span>
+        </div>
+        <p className="text-xs text-gray-500 mb-4">For backup payments and future withdrawals</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[
+            { name: "accountHolderName", label: "Account Holder Name", placeholder: "John Doe" },
+            { name: "accountNumber", label: "Account Number", placeholder: "1234567890" },
+            { name: "bankName", label: "Bank Name", placeholder: "Bank of Cayman" },
+            { name: "ifscCode", label: "IFSC / Routing Code", placeholder: "SBIN0001234" },
+          ].map(({ name, label, placeholder }) => (
+            <div key={name} className="space-y-1">
+              <label className="block text-xs font-medium text-gray-600">{label}</label>
+              <input type="text" name={name} value={formData[name]} onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 bg-white"
+                placeholder={placeholder} />
+            </div>
+          ))}
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-gray-600">Account Type</label>
+            <select name="accountType" value={formData.accountType} onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 bg-white">
               <option value="">Select type</option>
               <option value="savings">Savings</option>
               <option value="current">Current</option>
             </select>
           </div>
         </div>
-        <p className="text-xs text-blue-700 mt-3">
-          📝 Bank details are optional but recommended for backup payment
-          methods
-        </p>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Address <span className="text-red-500">*</span>
-        </label>
+      {/* Address */}
+      <div className="space-y-1">
+        <label className="block text-sm font-medium text-gray-700">Address <span className="text-red-500">*</span></label>
         <div className="flex gap-2">
-          <input
-            type="text"
-            ref={addressInputRef}
-            name="address"
-            value={formData.address}
-            onChange={handleInputChange}
-            className="flex-1 px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 hover:border-gray-300 bg-gray-50 focus:bg-white"
-            placeholder="Start typing your address..."
-            required
-          />
-          <button
-            type="button"
-            onClick={getCurrentLocation}
-            disabled={isLoadingLocation}
-            className="px-3 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-          >
-            {isLoadingLocation ? (
-              <span className="animate-spin">⌛</span>
-            ) : (
-              <MdMyLocation className="w-5 h-5" />
-            )}
+          <input type="text" ref={addressInputRef} name="address" value={formData.address} onChange={handleInputChange}
+            className="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 bg-white"
+            placeholder="Start typing your address..." required />
+          <button type="button" onClick={getCurrentLocation} disabled={isLoadingLocation}
+            className="px-3 py-2.5 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors disabled:opacity-50 flex-shrink-0"
+            title="Use my location">
+            {isLoadingLocation ? <span className="animate-spin inline-block">⌛</span> : <MdMyLocation className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Zip Code <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          name="zipCode"
-          value={formData.zipCode}
-          onChange={handleInputChange}
-          className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 hover:border-gray-300 bg-gray-50 focus:bg-white"
-          placeholder="Enter zip code"
-          required
-        />
+      <div className="space-y-1">
+        <label className="block text-sm font-medium text-gray-700">Zip Code <span className="text-red-500">*</span></label>
+        <input type="text" name="zipCode" value={formData.zipCode} onChange={handleInputChange}
+          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 bg-white"
+          placeholder="Enter zip code" required />
       </div>
 
-      {/* Trade and Business License Upload - MANDATORY */}
-      <div className="bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-300 rounded-xl p-4 shadow-sm">
+      {/* Trade License Upload */}
+      <div className="border border-gray-200 rounded-xl p-4">
         <div className="flex items-start gap-2 mb-3">
-          <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-            <span className="text-xl">📄</span>
-          </div>
-          <div className="flex-1">
-            <p className="font-bold text-red-900 text-lg">
-              Trade & Business License <span className="text-red-500">*</span>
-            </p>
-            <p className="text-sm text-red-700 mt-1.5 leading-relaxed">
-              Upload your Trade License and Business Registration documents.
-              This is <strong>mandatory</strong> for verification.
-            </p>
+          <span className="text-xl flex-shrink-0">📄</span>
+          <div>
+            <p className="font-semibold text-gray-800 text-sm">Trade & Business License <span className="text-gray-400 font-normal">(Optional)</span></p>
+            <p className="text-xs text-gray-500 mt-0.5">Upload up to 5 files (PNG, JPG, PDF — max 10MB each). Uploading a trade certificate helps build trust and may speed up approval.</p>
           </div>
         </div>
-
-        {/* File Upload Area */}
-        <div className="mt-4">
-          <label
-            htmlFor="trade-license-input"
-            className="flex flex-col items-center justify-center w-full h-32 border-2 border-red-300 border-dashed rounded-lg cursor-pointer bg-white hover:bg-red-50 transition-colors"
-          >
-            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-              <svg
-                className="w-8 h-8 mb-3 text-red-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                />
-              </svg>
-              <p className="mb-2 text-sm text-red-600">
-                <span className="font-semibold">Click to upload</span> or drag
-                and drop
-              </p>
-              <p className="text-xs text-red-500">
-                PNG, JPG, PDF (Max 10MB each, up to 5 files)
-              </p>
-            </div>
-            <input
-              id="trade-license-input"
-              type="file"
-              accept=".jpg,.jpeg,.png,.pdf"
-              multiple
-              onChange={(e) => {
-                const files = Array.from(e.target.files);
-                if (files.length + tradeLicenses.length > 5) {
-                  toast.error("Maximum 5 files allowed");
-                  return;
-                }
-                // Validate file sizes
-                const validFiles = files.filter((file) => {
-                  if (file.size > 10 * 1024 * 1024) {
-                    toast.error(`${file.name} is too large (max 10MB)`);
-                    return false;
-                  }
-                  return true;
-                });
-                setTradeLicenses([...tradeLicenses, ...validFiles]);
-              }}
-              className="hidden"
-            />
-          </label>
-        </div>
-
-        {/* Uploaded Files Preview */}
+        <label htmlFor="trade-license-input"
+          className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+          <svg className="w-7 h-7 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          <p className="text-sm text-gray-500"><span className="font-medium">Click to upload</span> or drag & drop</p>
+          <input id="trade-license-input" type="file" accept=".jpg,.jpeg,.png,.pdf" multiple
+            onChange={(e) => {
+              const files = Array.from(e.target.files);
+              if (files.length + tradeLicenses.length > 5) { toast.error("Maximum 5 files allowed"); return; }
+              const validFiles = files.filter((file) => {
+                if (file.size > 10 * 1024 * 1024) { toast.error(`${file.name} is too large (max 10MB)`); return false; }
+                return true;
+              });
+              setTradeLicenses([...tradeLicenses, ...validFiles]);
+            }}
+            className="hidden" />
+        </label>
         {tradeLicenses.length > 0 && (
-          <div className="mt-4 space-y-2">
-            <p className="text-sm font-medium text-gray-700">
-              Uploaded Documents ({tradeLicenses.length}/5):
-            </p>
+          <div className="mt-3 space-y-2">
             {tradeLicenses.map((file, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200"
-              >
-                <div className="flex items-center gap-3">
+              <div key={index} className="flex items-center justify-between bg-white p-2.5 rounded-lg border border-gray-200">
+                <div className="flex items-center gap-2.5">
                   {file.type === "application/pdf" ? (
-                    <div className="w-10 h-10 bg-red-100 rounded flex items-center justify-center">
-                      <span className="text-red-600 text-xs font-bold">
-                        PDF
-                      </span>
+                    <div className="w-9 h-9 bg-red-50 border border-red-200 rounded flex items-center justify-center flex-shrink-0">
+                      <span className="text-red-600 text-[10px] font-bold">PDF</span>
                     </div>
                   ) : (
-                    <img
-                      src={URL.createObjectURL(file)}
-                      alt={file.name}
-                      className="w-10 h-10 object-cover rounded"
-                    />
+                    <img src={URL.createObjectURL(file)} alt={file.name} className="w-9 h-9 object-cover rounded flex-shrink-0" />
                   )}
                   <div>
-                    <p className="text-sm font-medium text-gray-800 truncate max-w-[200px]">
-                      {file.name}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {(file.size / 1024).toFixed(1)} KB
-                    </p>
+                    <p className="text-xs font-medium text-gray-800 truncate max-w-[180px]">{file.name}</p>
+                    <p className="text-[10px] text-gray-400">{(file.size / 1024).toFixed(1)} KB</p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTradeLicenses(
-                      tradeLicenses.filter((_, i) => i !== index)
-                    );
-                  }}
-                  className="p-1 text-red-500 hover:bg-red-100 rounded transition-colors"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
+                <button type="button" onClick={() => setTradeLicenses(tradeLicenses.filter((_, i) => i !== index))}
+                  className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
             ))}
           </div>
         )}
-
-        <div className="mt-3 flex items-center gap-2 text-xs text-red-700 bg-red-100 rounded-lg p-3">
-          <svg
-            className="w-4 h-4 flex-shrink-0"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span>
-            Your documents will be verified by our admin team before approval
-          </span>
-        </div>
       </div>
 
       {showMap && (
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <FiMapPin className="inline mr-2" />
-            Shop Location on Map
+        <div>
+          <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-2">
+            <FiMapPin className="inline" /> Shop Location on Map
           </label>
-          <div
-            ref={mapRef}
-            className="w-full h-64 rounded-lg border border-gray-300"
-          />
-          <p className="text-xs text-gray-500 mt-2">
-            Drag the marker to adjust your exact location
-          </p>
+          <div ref={mapRef} className="w-full h-56 rounded-lg border border-gray-300" />
+          <p className="text-xs text-gray-500 mt-1.5">Drag the marker to adjust your exact location</p>
         </div>
       )}
     </div>
@@ -982,107 +794,58 @@ const ShopCreateWithSubscription = () => {
 
   const renderSubscriptionSelection = () => (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">
-        Choose Your Plan
-      </h2>
-      <p className="text-gray-600 mb-6">
-        Select a subscription plan that suits your business needs
-      </p>
-
-      {/* Billing Cycle Selector */}
-      <div className="flex flex-wrap justify-center gap-2 mb-6">
+      {/* Billing Cycle */}
+      <div className="flex flex-wrap gap-2">
         {[
-          { value: "monthly", label: "Monthly", discount: null },
+          { value: "monthly", label: "Monthly" },
           { value: "quarterly", label: "3 Months", discount: "10%" },
           { value: "semiannual", label: "6 Months", discount: "15%" },
           { value: "annual", label: "12 Months", discount: "20%" },
         ].map((cycle) => (
           <button
-            key={cycle.value}
-            type="button"
-            onClick={() => setBillingCycle(cycle.value)}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              billingCycle === cycle.value
-                ? "bg-blue-600 text-white shadow-lg"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            key={cycle.value} type="button" onClick={() => setBillingCycle(cycle.value)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
+              billingCycle === cycle.value ? "bg-slate-800 text-white border-slate-800" : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
             }`}
           >
             {cycle.label}
-            {cycle.discount && (
-              <span className="ml-1 text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">
-                Save {cycle.discount}
-              </span>
-            )}
+            {cycle.discount && <span className="ml-1.5 text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-semibold">{cycle.discount} off</span>}
           </button>
         ))}
       </div>
 
-      {/* Plans Grid */}
       {isLoadingPlans ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          <p className="ml-4 text-gray-600">Loading subscription plans...</p>
+        <div className="flex items-center justify-center gap-3 py-12 text-gray-500">
+          <span className="animate-spin rounded-full h-5 w-5 border-2 border-slate-400 border-t-transparent" />
+          Loading plans…
         </div>
       ) : subscriptionPlans.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-600">
-            No subscription plans available at the moment.
-          </p>
-        </div>
+        <p className="text-center text-gray-500 py-10">No subscription plans available.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {subscriptionPlans.map((plan) => (
             <div
-              key={plan.id}
-              onClick={() => setSelectedPlan(plan.id)}
-              className={`relative p-6 rounded-2xl border-2 cursor-pointer transition-all transform hover:scale-105 ${
-                selectedPlan === plan.id
-                  ? "border-blue-500 shadow-2xl bg-blue-50"
-                  : "border-gray-200 hover:border-blue-300 bg-white"
+              key={plan.id} onClick={() => setSelectedPlan(plan.id)}
+              className={`relative p-5 rounded-xl border-2 cursor-pointer transition-all ${
+                selectedPlan === plan.id ? "border-slate-800 bg-slate-50" : "border-gray-200 hover:border-gray-300 bg-white"
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-1 rounded-full text-xs font-bold">
-                  POPULAR
-                </div>
+                <span className="absolute -top-2.5 left-4 bg-slate-800 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-wider uppercase">Popular</span>
               )}
-
               {selectedPlan === plan.id && (
-                <div className="absolute top-4 right-4">
-                  <BsCheckCircle className="w-6 h-6 text-blue-600" />
-                </div>
+                <div className="absolute top-3 right-3"><BsCheckCircle className="w-5 h-5 text-slate-700" /></div>
               )}
-
-              <div
-                className={`w-12 h-12 rounded-xl bg-gradient-to-r ${plan.color} flex items-center justify-center mb-4`}
-              >
-                <span className="text-2xl text-white">💎</span>
-              </div>
-
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                {plan.name}
-              </h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">{plan.name}</h3>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-gray-900">
-                  ${plan.price[billingCycle]}
-                </span>
-                <span className="text-gray-500 text-sm">
-                  /
-                  {billingCycle === "quarterly"
-                    ? "3 months"
-                    : billingCycle === "semiannual"
-                    ? "6 months"
-                    : billingCycle === "annual"
-                    ? "12 months"
-                    : "month"}
-                </span>
+                <span className="text-3xl font-bold text-gray-900">${plan.price[billingCycle]}</span>
+                <span className="text-gray-400 text-xs ml-1">/ {billingCycle === "quarterly" ? "3mo" : billingCycle === "semiannual" ? "6mo" : billingCycle === "annual" ? "year" : "mo"}</span>
               </div>
-
-              <ul className="space-y-3 mb-6">
-                {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-center text-gray-700">
-                    <FiCheck className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
-                    <span>{feature}</span>
+              <ul className="space-y-1.5">
+                {plan.features.map((feature, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                    <FiCheck className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    {feature}
                   </li>
                 ))}
               </ul>
@@ -1094,117 +857,62 @@ const ShopCreateWithSubscription = () => {
   );
 
   const renderPaymentChoice = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">Payment Options</h2>
-      <p className="text-gray-600 mb-6">
-        Choose when you'd like to pay for your subscription
-      </p>
+    <div className="space-y-5">
+      <p className="text-sm text-gray-600">Choose when you'd like to pay for your subscription</p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Pay Now Option */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Pay Now */}
         <div
           onClick={() => setPaymentChoice("now")}
-          className={`p-8 rounded-2xl border-2 cursor-pointer transition-all transform hover:scale-105 ${
-            paymentChoice === "now"
-              ? "border-blue-500 shadow-2xl bg-blue-50"
-              : "border-gray-200 hover:border-blue-300 bg-white"
+          className={`p-5 rounded-xl border-2 cursor-pointer transition-all ${
+            paymentChoice === "now" ? "border-slate-800 bg-slate-50" : "border-gray-200 hover:border-gray-300 bg-white"
           }`}
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center">
-              <BsCreditCard className="w-8 h-8 text-white" />
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
+              <BsCreditCard className="w-5 h-5 text-white" />
             </div>
-            {paymentChoice === "now" && (
-              <BsCheckCircle className="w-6 h-6 text-blue-600" />
-            )}
+            {paymentChoice === "now" && <BsCheckCircle className="w-5 h-5 text-slate-700" />}
           </div>
-
-          <h3 className="text-xl font-bold text-gray-800 mb-2">Pay Now</h3>
-          <p className="text-gray-600 mb-4">
-            Complete payment now and get instant access after approval
-          </p>
-
-          <div className="bg-green-100 border border-green-300 rounded-lg p-4">
-            <ul className="space-y-2 text-sm text-green-800">
-              <li>✅ Faster approval process</li>
-              <li>✅ Immediate activation after admin approval</li>
-              <li>✅ Start selling right away</li>
-              <li>✅ 100% refund if not approved</li>
-            </ul>
-          </div>
+          <h3 className="text-base font-bold text-gray-900 mb-1">Pay Now</h3>
+          <p className="text-sm text-gray-500 mb-3">Pay today and get activated faster after approval</p>
+          <ul className="space-y-1 text-xs text-gray-600">
+            <li className="flex items-center gap-1.5"><FiCheck className="text-emerald-500 flex-shrink-0" />Faster approval</li>
+            <li className="flex items-center gap-1.5"><FiCheck className="text-emerald-500 flex-shrink-0" />Immediate activation</li>
+            <li className="flex items-center gap-1.5"><FiCheck className="text-emerald-500 flex-shrink-0" />100% refund if declined</li>
+          </ul>
         </div>
 
-        {/* Pay Later Option */}
+        {/* Pay Later */}
         <div
           onClick={() => setPaymentChoice("later")}
-          className={`p-8 rounded-2xl border-2 cursor-pointer transition-all transform hover:scale-105 ${
-            paymentChoice === "later"
-              ? "border-blue-500 shadow-2xl bg-blue-50"
-              : "border-gray-200 hover:border-blue-300 bg-white"
+          className={`p-5 rounded-xl border-2 cursor-pointer transition-all ${
+            paymentChoice === "later" ? "border-slate-800 bg-slate-50" : "border-gray-200 hover:border-gray-300 bg-white"
           }`}
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center">
-              <span className="text-3xl">⏰</span>
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center">
+              <span className="text-lg">⏰</span>
             </div>
-            {paymentChoice === "later" && (
-              <BsCheckCircle className="w-6 h-6 text-blue-600" />
-            )}
+            {paymentChoice === "later" && <BsCheckCircle className="w-5 h-5 text-slate-700" />}
           </div>
-
-          <h3 className="text-xl font-bold text-gray-800 mb-2">Pay Later</h3>
-          <p className="text-gray-600 mb-4">
-            Complete registration now, pay after admin approval
-          </p>
-
-          <div className="bg-purple-100 border border-purple-300 rounded-lg p-4">
-            <ul className="space-y-2 text-sm text-purple-800">
-              <li>✅ No payment required now</li>
-              <li>✅ Wait for approval first</li>
-              <li>✅ Pay only if approved</li>
-              <li>✅ Flexible payment options</li>
-            </ul>
-          </div>
+          <h3 className="text-base font-bold text-gray-900 mb-1">Pay After Approval</h3>
+          <p className="text-sm text-gray-500 mb-3">Register free, pay only after admin approves you</p>
+          <ul className="space-y-1 text-xs text-gray-600">
+            <li className="flex items-center gap-1.5"><FiCheck className="text-emerald-500 flex-shrink-0" />No payment now</li>
+            <li className="flex items-center gap-1.5"><FiCheck className="text-emerald-500 flex-shrink-0" />Wait for approval first</li>
+            <li className="flex items-center gap-1.5"><FiCheck className="text-emerald-500 flex-shrink-0" />Flexible payment options</li>
+          </ul>
         </div>
       </div>
 
-      {/* Selected Plan Summary */}
       {selectedPlan && (
-        <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
-          <h4 className="font-semibold text-gray-800 mb-2">Selected Plan</h4>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-lg font-bold text-gray-900">
-                {subscriptionPlans.find((p) => p.id === selectedPlan)?.name}{" "}
-                Plan
-              </p>
-              <p className="text-sm text-gray-600">
-                {billingCycle === "quarterly"
-                  ? "3 Months"
-                  : billingCycle === "semiannual"
-                  ? "6 Months"
-                  : billingCycle === "annual"
-                  ? "12 Months"
-                  : "Monthly"}{" "}
-                billing
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-gray-900">
-                ${getSelectedPlanPrice()}
-              </p>
-              <p className="text-sm text-gray-600">
-                /
-                {billingCycle === "quarterly"
-                  ? "3mo"
-                  : billingCycle === "semiannual"
-                  ? "6mo"
-                  : billingCycle === "annual"
-                  ? "12mo"
-                  : "mo"}
-              </p>
-            </div>
+        <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm">
+          <div>
+            <p className="font-semibold text-gray-900">{subscriptionPlans.find((p) => p.id === selectedPlan)?.name} Plan</p>
+            <p className="text-gray-500">{billingCycle === "quarterly" ? "3 Months" : billingCycle === "semiannual" ? "6 Months" : billingCycle === "annual" ? "12 Months" : "Monthly"} billing</p>
           </div>
+          <span className="text-xl font-bold text-gray-900">${getSelectedPlanPrice()}</span>
         </div>
       )}
     </div>
@@ -1212,330 +920,275 @@ const ShopCreateWithSubscription = () => {
 
   const renderPayment = () => (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">
-        Complete Payment
-      </h2>
-      <p className="text-gray-600 mb-6">
-        Your account will be created after successful payment
-      </p>
+      <div>
+        <h2 className="text-xl font-bold text-gray-900 mb-1">Complete Payment</h2>
+        <p className="text-sm text-gray-500">Choose how you'd like to pay for your subscription</p>
+      </div>
 
       {/* Order Summary */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
-        <h3 className="font-semibold text-gray-800 mb-4">Order Summary</h3>
-        <div className="space-y-3">
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
+        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Order Summary</h3>
+        <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-600">Plan</span>
-            <span className="font-medium">
-              {subscriptionPlans.find((p) => p.id === selectedPlan)?.name}
+            <span className="font-medium text-gray-800">{subscriptionPlans.find((p) => p.id === selectedPlan)?.name}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Billing cycle</span>
+            <span className="font-medium text-gray-800">
+              {billingCycle === "quarterly" ? "3 Months" : billingCycle === "semiannual" ? "6 Months" : billingCycle === "annual" ? "12 Months" : "Monthly"}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">Billing</span>
-            <span className="font-medium">
-              {billingCycle === "quarterly"
-                ? "3 Months"
-                : billingCycle === "semiannual"
-                ? "6 Months"
-                : billingCycle === "annual"
-                ? "12 Months"
-                : "Monthly"}
-            </span>
+            <span className="text-gray-600">Shop</span>
+            <span className="font-medium text-gray-800">{formData.name}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Shop Name</span>
-            <span className="font-medium">{formData.name}</span>
-          </div>
-          <div className="border-t border-gray-200 pt-3 mt-3 flex justify-between">
-            <span className="font-semibold text-gray-800">Total</span>
-            <span className="text-2xl font-bold text-gray-900">
-              ${getSelectedPlanPrice()}
-            </span>
-          </div>
+        </div>
+        <div className="border-t border-gray-200 mt-3 pt-3 flex justify-between items-center">
+          <span className="font-semibold text-gray-800">Total due</span>
+          <span className="text-2xl font-bold text-gray-900">${getSelectedPlanPrice()}</span>
         </div>
       </div>
 
-      {/* PayPal Payment */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
-        <PayPalScriptProvider
-          options={{
-            "client-id":
-              "AW3P72fNSIFlkCnT3gaKSxCKKaTL09YBLL3d45J5Uc7JaXCNrYJoUiza6OqL87Kj7Sg7UbufGwCrQ7yA",
-            currency: "USD",
-          }}
-        >
-          <PayPalButtons
-            createOrder={(data, actions) => {
-              return actions.order.create({
-                purchase_units: [
-                  {
-                    amount: {
-                      value: getSelectedPlanPrice().toFixed(2), // Already in USD
-                    },
-                  },
-                ],
-              });
+      {/* Payment Method Selector */}
+      <div>
+        <p className="text-sm font-semibold text-gray-700 mb-3">Select payment method</p>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("paypal")}
+            className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 text-sm font-medium transition-all duration-200 ${
+              paymentMethod === "paypal"
+                ? "border-slate-800 bg-slate-800 text-white"
+                : "border-gray-200 text-gray-600 hover:border-gray-300 bg-white"
+            }`}
+          >
+            <BsPaypal className="text-base" />
+            PayPal
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setPaymentMethod("stripe");
+              if (!stripeClientSecret) initializeStripePayment();
             }}
-            onApprove={handlePayPalApprove}
-            onError={(err) => {
-              toast.error("Payment failed. Please try again.");
-              setIsLoading(false);
-            }}
-          />
-        </PayPalScriptProvider>
+            className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 text-sm font-medium transition-all duration-200 ${
+              paymentMethod === "stripe"
+                ? "border-slate-800 bg-slate-800 text-white"
+                : "border-gray-200 text-gray-600 hover:border-gray-300 bg-white"
+            }`}
+          >
+            <FiCreditCard className="text-base" />
+            Credit / Debit Card
+          </button>
+        </div>
       </div>
 
-      <div className="text-center text-sm text-gray-500 mt-4">
-        <p>🔒 Your payment information is secure and encrypted</p>
-        <p className="mt-2">
-          💰 100% refund guaranteed if your shop is not approved by admin
-        </p>
-      </div>
+      {/* PayPal Buttons */}
+      {paymentMethod === "paypal" && (
+        <div>
+          <PayPalScriptProvider
+            options={{
+              "client-id": "AW3P72fNSIFlkCnT3gaKSxCKKaTL09YBLL3d45J5Uc7JaXCNrYJoUiza6OqL87Kj7Sg7UbufGwCrQ7yA",
+              currency: "USD",
+            }}
+          >
+            <PayPalButtons
+              createOrder={(data, actions) => {
+                return actions.order.create({
+                  purchase_units: [{ amount: { value: getSelectedPlanPrice().toFixed(2) } }],
+                });
+              }}
+              onApprove={handlePayPalApprove}
+              onError={() => {
+                toast.error("PayPal payment failed. Please try again.");
+                setIsLoading(false);
+              }}
+            />
+          </PayPalScriptProvider>
+        </div>
+      )}
+
+      {/* Stripe Card Form */}
+      {paymentMethod === "stripe" && (
+        <div>
+          {stripeInitError ? (
+            <div className="text-center py-6 space-y-3">
+              <p className="text-sm text-red-600">Failed to load card payment. Please check your connection.</p>
+              <button
+                type="button"
+                onClick={initializeStripePayment}
+                className="px-4 py-2 bg-slate-800 text-white text-sm rounded-lg hover:bg-slate-700 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          ) : !stripeClientSecret || !stripePromise ? (
+            <div className="flex items-center justify-center gap-3 py-8 text-gray-500">
+              <span className="animate-spin rounded-full h-5 w-5 border-2 border-slate-400 border-t-transparent" />
+              <span className="text-sm">Initializing secure payment…</span>
+            </div>
+          ) : (
+            <Elements stripe={stripePromise}>
+              <StripeCardForm
+                clientSecret={stripeClientSecret}
+                onSuccess={handleSubmit}
+                planPrice={getSelectedPlanPrice()}
+              />
+            </Elements>
+          )}
+        </div>
+      )}
+
+      <p className="text-center text-xs text-gray-400">
+        🔒 All payments are secure and encrypted. 100% refund if shop is not approved.
+      </p>
     </div>
   );
 
   const renderConfirmation = () => (
-    <div className="space-y-6 text-center py-8">
-      <div className="w-20 h-20 mx-auto bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
-        <FiCheck className="w-10 h-10 text-white" />
-      </div>
-
-      <h2 className="text-3xl font-bold text-gray-800">Almost There!</h2>
-      <p className="text-gray-600 max-w-md mx-auto">
-        Review your information and click "Complete Registration" to finish
-        setting up your shop
-      </p>
-
-      {/* Summary Card */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 max-w-md mx-auto text-left">
-        <h3 className="font-semibold text-gray-800 mb-4">
-          Registration Summary
-        </h3>
-        <div className="space-y-3 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-600">Shop Name:</span>
-            <span className="font-medium">{formData.name}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Email:</span>
-            <span className="font-medium">{formData.email}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Phone:</span>
-            <span className="font-medium">{formData.phoneNumber}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Selected Plan:</span>
-            <span className="font-medium">
-              {subscriptionPlans.find((p) => p.id === selectedPlan)?.name}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Payment:</span>
-            <span className="font-medium">Pay After Approval</span>
-          </div>
+    <div className="space-y-6">
+      {/* Check icon */}
+      <div className="flex justify-center">
+        <div className="w-16 h-16 rounded-full bg-emerald-50 border-2 border-emerald-200 flex items-center justify-center">
+          <FiCheck className="w-8 h-8 text-emerald-600" />
         </div>
       </div>
+      <div className="text-center">
+        <h2 className="text-xl font-bold text-gray-900">Almost there!</h2>
+        <p className="text-sm text-gray-500 mt-1">Review your details and submit your application</p>
+      </div>
 
-      {/* Next Steps */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 max-w-md mx-auto text-left">
-        <h4 className="font-semibold text-blue-900 mb-3">What happens next?</h4>
-        <ol className="space-y-2 text-sm text-blue-800">
-          <li className="flex items-start">
-            <span className="font-bold mr-2">1.</span>
-            <span>You'll receive an email verification link</span>
-          </li>
-          <li className="flex items-start">
-            <span className="font-bold mr-2">2.</span>
-            <span>Verify your email address</span>
-          </li>
-          <li className="flex items-start">
-            <span className="font-bold mr-2">3.</span>
-            <span>Admin will review your application (within 48 hours)</span>
-          </li>
-          <li className="flex items-start">
-            <span className="font-bold mr-2">4.</span>
-            <span>Once approved, complete your payment</span>
-          </li>
-          <li className="flex items-start">
-            <span className="font-bold mr-2">5.</span>
-            <span>Start selling on our platform!</span>
-          </li>
+      {/* Summary */}
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 space-y-2 text-sm">
+        {[{l:"Shop",v:formData.name},{l:"Email",v:formData.email},{l:"Phone",v:formData.phoneNumber},{l:"Plan",v:subscriptionPlans.find((p)=>p.id===selectedPlan)?.name},{l:"Payment",v:"Pay After Approval"}].map(({l,v})=>(
+          <div key={l} className="flex justify-between">
+            <span className="text-gray-500">{l}</span>
+            <span className="font-medium text-gray-800 truncate max-w-[60%] text-right">{v}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Next steps */}
+      <div className="border border-gray-200 rounded-xl p-5">
+        <p className="text-sm font-semibold text-gray-700 mb-3">What happens next?</p>
+        <ol className="space-y-2 text-sm text-gray-600">
+          {["You'll receive an email verification link","Verify your email address","Admin reviews your application (within 48 hrs)","Once approved, complete your payment","Start selling!"].map((s,i)=>(
+            <li key={i} className="flex items-start gap-2">
+              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-slate-100 text-slate-600 text-xs font-bold flex items-center justify-center">{i+1}</span>
+              {s}
+            </li>
+          ))}
         </ol>
       </div>
 
       <button
-        onClick={handleSubmit}
-        disabled={isLoading}
-        className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        onClick={handleSubmit} disabled={isLoading}
+        className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isLoading ? "Processing..." : "Complete Registration"}
+        {isLoading ? "Submitting…" : "Complete Registration"}
       </button>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-6 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header Section */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
-            Start Your Seller Journey
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600">
-            Join thousands of successful sellers on our platform
-          </p>
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <Link to="/" className="inline-block mb-4">
+            <img src="/logo (10).png" alt="Mall of Cayman" className="h-14 w-auto mx-auto object-contain" />
+          </Link>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Become a Seller</h1>
+          <p className="text-sm text-gray-500 mt-1">Join thousands of successful sellers on our platform</p>
         </div>
 
-        {/* Progress Steps - Modern Design */}
-        <div className="mb-6 bg-white rounded-xl shadow-sm p-4">
-          <div className="flex items-center justify-between relative">
-            {/* Progress Line Background */}
-            <div
-              className="absolute left-0 top-6 w-full h-1 bg-gray-200 -z-10"
-              style={{
-                left: "calc(24px)",
-                right: "calc(24px)",
-                width: "calc(100% - 48px)",
-              }}
-            ></div>
-
-            {/* Active Progress Line */}
-            <div
-              className="absolute left-0 top-6 h-1 bg-gradient-to-r from-blue-500 to-purple-500 -z-10 transition-all duration-500"
-              style={{
-                left: "calc(24px)",
-                width: `calc(${
-                  ((currentStep - 1) / (paymentChoice === "now" ? 4 : 4)) * 100
-                }% - 48px)`,
-              }}
-            ></div>
-
-            {[
-              { num: 1, label: "Basic Info", icon: "👤" },
-              { num: 2, label: "Address", icon: "📍" },
-              { num: 3, label: "Plan", icon: "💎" },
-              { num: 4, label: "Payment", icon: "💳" },
-              {
-                num: 5,
-                label: paymentChoice === "now" ? "Pay" : "Confirm",
-                icon: "✓",
-              },
-            ].map((step, index) => (
-              <div
-                key={step.num}
-                className="flex flex-col items-center relative z-10"
-              >
+        {/* Step Indicator */}
+        <div className="flex items-center justify-between mb-8 px-2">
+          {[
+            { num: 1, label: "Basics" },
+            { num: 2, label: "Location" },
+            { num: 3, label: "Plan" },
+            { num: 4, label: "Payment" },
+            { num: 5, label: paymentChoice === "now" ? "Pay" : "Confirm" },
+          ].map((step, idx, arr) => (
+            <React.Fragment key={step.num}>
+              <div className="flex flex-col items-center">
                 <div
-                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center font-bold transition-all duration-300 transform ${
-                    currentStep >= step.num
-                      ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg scale-110"
-                      : "bg-white border-2 border-gray-300 text-gray-400"
+                  className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                    currentStep > step.num
+                      ? "bg-slate-800 text-white"
+                      : currentStep === step.num
+                      ? "bg-slate-800 text-white ring-4 ring-slate-200"
+                      : "bg-gray-200 text-gray-400"
                   }`}
                 >
-                  {currentStep > step.num ? (
-                    <FiCheck className="w-6 h-6" />
-                  ) : (
-                    <span className="text-lg">{step.icon}</span>
-                  )}
+                  {currentStep > step.num ? <FiCheck className="w-4 h-4" /> : step.num}
                 </div>
-                <span
-                  className={`text-xs sm:text-sm mt-2 font-medium hidden sm:block transition-colors ${
-                    currentStep >= step.num ? "text-blue-600" : "text-gray-500"
-                  }`}
-                >
+                <span className={`text-xs mt-1.5 font-medium hidden sm:block ${currentStep >= step.num ? "text-slate-700" : "text-gray-400"}`}>
                   {step.label}
                 </span>
               </div>
-            ))}
-          </div>
+              {idx < arr.length - 1 && (
+                <div className={`flex-1 h-0.5 mx-1 transition-all duration-300 ${currentStep > step.num ? "bg-slate-800" : "bg-gray-200"}`} />
+              )}
+            </React.Fragment>
+          ))}
         </div>
 
-        {/* Form Card - Enhanced Design */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-          {/* Step Header with Gradient */}
-          <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-4 text-white">
-            <h2 className="text-xl sm:text-2xl font-bold">
-              {currentStep === 1 && "Tell us about your business"}
-              {currentStep === 2 && "Where are you located?"}
-              {currentStep === 3 && "Choose your perfect plan"}
-              {currentStep === 4 && "Select payment method"}
-              {currentStep === 5 &&
-                paymentChoice === "now" &&
-                "Complete your payment"}
-              {currentStep === 5 &&
-                paymentChoice === "later" &&
-                "Confirm & Start"}
+        {/* Form Card */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          {/* Step header bar */}
+          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
+            <h2 className="text-base font-bold text-gray-800">
+              {currentStep === 1 && "Basic Information"}
+              {currentStep === 2 && "Address & Location"}
+              {currentStep === 3 && "Choose a Subscription Plan"}
+              {currentStep === 4 && "Payment Timing"}
+              {currentStep === 5 && paymentChoice === "now" && "Complete Payment"}
+              {currentStep === 5 && paymentChoice !== "now" && "Confirm & Submit"}
             </h2>
-            <p className="mt-1 text-blue-50 text-xs sm:text-sm">
-              {currentStep === 1 && "Let's start with some basic information"}
-              {currentStep === 2 && "Help customers find your store easily"}
-              {currentStep === 3 && "Select a plan that grows with you"}
-              {currentStep === 4 && "How would you like to pay?"}
-              {currentStep === 5 &&
-                paymentChoice === "now" &&
-                "Secure payment powered by PayPal"}
-              {currentStep === 5 &&
-                paymentChoice === "later" &&
-                "You're all set! Let's get started"}
+            <p className="text-xs text-gray-500 mt-0.5">
+              Step {currentStep} of 5
             </p>
           </div>
 
-          {/* Form Content */}
-          <div className="p-5 sm:p-6">{renderStep()}</div>
+          {/* Form content */}
+          <div className="p-6">{renderStep()}</div>
 
-          {/* Navigation Buttons - Enhanced */}
-          <div className="flex justify-between items-center px-5 sm:px-6 py-4 bg-gray-50 border-t border-gray-200">
+          {/* Navigation */}
+          <div className="flex justify-between items-center px-6 py-4 bg-gray-50 border-t border-gray-100">
             {currentStep > 1 ? (
               <button
                 onClick={prevStep}
-                className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors duration-200"
               >
                 <FiArrowLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Previous</span>
-                <span className="sm:hidden">Back</span>
+                Back
               </button>
             ) : (
-              <div></div>
+              <div />
             )}
 
-            {currentStep <
-              (paymentChoice === "later"
-                ? 5
-                : paymentChoice === "now"
-                ? 5
-                : 4) && (
+            {currentStep < 5 && (
               <button
                 onClick={nextStep}
-                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                className="flex items-center gap-2 px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold transition-colors duration-200 shadow-sm"
               >
-                <span>Continue</span>
+                Continue
                 <FiArrowRight className="w-4 h-4" />
               </button>
             )}
           </div>
         </div>
 
-        {/* Help Text - Enhanced */}
-        <div className="mt-6 text-center bg-white rounded-xl shadow-sm p-4">
-          <p className="text-gray-600 text-sm">
-            Already have a seller account?{" "}
-            <Link
-              to="/shop-login"
-              className="text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-colors"
-            >
-              Sign in here →
-            </Link>
-          </p>
-          <p className="text-gray-500 text-xs mt-2">
-            Need help? Contact our support team at{" "}
-            <a
-              href="mailto:info@mallofcayman.com"
-              className="text-blue-600 hover:underline"
-            >
-              info@mallofcayman.com
-            </a>
-          </p>
-        </div>
+        {/* Sign in link */}
+        <p className="text-center text-sm text-gray-500 mt-6">
+          Already have a seller account?{" "}
+          <Link to="/shop-login" className="text-slate-700 font-semibold hover:underline">
+            Sign in →
+          </Link>
+        </p>
       </div>
     </div>
   );

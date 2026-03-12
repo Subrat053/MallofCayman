@@ -44,7 +44,6 @@ const ShopCreate = () => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [gstNumber, setGstNumber] = useState("");
   const [address, setAddress] = useState("");
   const [zipCode, setZipCode] = useState("");
   const [avatar, setAvatar] = useState(null);
@@ -319,11 +318,6 @@ const ShopCreate = () => {
       newForm.append("address", address);
       newForm.append("phoneNumber", phoneNumber);
 
-      // Add GST number if provided
-      if (gstNumber.trim()) {
-        newForm.append("gstNumber", gstNumber);
-      }
-
       // Include coordinates if available
       if (latitude && longitude) {
         newForm.append("latitude", latitude);
@@ -350,7 +344,6 @@ const ShopCreate = () => {
       setZipCode("");
       setAddress("");
       setPhoneNumber("");
-      setGstNumber("");
       setLatitude("");
       setLongitude("");
       setShowMap(false);
@@ -515,28 +508,6 @@ const ShopCreate = () => {
                       placeholder="Enter your phone number"
                       required
                     />
-                  </div>
-
-                  {/* GST Number */}
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
-                      GST Number (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={gstNumber}
-                      onChange={(e) =>
-                        setGstNumber(e.target.value.toUpperCase())
-                      }
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                      placeholder="22AAAAA0000A1Z5"
-                      pattern="[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}"
-                      title="Enter a valid 15-digit GST number (e.g., 22AAAAA0000A1Z5)"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Format: 2 digits + 5 letters + 4 digits + 1 letter + 1
-                      digit/letter + Z + 1 digit/letter
-                    </p>
                   </div>
 
                   {/* Password */}
