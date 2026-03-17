@@ -9,11 +9,9 @@ const cors = require("cors");
 const path = require("path");
 
 // config
-if (process.env.NODE_ENV !== "PRODUCTION") {
-  require("dotenv").config({
-    path: "config/.env",
-  });
-}
+const dotenv = require("dotenv");
+const envPath = process.env.NODE_ENV === "PRODUCTION" ? "config/.env.production" : "config/.env";
+dotenv.config({ path: envPath });
 
 // connect db then initialize settings
 connectDatabase().then(() => {

@@ -14,7 +14,7 @@ const createSellerAccount = async () => {
     });
     console.log("✅ Connected to database\n");
 
-    const sellerEmail = "msubha053@gmail.com";
+    const sellerEmail = "workmallofcayman@gmail.com";
     
     // Check if seller already exists
     const existingSeller = await Shop.findOne({ email: sellerEmail });
@@ -62,7 +62,7 @@ const createSellerAccount = async () => {
 
     // Create seller account (password hashing handled by pre-save hook in model)
     const newShop = await Shop.create({
-      name: "MRX Shop",
+      name: "IBS Store",
       email: sellerEmail,
       password: "password123",
       phoneNumber: 1234567890,
