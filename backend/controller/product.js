@@ -1,10 +1,17 @@
 const express = require("express");
-const { isSeller, isAuthenticated, isAdmin, requirePermission, isSellerOrStoreManager } = require("../middleware/auth");
+const {
+  isSeller,
+  isAuthenticated,
+  isAdmin,
+  requirePermission,
+  isSellerOrStoreManager,
+} = require("../middleware/auth");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const router = express.Router();
 const Product = require("../model/product");
 const Order = require("../model/order");
 const Shop = require("../model/shop");
+const mongoose = require("mongoose");
 const { upload, uploadFields } = require("../multer");
 const ErrorHandler = require("../utils/ErrorHandler");
 const NotificationService = require("../utils/NotificationService");
@@ -12,7 +19,12 @@ const fs = require("fs");
 const cloudinary = require("cloudinary").v2;
 const { uploadToCloudinary } = require("../config/cloudinary");
 const path = require("path");
-const { uploadImageToCloudinary, uploadVideoToCloudinary, deleteFromCloudinary, uploadFileToCloudinary } = require("../config/cloudinary");
+const {
+  uploadImageToCloudinary,
+  uploadVideoToCloudinary,
+  deleteFromCloudinary,
+  uploadFileToCloudinary,
+} = require("../config/cloudinary");
 
 // create product
 router.post(
@@ -25,47 +37,66 @@ router.post(
       if (!shop) {
         return next(new ErrorHandler("Shop Id is invalid!", 400));
       } else {
-        const imageFiles = req.files['images'] || [];
-        const videoFiles = req.files['videos'] || [];
-        
-        console.log(`Processing ${imageFiles.length} image files and ${videoFiles.length} video files`);
+        const imageFiles = req.files["images"] || [];
+        const videoFiles = req.files["videos"] || [];
+
+        console.log(
+          `Processing ${imageFiles.length} image files and ${videoFiles.length} video files`,
+        );
 
         // Upload images to Cloudinary
         const uploadedImages = [];
         for (const file of imageFiles) {
           try {
-            console.log(`Uploading image: ${file.originalname} (${file.mimetype})`);
-            
+            console.log(
+              `Uploading image: ${file.originalname} (${file.mimetype})`,
+            );
+
             // Validate file buffer
             if (!file.buffer || file.buffer.length === 0) {
-              console.error('Empty file buffer for:', file.originalname);
-              return next(new ErrorHandler(`File ${file.originalname} is empty or corrupted`, 400));
+              console.error("Empty file buffer for:", file.originalname);
+              return next(
+                new ErrorHandler(
+                  `File ${file.originalname} is empty or corrupted`,
+                  400,
+                ),
+              );
             }
-            
+
             const result = await uploadToCloudinary(file.buffer, {
-              folder: 'products',
-              resource_type: 'image'
+              folder: "products",
+              resource_type: "image",
             });
-            console.log('Full Cloudinary image result:', JSON.stringify(result, null, 2));
+            console.log(
+              "Full Cloudinary image result:",
+              JSON.stringify(result, null, 2),
+            );
             console.log(`Image uploaded successfully: ${result.url}`);
-            
+
             // Validate that we got the required fields
             if (!result.url || !result.public_id) {
-              console.error('Invalid Cloudinary response - missing url or public_id:', result);
-              throw new Error('Cloudinary upload succeeded but returned incomplete data');
+              console.error(
+                "Invalid Cloudinary response - missing url or public_id:",
+                result,
+              );
+              throw new Error(
+                "Cloudinary upload succeeded but returned incomplete data",
+              );
             }
-            
+
             uploadedImages.push({
               url: result.url,
-              public_id: result.public_id
+              public_id: result.public_id,
             });
           } catch (error) {
-            console.error('Image upload error:', error);
+            console.error("Image upload error:", error);
             // Clean up any uploaded files before throwing error
             for (const uploaded of uploadedImages) {
-              await deleteFromCloudinary(uploaded.public_id, 'image');
+              await deleteFromCloudinary(uploaded.public_id, "image");
             }
-            return next(new ErrorHandler(`Image upload failed: ${error.message}`, 400));
+            return next(
+              new ErrorHandler(`Image upload failed: ${error.message}`, 400),
+            );
           }
         }
 
@@ -73,41 +104,58 @@ router.post(
         const uploadedVideos = [];
         for (const file of videoFiles) {
           try {
-            console.log(`Uploading video: ${file.originalname} (${file.mimetype})`);
-            
+            console.log(
+              `Uploading video: ${file.originalname} (${file.mimetype})`,
+            );
+
             // Validate file buffer
             if (!file.buffer || file.buffer.length === 0) {
-              console.error('Empty video file buffer for:', file.originalname);
-              return next(new ErrorHandler(`Video file ${file.originalname} is empty or corrupted`, 400));
+              console.error("Empty video file buffer for:", file.originalname);
+              return next(
+                new ErrorHandler(
+                  `Video file ${file.originalname} is empty or corrupted`,
+                  400,
+                ),
+              );
             }
-            
+
             const result = await uploadToCloudinary(file.buffer, {
-              folder: 'products/videos',
-              resource_type: 'video'
+              folder: "products/videos",
+              resource_type: "video",
             });
-            console.log('Full Cloudinary video result:', JSON.stringify(result, null, 2));
+            console.log(
+              "Full Cloudinary video result:",
+              JSON.stringify(result, null, 2),
+            );
             console.log(`Video uploaded successfully: ${result.url}`);
-            
+
             // Validate that we got the required fields
             if (!result.url || !result.public_id) {
-              console.error('Invalid Cloudinary response - missing url or public_id:', result);
-              throw new Error('Cloudinary upload succeeded but returned incomplete data');
+              console.error(
+                "Invalid Cloudinary response - missing url or public_id:",
+                result,
+              );
+              throw new Error(
+                "Cloudinary upload succeeded but returned incomplete data",
+              );
             }
-            
+
             uploadedVideos.push({
               url: result.url,
-              public_id: result.public_id
+              public_id: result.public_id,
             });
           } catch (error) {
-            console.error('Video upload error:', error);
+            console.error("Video upload error:", error);
             // Clean up any uploaded files before throwing error
             for (const uploaded of uploadedImages) {
-              await deleteFromCloudinary(uploaded.public_id, 'image');
+              await deleteFromCloudinary(uploaded.public_id, "image");
             }
             for (const uploaded of uploadedVideos) {
-              await deleteFromCloudinary(uploaded.public_id, 'video');
+              await deleteFromCloudinary(uploaded.public_id, "video");
             }
-            return next(new ErrorHandler(`Video upload failed: ${error.message}`, 400));
+            return next(
+              new ErrorHandler(`Video upload failed: ${error.message}`, 400),
+            );
           }
         }
 
@@ -117,11 +165,14 @@ router.post(
         productData.shop = shop;
 
         // Handle attributes from form data
-        if (productData.attributes && typeof productData.attributes === 'string') {
+        if (
+          productData.attributes &&
+          typeof productData.attributes === "string"
+        ) {
           try {
             productData.attributes = JSON.parse(productData.attributes);
           } catch (error) {
-            console.error('Error parsing attributes:', error);
+            console.error("Error parsing attributes:", error);
             productData.attributes = [];
           }
         } else if (!productData.attributes) {
@@ -130,59 +181,64 @@ router.post(
 
         // Filter out empty attributes to prevent validation errors
         if (Array.isArray(productData.attributes)) {
-          productData.attributes = productData.attributes.filter(attr => {
+          productData.attributes = productData.attributes.filter((attr) => {
             // Remove attributes that don't have a name or have empty values
-            if (!attr.name || attr.name.trim() === '') {
+            if (!attr.name || attr.name.trim() === "") {
               return false;
             }
-            
+
             // Filter out empty values within the attribute
             if (attr.values && Array.isArray(attr.values)) {
-              attr.values = attr.values.filter(val => {
-                return val.value && val.value.trim() !== '';
+              attr.values = attr.values.filter((val) => {
+                return val.value && val.value.trim() !== "";
               });
-              
+
               // If no valid values remain, remove the entire attribute
               if (attr.values.length === 0) {
                 return false;
               }
             }
-            
+
             return true;
           });
         }
-        
-        console.log('Cleaned attributes:', JSON.stringify(productData.attributes, null, 2));
+
+        console.log(
+          "Cleaned attributes:",
+          JSON.stringify(productData.attributes, null, 2),
+        );
 
         // Set isSellerProduct to true for seller-created products
         productData.isSellerProduct = true;
         productData.isAdminTagged = false; // Seller-created products are not admin-tagged
         productData.sellerShop = shopId; // Associate with the seller's shop
-        productData.approvalStatus = 'pending'; // Require admin approval
+        productData.approvalStatus = "pending"; // Require admin approval
 
-        console.log('Creating product with Cloudinary URLs:');
-        console.log('Images:', uploadedImages);
-        console.log('Videos:', uploadedVideos);
-        console.log('Setting isSellerProduct: true for seller product');
-        console.log('Setting approvalStatus: pending - requires admin approval');
+        console.log("Creating product with Cloudinary URLs:");
+        console.log("Images:", uploadedImages);
+        console.log("Videos:", uploadedVideos);
+        console.log("Setting isSellerProduct: true for seller product");
+        console.log(
+          "Setting approvalStatus: pending - requires admin approval",
+        );
 
         const product = await Product.create(productData);
 
-        console.log('Product created successfully:', {
+        console.log("Product created successfully:", {
           id: product._id,
           name: product.name,
           images: product.images,
-          videos: product.videos
+          videos: product.videos,
         });
 
         // Create notification for new product
         await NotificationService.createProductNotification(
-          'New Product Added',
+          "New Product Added",
           `Product "${product.name}" added by ${shop.name}`,
-          'new_product',
+          "new_product",
           product._id,
           null,
-          [shopId]
+          [shopId],
         );
 
         res.status(201).json({
@@ -193,7 +249,7 @@ router.post(
     } catch (error) {
       return next(new ErrorHandler(error, 400));
     }
-  })
+  }),
 );
 
 // get all products of a shop
@@ -201,23 +257,39 @@ router.get(
   "/get-all-products-shop/:id",
   catchAsyncErrors(async (req, res, next) => {
     try {
+      const shopId = req.params.id;
+      if (
+        !shopId ||
+        shopId === "null" ||
+        shopId === "undefined" ||
+        !mongoose.Types.ObjectId.isValid(shopId)
+      ) {
+        return res.status(200).json({
+          success: true,
+          products: [],
+        });
+      }
+
       // Find products that are either:
       // 1. Created by this shop (shopId matches)
       // 2. Tagged to this shop by admin (sellerShop matches and isSellerProduct is true)
       const products = await Product.find({
         $or: [
-          { shopId: req.params.id }, // Products created by this shop
-          { 
-            sellerShop: req.params.id, 
-            isSellerProduct: true 
-          } // Products tagged to this shop by admin
-        ]
+          { shopId }, // Products created by this shop
+          {
+            sellerShop: shopId,
+            isSellerProduct: true,
+          }, // Products tagged to this shop by admin
+        ],
       })
-        .populate('category', 'name _id parent')
-        .populate('sellerShop', 'name email phoneNumber address avatar averageRating _id');
+        .populate("category", "name _id parent")
+        .populate(
+          "sellerShop",
+          "name email phoneNumber address avatar averageRating _id",
+        );
 
       // Products already have correct shop names based on their type
-      const transformedProducts = products.map(product => {
+      const transformedProducts = products.map((product) => {
         return product.toObject();
       });
 
@@ -228,7 +300,7 @@ router.get(
     } catch (error) {
       return next(new ErrorHandler(error, 400));
     }
-  })
+  }),
 );
 
 // get single product
@@ -236,11 +308,14 @@ router.get(
   "/get-product/:id",
   catchAsyncErrors(async (req, res, next) => {
     try {
-      console.log('Getting product with ID:', req.params.id);
-      
+      console.log("Getting product with ID:", req.params.id);
+
       const product = await Product.findById(req.params.id)
-        .populate('category', 'name _id parent')
-        .populate('sellerShop', 'name email phoneNumber address avatar averageRating _id');
+        .populate("category", "name _id parent")
+        .populate(
+          "sellerShop",
+          "name email phoneNumber address avatar averageRating _id",
+        );
 
       if (!product) {
         return next(new ErrorHandler("Product not found with this id!", 404));
@@ -251,20 +326,20 @@ router.get(
       if (product.isSellerProduct !== false) {
         const Shop = require("../model/shop");
         let hasValidShop = false;
-        
+
         // Check populated sellerShop
         if (product.sellerShop && product.sellerShop._id) {
           hasValidShop = true;
         } else {
           // Check other shop references
           let shopToCheck = null;
-          
+
           if (product.shopId) {
             shopToCheck = product.shopId;
           } else if (product.shop && product.shop._id) {
             shopToCheck = product.shop._id;
           }
-          
+
           if (shopToCheck) {
             const shopExists = await Shop.findById(shopToCheck);
             hasValidShop = !!shopExists;
@@ -272,17 +347,24 @@ router.get(
         }
 
         if (!hasValidShop) {
-          console.log(`Seller product ${product._id} has deleted shop reference`);
-          return next(new ErrorHandler("Product is no longer available (shop deleted)!", 404));
+          console.log(
+            `Seller product ${product._id} has deleted shop reference`,
+          );
+          return next(
+            new ErrorHandler(
+              "Product is no longer available (shop deleted)!",
+              404,
+            ),
+          );
         }
       }
 
-      console.log('Product found:', {
+      console.log("Product found:", {
         id: product._id,
         name: product.name,
         isSellerProduct: product.isSellerProduct,
         sellerShop: product.sellerShop,
-        sellerShopType: typeof product.sellerShop
+        sellerShopType: typeof product.sellerShop,
       });
 
       // Product already has correct shop name based on its type
@@ -295,7 +377,7 @@ router.get(
     } catch (error) {
       return next(new ErrorHandler(error, 400));
     }
-  })
+  }),
 );
 
 // update product of a shop (accessible by seller or store manager)
@@ -314,47 +396,69 @@ router.put(
 
       // Check if the product belongs to the seller's shop
       if (product.shopId.toString() !== req.seller._id.toString()) {
-        return next(new ErrorHandler("You are not authorized to update this product!", 403));
+        return next(
+          new ErrorHandler(
+            "You are not authorized to update this product!",
+            403,
+          ),
+        );
       }
 
-      const imageFiles = req.files['images'] || [];
-      const videoFiles = req.files['videos'] || [];
+      const imageFiles = req.files["images"] || [];
+      const videoFiles = req.files["videos"] || [];
       let newImages = [];
       let newVideos = [];
 
       // Handle image uploads
       if (imageFiles && imageFiles.length > 0) {
-        console.log(`Processing ${imageFiles.length} new image files for update`);
-        
+        console.log(
+          `Processing ${imageFiles.length} new image files for update`,
+        );
+
         // First, upload all new images to Cloudinary
         const uploadedImages = [];
         for (const file of imageFiles) {
           try {
-            console.log(`Uploading new image: ${file.originalname} (${file.mimetype})`);
-            
+            console.log(
+              `Uploading new image: ${file.originalname} (${file.mimetype})`,
+            );
+
             // Use buffer upload for memory storage
             const result = await uploadToCloudinary(file.buffer, {
-              resource_type: 'image',
-              folder: 'products/images',
-              allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg']
+              resource_type: "image",
+              folder: "products/images",
+              allowed_formats: [
+                "jpg",
+                "jpeg",
+                "png",
+                "gif",
+                "webp",
+                "bmp",
+                "svg",
+              ],
             });
-            
+
             console.log(`New image uploaded successfully: ${result.url}`);
             uploadedImages.push({
               url: result.url,
-              public_id: result.public_id
+              public_id: result.public_id,
             });
           } catch (error) {
-            console.error('Image upload error during update:', error);
+            console.error("Image upload error during update:", error);
             // Clean up any uploaded files before throwing error
             for (const uploaded of uploadedImages) {
               try {
-                await deleteFromCloudinary(uploaded.public_id, 'image');
+                await deleteFromCloudinary(uploaded.public_id, "image");
               } catch (cleanupError) {
-                console.error('Error cleaning up uploaded images:', cleanupError);
+                console.error(
+                  "Error cleaning up uploaded images:",
+                  cleanupError,
+                );
               }
             }
-            return next(new ErrorHandler(`Image upload failed: ${error.message}`, 400));
+            return next(
+              new ErrorHandler(`Image upload failed: ${error.message}`, 400),
+            );
           }
         }
 
@@ -363,10 +467,13 @@ router.put(
           for (const image of product.images) {
             if (image.public_id) {
               try {
-                await deleteFromCloudinary(image.public_id, 'image');
+                await deleteFromCloudinary(image.public_id, "image");
                 console.log(`Deleted old image: ${image.public_id}`);
               } catch (error) {
-                console.error(`Failed to delete old image ${image.public_id}:`, error);
+                console.error(
+                  `Failed to delete old image ${image.public_id}:`,
+                  error,
+                );
               }
             }
           }
@@ -381,37 +488,54 @@ router.put(
 
       // Handle video uploads
       if (videoFiles && videoFiles.length > 0) {
-        console.log(`Processing ${videoFiles.length} new video files for update`);
-        
+        console.log(
+          `Processing ${videoFiles.length} new video files for update`,
+        );
+
         // First, upload all new videos to Cloudinary
         const uploadedVideos = [];
         for (const file of videoFiles) {
           try {
-            console.log(`Uploading new video: ${file.originalname} (${file.mimetype})`);
-            
+            console.log(
+              `Uploading new video: ${file.originalname} (${file.mimetype})`,
+            );
+
             // Use buffer upload for memory storage
             const result = await uploadToCloudinary(file.buffer, {
-              resource_type: 'video',
-              folder: 'products/videos',
-              allowed_formats: ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv']
+              resource_type: "video",
+              folder: "products/videos",
+              allowed_formats: [
+                "mp4",
+                "avi",
+                "mov",
+                "wmv",
+                "flv",
+                "webm",
+                "mkv",
+              ],
             });
-            
+
             console.log(`New video uploaded successfully: ${result.url}`);
             uploadedVideos.push({
               url: result.url,
-              public_id: result.public_id
+              public_id: result.public_id,
             });
           } catch (error) {
-            console.error('Video upload error during update:', error);
+            console.error("Video upload error during update:", error);
             // Clean up any uploaded files before throwing error
             for (const uploaded of uploadedVideos) {
               try {
-                await deleteFromCloudinary(uploaded.public_id, 'video');
+                await deleteFromCloudinary(uploaded.public_id, "video");
               } catch (cleanupError) {
-                console.error('Error cleaning up uploaded videos:', cleanupError);
+                console.error(
+                  "Error cleaning up uploaded videos:",
+                  cleanupError,
+                );
               }
             }
-            return next(new ErrorHandler(`Video upload failed: ${error.message}`, 400));
+            return next(
+              new ErrorHandler(`Video upload failed: ${error.message}`, 400),
+            );
           }
         }
 
@@ -420,10 +544,13 @@ router.put(
           for (const video of product.videos) {
             if (video.public_id) {
               try {
-                await deleteFromCloudinary(video.public_id, 'video');
+                await deleteFromCloudinary(video.public_id, "video");
                 console.log(`Deleted old video: ${video.public_id}`);
               } catch (error) {
-                console.error(`Failed to delete old video ${video.public_id}:`, error);
+                console.error(
+                  `Failed to delete old video ${video.public_id}:`,
+                  error,
+                );
               }
             }
           }
@@ -440,11 +567,12 @@ router.put(
       let parsedAttributes = product.attributes; // Default to existing attributes
       if (req.body.attributes) {
         try {
-          parsedAttributes = typeof req.body.attributes === 'string' 
-            ? JSON.parse(req.body.attributes) 
-            : req.body.attributes;
+          parsedAttributes =
+            typeof req.body.attributes === "string"
+              ? JSON.parse(req.body.attributes)
+              : req.body.attributes;
         } catch (error) {
-          console.error('Error parsing attributes:', error);
+          console.error("Error parsing attributes:", error);
           return next(new ErrorHandler("Invalid attributes format", 400));
         }
       }
@@ -462,29 +590,33 @@ router.put(
         videos: newVideos,
       };
 
-      const updatedProduct = await Product.findByIdAndUpdate(productId, updateData, {
-        new: true,
-        runValidators: true,
-      });
+      const updatedProduct = await Product.findByIdAndUpdate(
+        productId,
+        updateData,
+        {
+          new: true,
+          runValidators: true,
+        },
+      );
 
       // Check for low stock and create notification
       if (updatedProduct.stock <= 10 && updatedProduct.stock > 0) {
         await NotificationService.createStockNotification(
-          'Low Stock Alert',
+          "Low Stock Alert",
           `Product "${updatedProduct.name}" is running low on stock (${updatedProduct.stock} remaining)`,
-          'low_stock',
+          "low_stock",
           updatedProduct._id,
           null,
-          [updatedProduct.shopId]
+          [updatedProduct.shopId],
         );
       } else if (updatedProduct.stock === 0) {
         await NotificationService.createStockNotification(
-          'Out of Stock Alert',
+          "Out of Stock Alert",
           `Product "${updatedProduct.name}" is now out of stock`,
-          'out_of_stock',
+          "out_of_stock",
           updatedProduct._id,
           null,
-          [updatedProduct.shopId]
+          [updatedProduct.shopId],
         );
       }
 
@@ -496,7 +628,7 @@ router.put(
     } catch (error) {
       return next(new ErrorHandler(error, 400));
     }
-  })
+  }),
 );
 
 // delete product of a shop
@@ -514,15 +646,23 @@ router.delete(
       }
 
       // Check ownership - seller can only delete their own products
-      if (productData.shopId && productData.shopId.toString() !== req.seller._id.toString()) {
-        return next(new ErrorHandler("You are not authorized to delete this product!", 403));
+      if (
+        productData.shopId &&
+        productData.shopId.toString() !== req.seller._id.toString()
+      ) {
+        return next(
+          new ErrorHandler(
+            "You are not authorized to delete this product!",
+            403,
+          ),
+        );
       }
 
       // Delete images from Cloudinary
       if (productData.images && productData.images.length > 0) {
         for (const image of productData.images) {
           if (image.public_id) {
-            await deleteFromCloudinary(image.public_id, 'image');
+            await deleteFromCloudinary(image.public_id, "image");
           }
         }
       }
@@ -531,7 +671,7 @@ router.delete(
       if (productData.videos && productData.videos.length > 0) {
         for (const video of productData.videos) {
           if (video.public_id) {
-            await deleteFromCloudinary(video.public_id, 'video');
+            await deleteFromCloudinary(video.public_id, "video");
           }
         }
       }
@@ -549,7 +689,7 @@ router.delete(
     } catch (error) {
       return next(new ErrorHandler(error, 400));
     }
-  })
+  }),
 );
 
 // get all products
@@ -560,57 +700,68 @@ router.get(
       // Only show approved products to customers (or admin products)
       const products = await Product.find({
         $or: [
-          { approvalStatus: 'approved' },
+          { approvalStatus: "approved" },
           { isSellerProduct: false }, // Admin products don't need approval
-          { approvalStatus: { $exists: false } } // Legacy products without approval status
-        ]
+          { approvalStatus: { $exists: false } }, // Legacy products without approval status
+        ],
       })
-        .populate('category', 'name _id parent')
-        .populate('sellerShop', 'name email phoneNumber address avatar averageRating _id')
+        .populate("category", "name _id parent")
+        .populate(
+          "sellerShop",
+          "name email phoneNumber address avatar averageRating _id",
+        )
         .sort({ createdAt: -1 });
 
       // Get all existing shop IDs for validation
       const Shop = require("../model/shop");
-      const existingShops = await Shop.find({}, '_id');
-      const existingShopIds = existingShops.map(shop => shop._id.toString());
+      const existingShops = await Shop.find({}, "_id");
+      const existingShopIds = existingShops.map((shop) => shop._id.toString());
 
       // Filter out only seller-created products with deleted shops
       // Admin products (isSellerProduct: false) should remain visible even if assigned shop is deleted
-      const validProducts = products.filter(product => {
+      const validProducts = products.filter((product) => {
         // Keep all admin products regardless of shop status
         if (product.isSellerProduct === false) {
           return true;
         }
-        
+
         // For seller products, check if shop still exists
         let hasValidShop = false;
-        
+
         // Check sellerShop (populated)
         if (product.sellerShop && product.sellerShop._id) {
           hasValidShop = true;
         }
-        
+
         // Check shopId (string) - verify it exists in database
-        if (product.shopId && existingShopIds.includes(product.shopId.toString())) {
+        if (
+          product.shopId &&
+          existingShopIds.includes(product.shopId.toString())
+        ) {
           hasValidShop = true;
         }
-        
+
         // Check shop object
         if (product.shop) {
-          if (product.shop._id && existingShopIds.includes(product.shop._id.toString())) {
+          if (
+            product.shop._id &&
+            existingShopIds.includes(product.shop._id.toString())
+          ) {
             hasValidShop = true;
           }
         }
-        
+
         if (!hasValidShop && product.isSellerProduct !== false) {
-          console.log(`Filtering out seller product ${product._id} with invalid shop reference`);
+          console.log(
+            `Filtering out seller product ${product._id} with invalid shop reference`,
+          );
         }
-        
+
         return hasValidShop;
       });
 
       // Products already have correct shop names based on their type
-      const transformedProducts = validProducts.map(product => {
+      const transformedProducts = validProducts.map((product) => {
         return product.toObject();
       });
 
@@ -621,7 +772,7 @@ router.get(
     } catch (error) {
       return next(new ErrorHandler(error, 400));
     }
-  })
+  }),
 );
 
 // review for a product
@@ -642,7 +793,7 @@ router.put(
       };
 
       const isReviewed = product.reviews.find(
-        (rev) => rev.user._id.toString() === req.user._id.toString()
+        (rev) => rev.user._id.toString() === req.user._id.toString(),
       );
 
       if (isReviewed) {
@@ -672,7 +823,7 @@ router.put(
         await Order.findByIdAndUpdate(
           orderId,
           { $set: { "cart.$[elem].isReviewed": true } },
-          { arrayFilters: [{ "elem._id": productId }], new: true }
+          { arrayFilters: [{ "elem._id": productId }], new: true },
         );
       }
 
@@ -683,114 +834,161 @@ router.put(
     } catch (error) {
       return next(new ErrorHandler(error, 400));
     }
-  })
+  }),
 );
 
 // Admin create product
 router.post(
   "/admin-create-product",
   isAuthenticated,
-  requirePermission('canManageProducts'),
+  requirePermission("canManageProducts"),
   uploadFields,
   catchAsyncErrors(async (req, res, next) => {
     try {
-      console.log('Admin creating product with data:', req.body);
-      
-      const imageFiles = req.files['images'] || [];
-      const videoFiles = req.files['videos'] || [];
-      console.log(`Admin product: Processing ${imageFiles.length} image files and ${videoFiles.length} video files`);
-      
+      console.log("Admin creating product with data:", req.body);
+
+      const imageFiles = req.files["images"] || [];
+      const videoFiles = req.files["videos"] || [];
+      console.log(
+        `Admin product: Processing ${imageFiles.length} image files and ${videoFiles.length} video files`,
+      );
+
       // Upload images to Cloudinary
       const imageUploads = [];
       if (imageFiles && imageFiles.length > 0) {
-        console.log('Processing', imageFiles.length, 'image files');
+        console.log("Processing", imageFiles.length, "image files");
         for (const file of imageFiles) {
           try {
             if (!file.buffer || file.buffer.length === 0) {
-              console.error('Empty file buffer for:', file.originalname);
-              return next(new ErrorHandler(`File ${file.originalname} is empty or corrupted`, 400));
+              console.error("Empty file buffer for:", file.originalname);
+              return next(
+                new ErrorHandler(
+                  `File ${file.originalname} is empty or corrupted`,
+                  400,
+                ),
+              );
             }
-            
-            console.log('Uploading admin product image to Cloudinary:', file.originalname);
+
+            console.log(
+              "Uploading admin product image to Cloudinary:",
+              file.originalname,
+            );
             const result = await uploadToCloudinary(file.buffer, {
-              folder: 'products',
-              resource_type: 'image'
+              folder: "products",
+              resource_type: "image",
             });
-            
-            console.log('Cloudinary upload result:', { 
-              secure_url: result.secure_url, 
+
+            console.log("Cloudinary upload result:", {
+              secure_url: result.secure_url,
               public_id: result.public_id,
-              url: result.url 
+              url: result.url,
             });
-            
+
             const imageData = {
-              url: result.secure_url || result.url || `https://res.cloudinary.com/${process.env.CLOUDINARY_NAME}/image/upload/${result.public_id}`,
-              public_id: result.public_id
+              url:
+                result.secure_url ||
+                result.url ||
+                `https://res.cloudinary.com/${process.env.CLOUDINARY_NAME}/image/upload/${result.public_id}`,
+              public_id: result.public_id,
             };
-            
+
             // Ensure URL is not undefined
             if (!imageData.url) {
-              console.error('Image URL is undefined, using fallback');
-              imageData.url = 'https://via.placeholder.com/400x300/cccccc/666666?text=Image+Error';
+              console.error("Image URL is undefined, using fallback");
+              imageData.url =
+                "https://via.placeholder.com/400x300/cccccc/666666?text=Image+Error";
             }
-            
+
             imageUploads.push(imageData);
-            console.log('Admin product image uploaded successfully:', result.public_id);
-            console.log('Image data added to array:', imageData);
+            console.log(
+              "Admin product image uploaded successfully:",
+              result.public_id,
+            );
+            console.log("Image data added to array:", imageData);
           } catch (uploadError) {
-            console.error('Error uploading admin product image to Cloudinary:', uploadError);
-            return next(new ErrorHandler(`Failed to upload image ${file.originalname}: ${uploadError.message}`, 500));
+            console.error(
+              "Error uploading admin product image to Cloudinary:",
+              uploadError,
+            );
+            return next(
+              new ErrorHandler(
+                `Failed to upload image ${file.originalname}: ${uploadError.message}`,
+                500,
+              ),
+            );
           }
         }
       } else {
         // Provide a default image for admin products if none uploaded
         imageUploads.push({
-          url: 'https://via.placeholder.com/400x300/cccccc/666666?text=No+Image',
-          public_id: 'default-product-image'
+          url: "https://via.placeholder.com/400x300/cccccc/666666?text=No+Image",
+          public_id: "default-product-image",
         });
-        console.log('Using default image for admin product');
+        console.log("Using default image for admin product");
       }
 
       // Upload videos to Cloudinary
       const videoUploads = [];
       if (videoFiles && videoFiles.length > 0) {
-        console.log('Processing', videoFiles.length, 'video files');
+        console.log("Processing", videoFiles.length, "video files");
         for (const file of videoFiles) {
           try {
             if (!file.buffer || file.buffer.length === 0) {
-              console.error('Empty video file buffer for:', file.originalname);
-              return next(new ErrorHandler(`Video file ${file.originalname} is empty or corrupted`, 400));
+              console.error("Empty video file buffer for:", file.originalname);
+              return next(
+                new ErrorHandler(
+                  `Video file ${file.originalname} is empty or corrupted`,
+                  400,
+                ),
+              );
             }
-            
-            console.log('Uploading admin product video to Cloudinary:', file.originalname);
+
+            console.log(
+              "Uploading admin product video to Cloudinary:",
+              file.originalname,
+            );
             const result = await uploadToCloudinary(file.buffer, {
-              folder: 'products/videos',
-              resource_type: 'video'
+              folder: "products/videos",
+              resource_type: "video",
             });
-            
-            console.log('Cloudinary video upload result:', { 
-              secure_url: result.secure_url, 
+
+            console.log("Cloudinary video upload result:", {
+              secure_url: result.secure_url,
               public_id: result.public_id,
-              url: result.url 
+              url: result.url,
             });
-            
+
             const videoData = {
-              url: result.secure_url || result.url || `https://res.cloudinary.com/${process.env.CLOUDINARY_NAME}/video/upload/${result.public_id}`,
-              public_id: result.public_id
+              url:
+                result.secure_url ||
+                result.url ||
+                `https://res.cloudinary.com/${process.env.CLOUDINARY_NAME}/video/upload/${result.public_id}`,
+              public_id: result.public_id,
             };
-            
+
             // Ensure URL is not undefined
             if (!videoData.url) {
-              console.error('Video URL is undefined, skipping this video');
+              console.error("Video URL is undefined, skipping this video");
               continue;
             }
-            
+
             videoUploads.push(videoData);
-            console.log('Admin product video uploaded successfully:', result.public_id);
-            console.log('Video data added to array:', videoData);
+            console.log(
+              "Admin product video uploaded successfully:",
+              result.public_id,
+            );
+            console.log("Video data added to array:", videoData);
           } catch (uploadError) {
-            console.error('Error uploading admin product video to Cloudinary:', uploadError);
-            return next(new ErrorHandler(`Failed to upload video ${file.originalname}: ${uploadError.message}`, 500));
+            console.error(
+              "Error uploading admin product video to Cloudinary:",
+              uploadError,
+            );
+            return next(
+              new ErrorHandler(
+                `Failed to upload video ${file.originalname}: ${uploadError.message}`,
+                500,
+              ),
+            );
           }
         }
       }
@@ -798,62 +996,87 @@ router.post(
       const productData = req.body;
       productData.images = imageUploads;
       productData.videos = videoUploads;
-      
+
       // Handle attributes from form data
-      if (productData.attributes && typeof productData.attributes === 'string') {
+      if (
+        productData.attributes &&
+        typeof productData.attributes === "string"
+      ) {
         try {
           productData.attributes = JSON.parse(productData.attributes);
         } catch (error) {
-          console.error('Error parsing attributes:', error);
+          console.error("Error parsing attributes:", error);
           productData.attributes = [];
         }
       } else if (!productData.attributes) {
         productData.attributes = [];
       }
-      
+
       // Filter out empty attributes to prevent validation errors
       if (Array.isArray(productData.attributes)) {
-        productData.attributes = productData.attributes.filter(attr => {
+        productData.attributes = productData.attributes.filter((attr) => {
           // Remove attributes that don't have a name or have empty values
-          if (!attr.name || attr.name.trim() === '') {
+          if (!attr.name || attr.name.trim() === "") {
             return false;
           }
-          
+
           // Filter out empty values within the attribute
           if (attr.values && Array.isArray(attr.values)) {
-            attr.values = attr.values.filter(val => {
-              return val.value && val.value.trim() !== '';
+            attr.values = attr.values.filter((val) => {
+              return val.value && val.value.trim() !== "";
             });
-            
+
             // If no valid values remain, remove the entire attribute
             if (attr.values.length === 0) {
               return false;
             }
           }
-          
+
           return true;
         });
       }
-      
-      console.log('Cleaned attributes:', JSON.stringify(productData.attributes, null, 2));
-      
+
+      console.log(
+        "Cleaned attributes:",
+        JSON.stringify(productData.attributes, null, 2),
+      );
+
       // Handle sellerShop field properly - remove if empty or if not a seller product
-      if (!productData.isSellerProduct || !productData.sellerShop || productData.sellerShop === '' || productData.sellerShop === 'undefined') {
+      if (
+        !productData.isSellerProduct ||
+        !productData.sellerShop ||
+        productData.sellerShop === "" ||
+        productData.sellerShop === "undefined" ||
+        productData.sellerShop === "null"
+      ) {
         delete productData.sellerShop;
         productData.isSellerProduct = false;
       }
-      
-      console.log('Final imageUploads array:', JSON.stringify(imageUploads, null, 2));
-      console.log('Final videoUploads array:', JSON.stringify(videoUploads, null, 2));
-      console.log('ProductData.images before saving:', JSON.stringify(productData.images, null, 2));
-      console.log('ProductData.videos before saving:', JSON.stringify(productData.videos, null, 2));
-      
+
+      console.log(
+        "Final imageUploads array:",
+        JSON.stringify(imageUploads, null, 2),
+      );
+      console.log(
+        "Final videoUploads array:",
+        JSON.stringify(videoUploads, null, 2),
+      );
+      console.log(
+        "ProductData.images before saving:",
+        JSON.stringify(productData.images, null, 2),
+      );
+      console.log(
+        "ProductData.videos before saving:",
+        JSON.stringify(productData.videos, null, 2),
+      );
+
       // Final validation - ensure all images have required fields
       if (productData.images && productData.images.length > 0) {
         productData.images = productData.images.map((img, index) => {
           if (!img.url) {
             console.error(`Image ${index} missing URL, adding fallback`);
-            img.url = 'https://via.placeholder.com/400x300/cccccc/666666?text=Missing+URL';
+            img.url =
+              "https://via.placeholder.com/400x300/cccccc/666666?text=Missing+URL";
           }
           if (!img.public_id) {
             console.error(`Image ${index} missing public_id, adding fallback`);
@@ -861,15 +1084,18 @@ router.post(
           }
           return img;
         });
-        console.log('Images after validation:', JSON.stringify(productData.images, null, 2));
+        console.log(
+          "Images after validation:",
+          JSON.stringify(productData.images, null, 2),
+        );
       }
-      
+
       // Handle shop and shopId assignment based on product type
-      console.log('Setting up shop information for product:', {
+      console.log("Setting up shop information for product:", {
         isSellerProduct: productData.isSellerProduct,
-        sellerShop: productData.sellerShop
+        sellerShop: productData.sellerShop,
       });
-      
+
       if (productData.isSellerProduct && productData.sellerShop) {
         // This is an admin-tagged seller product
         try {
@@ -881,64 +1107,75 @@ router.post(
               name: selectedSeller.name,
               email: selectedSeller.email,
               avatar: selectedSeller.avatar || {
-                public_id: 'seller-default',
-                url: 'https://via.placeholder.com/150/10B981/FFFFFF?text=SELLER'
-              }
+                public_id: "seller-default",
+                url: "https://via.placeholder.com/150/10B981/FFFFFF?text=SELLER",
+              },
             };
             // Mark as admin tagged since admin is creating and assigning to seller
             productData.isAdminTagged = true;
-            console.log('Successfully set admin-tagged seller product:', productData.shop.name);
+            console.log(
+              "Successfully set admin-tagged seller product:",
+              productData.shop.name,
+            );
           } else {
-            console.error('Selected seller not found:', productData.sellerShop);
+            console.error("Selected seller not found:", productData.sellerShop);
             return next(new ErrorHandler("Selected seller not found", 400));
           }
         } catch (error) {
-          console.error('Error fetching seller information:', error);
-          return next(new ErrorHandler(`Error fetching seller information: ${error.message}`, 400));
+          console.error("Error fetching seller information:", error);
+          return next(
+            new ErrorHandler(
+              `Error fetching seller information: ${error.message}`,
+              400,
+            ),
+          );
         }
       } else if (!productData.isSellerProduct || !productData.sellerShop) {
         // This is a pure admin product (no seller selected or not a seller product)
         productData.isSellerProduct = false;
         delete productData.sellerShop;
-        productData.shopId = 'admin';
+        productData.shopId = "admin";
         productData.shop = {
-          _id: 'admin',
-          name: 'Platform Admin',
-          email: req.user.email || 'admin@platform.com',
+          _id: "admin",
+          name: "Platform Admin",
+          email: req.user.email || "admin@platform.com",
           avatar: req.user.avatar || {
-            public_id: 'admin-default',
-            url: 'https://via.placeholder.com/150/4F46E5/FFFFFF?text=ADMIN'
-          }
+            public_id: "admin-default",
+            url: "https://via.placeholder.com/150/4F46E5/FFFFFF?text=ADMIN",
+          },
         };
-        console.log('Set as admin product');
+        console.log("Set as admin product");
       }
 
-      console.log('Full productData before create:', JSON.stringify(productData, null, 2));
+      console.log(
+        "Full productData before create:",
+        JSON.stringify(productData, null, 2),
+      );
       const product = await Product.create(productData);
-      console.log('Admin product created successfully');
+      console.log("Admin product created successfully");
 
       res.status(201).json({
         success: true,
         product,
-        message: "Product created successfully!"
+        message: "Product created successfully!",
       });
     } catch (error) {
-      console.error('Error creating admin product:', error);
+      console.error("Error creating admin product:", error);
       return next(new ErrorHandler(error.message || error, 400));
     }
-  })
+  }),
 );
 
 // Admin update product
 router.put(
   "/admin-update-product/:id",
   isAuthenticated,
-  requirePermission('canManageProducts'),
+  requirePermission("canManageProducts"),
   upload.array("images"),
   catchAsyncErrors(async (req, res, next) => {
     try {
       const productId = req.params.id;
-      console.log('Admin updating product:', productId);
+      console.log("Admin updating product:", productId);
 
       const existingProduct = await Product.findById(productId);
       if (!existingProduct) {
@@ -950,17 +1187,17 @@ router.put(
 
       // If new images are uploaded, replace existing ones
       if (files && files.length > 0) {
-        console.log('Processing', files.length, 'new image files');
-        
+        console.log("Processing", files.length, "new image files");
+
         // Delete old images from Cloudinary if they exist
         if (existingProduct.images && existingProduct.images.length > 0) {
           for (const img of existingProduct.images) {
-            if (img.public_id && img.public_id !== 'default-product-image') {
+            if (img.public_id && img.public_id !== "default-product-image") {
               try {
                 await cloudinary.uploader.destroy(img.public_id);
-                console.log('Deleted old image:', img.public_id);
+                console.log("Deleted old image:", img.public_id);
               } catch (deleteError) {
-                console.error('Error deleting old image:', deleteError);
+                console.error("Error deleting old image:", deleteError);
               }
             }
           }
@@ -971,46 +1208,69 @@ router.put(
         for (const file of files) {
           try {
             if (!file.buffer || file.buffer.length === 0) {
-              console.error('Empty file buffer for:', file.originalname);
-              return next(new ErrorHandler(`File ${file.originalname} is empty or corrupted`, 400));
+              console.error("Empty file buffer for:", file.originalname);
+              return next(
+                new ErrorHandler(
+                  `File ${file.originalname} is empty or corrupted`,
+                  400,
+                ),
+              );
             }
-            
-            console.log('Uploading new admin product image to Cloudinary:', file.originalname);
+
+            console.log(
+              "Uploading new admin product image to Cloudinary:",
+              file.originalname,
+            );
             const result = await uploadToCloudinary(file.buffer, {
-              folder: 'products',
-              resource_type: 'image'
+              folder: "products",
+              resource_type: "image",
             });
-            
+
             imageUploads.push({
               url: result.secure_url,
-              public_id: result.public_id
+              public_id: result.public_id,
             });
-            console.log('New admin product image uploaded successfully:', result.public_id);
+            console.log(
+              "New admin product image uploaded successfully:",
+              result.public_id,
+            );
           } catch (uploadError) {
-            console.error('Error uploading new admin product image to Cloudinary:', uploadError);
-            return next(new ErrorHandler(`Failed to upload image ${file.originalname}: ${uploadError.message}`, 500));
+            console.error(
+              "Error uploading new admin product image to Cloudinary:",
+              uploadError,
+            );
+            return next(
+              new ErrorHandler(
+                `Failed to upload image ${file.originalname}: ${uploadError.message}`,
+                500,
+              ),
+            );
           }
         }
       }
 
       const updateData = {
         ...req.body,
-        images: imageUploads
+        images: imageUploads,
       };
 
       // Parse attributes if they exist and are a string
-      if (updateData.attributes && typeof updateData.attributes === 'string') {
+      if (updateData.attributes && typeof updateData.attributes === "string") {
         try {
           updateData.attributes = JSON.parse(updateData.attributes);
         } catch (parseError) {
-          console.error('Error parsing attributes:', parseError);
+          console.error("Error parsing attributes:", parseError);
           return next(new ErrorHandler("Invalid attributes format", 400));
         }
       }
 
       // Handle sellerShop field properly - remove if empty or if not a seller product
       if (updateData.isSellerProduct === false) {
-        if (updateData.sellerShop && updateData.sellerShop !== '' && updateData.sellerShop !== 'undefined') {
+        if (
+          updateData.sellerShop &&
+          updateData.sellerShop !== "" &&
+          updateData.sellerShop !== "undefined"
+        ) {
           // This is an admin product tagged to a supplier - show supplier name with "(Admin Tagged)"
           try {
             const selectedSeller = await Shop.findById(updateData.sellerShop);
@@ -1020,53 +1280,63 @@ router.put(
                 _id: selectedSeller._id,
                 name: `${selectedSeller.name} (Admin Tagged)`,
                 email: selectedSeller.email,
-                avatar: selectedSeller.avatar
+                avatar: selectedSeller.avatar,
               };
             } else {
               // Fallback if seller not found
-              console.warn('Selected seller not found during update, falling back to admin');
+              console.warn(
+                "Selected seller not found during update, falling back to admin",
+              );
               delete updateData.sellerShop;
-              updateData.shopId = 'admin';
+              updateData.shopId = "admin";
               updateData.shop = {
-                _id: 'admin',
-                name: 'Platform Admin',
-                email: req.user.email || 'admin@platform.com',
+                _id: "admin",
+                name: "Platform Admin",
+                email: req.user.email || "admin@platform.com",
                 avatar: {
-                  public_id: 'admin-avatar',
-                  url: '/default-admin-avatar.png'
-                }
+                  public_id: "admin-avatar",
+                  url: "/default-admin-avatar.png",
+                },
               };
             }
           } catch (error) {
-            console.error('Error fetching seller information during update:', error);
+            console.error(
+              "Error fetching seller information during update:",
+              error,
+            );
             // Fallback to admin
             delete updateData.sellerShop;
-            updateData.shopId = 'admin';
+            updateData.shopId = "admin";
             updateData.shop = {
-              _id: 'admin',
-              name: 'Platform Admin',
-              email: req.user.email || 'admin@platform.com',
+              _id: "admin",
+              name: "Platform Admin",
+              email: req.user.email || "admin@platform.com",
               avatar: {
-                public_id: 'admin-avatar',
-                url: '/default-admin-avatar.png'
-              }
+                public_id: "admin-avatar",
+                url: "/default-admin-avatar.png",
+              },
             };
           }
         } else {
           // Pure admin product - show "Platform Admin"
           delete updateData.sellerShop;
-          updateData.shopId = 'admin';
+          updateData.shopId = "admin";
           updateData.shop = {
-            _id: 'admin',
-            name: 'Platform Admin',
-            email: req.user.email || 'admin@platform.com',
+            _id: "admin",
+            name: "Platform Admin",
+            email: req.user.email || "admin@platform.com",
             avatar: {
-              public_id: 'admin-avatar',
-              url: '/default-admin-avatar.png'
-            }
+              public_id: "admin-avatar",
+              url: "/default-admin-avatar.png",
+            },
           };
         }
-      } else if (updateData.isSellerProduct === true && updateData.sellerShop && updateData.sellerShop !== '' && updateData.sellerShop !== 'undefined') {
+      } else if (
+        updateData.isSellerProduct === true &&
+        updateData.sellerShop &&
+        updateData.sellerShop !== "" &&
+        updateData.sellerShop !== "undefined"
+      ) {
         // This is a seller product - show seller name without "(Admin Tagged)"
         try {
           const selectedSeller = await Shop.findById(updateData.sellerShop);
@@ -1076,56 +1346,62 @@ router.put(
               _id: selectedSeller._id,
               name: selectedSeller.name,
               email: selectedSeller.email,
-              avatar: selectedSeller.avatar
+              avatar: selectedSeller.avatar,
             };
           }
         } catch (error) {
-          console.error('Error fetching seller shop for seller product during update:', error);
+          console.error(
+            "Error fetching seller shop for seller product during update:",
+            error,
+          );
         }
       } else {
         // Invalid seller product state - fallback to admin
         delete updateData.sellerShop;
         updateData.isSellerProduct = false;
-        updateData.shopId = 'admin';
+        updateData.shopId = "admin";
         updateData.shop = {
-          _id: 'admin',
-          name: 'Platform Admin',
-          email: req.user.email || 'admin@platform.com',
+          _id: "admin",
+          name: "Platform Admin",
+          email: req.user.email || "admin@platform.com",
           avatar: {
-            public_id: 'admin-avatar',
-            url: '/default-admin-avatar.png'
-          }
+            public_id: "admin-avatar",
+            url: "/default-admin-avatar.png",
+          },
         };
       }
 
-      console.log('Updating product with data:', JSON.stringify(updateData, null, 2));
+      console.log(
+        "Updating product with data:",
+        JSON.stringify(updateData, null, 2),
+      );
       const product = await Product.findByIdAndUpdate(productId, updateData, {
         new: true,
-        runValidators: true
+        runValidators: true,
       });
 
-      console.log('Admin product updated successfully');
+      console.log("Admin product updated successfully");
       res.status(200).json({
         success: true,
         product,
-        message: "Product updated successfully!"
+        message: "Product updated successfully!",
       });
     } catch (error) {
-      console.error('Error updating admin product:', error);
+      console.error("Error updating admin product:", error);
       return next(new ErrorHandler(error.message || error, 400));
     }
-  })
+  }),
 );
 
 // Admin delete product
 router.delete(
   "/admin-delete-product/:id",
   isAuthenticated,
-  requirePermission('canManageProducts'),
+  requirePermission("canManageProducts"),
   catchAsyncErrors(async (req, res, next) => {
     try {
       const productId = req.params.id;
-      console.log('Admin deleting product:', productId);
+      console.log("Admin deleting product:", productId);
 
       const product = await Product.findById(productId);
       if (!product) {
@@ -1135,41 +1411,46 @@ router.delete(
       // Delete images from Cloudinary
       if (product.images && product.images.length > 0) {
         for (const img of product.images) {
-          if (img.public_id && img.public_id !== 'default-product-image') {
+          if (img.public_id && img.public_id !== "default-product-image") {
             try {
               await cloudinary.uploader.destroy(img.public_id);
-              console.log('Deleted product image:', img.public_id);
+              console.log("Deleted product image:", img.public_id);
             } catch (deleteError) {
-              console.error('Error deleting product image:', deleteError);
+              console.error("Error deleting product image:", deleteError);
             }
           }
         }
       }
 
       await Product.findByIdAndDelete(productId);
-      console.log('Admin product deleted successfully');
+      console.log("Admin product deleted successfully");
 
       res.status(200).json({
         success: true,
-        message: "Product deleted successfully!"
+        message: "Product deleted successfully!",
       });
     } catch (error) {
-      console.error('Error deleting admin product:', error);
+      console.error("Error deleting admin product:", error);
       return next(new ErrorHandler(error.message || error, 400));
     }
-  })
+  }),
 );
 
 // Admin toggle product status (publish/unpublish)
 router.patch(
   "/admin-toggle-product-status/:id",
   isAuthenticated,
-  requirePermission('canManageProducts'),
+  requirePermission("canManageProducts"),
   catchAsyncErrors(async (req, res, next) => {
     try {
       const productId = req.params.id;
       const { isPublished } = req.body;
-      console.log('Admin toggling product status:', productId, 'to:', isPublished);
+      console.log(
+        "Admin toggling product status:",
+        productId,
+        "to:",
+        isPublished,
+      );
 
       const product = await Product.findById(productId);
       if (!product) {
@@ -1179,34 +1460,37 @@ router.patch(
       product.isPublished = isPublished;
       await product.save();
 
-      console.log('Admin product status updated successfully');
+      console.log("Admin product status updated successfully");
       res.status(200).json({
         success: true,
         product,
-        message: `Product ${isPublished ? 'published' : 'unpublished'} successfully!`
+        message: `Product ${isPublished ? "published" : "unpublished"} successfully!`,
       });
     } catch (error) {
-      console.error('Error updating admin product status:', error);
+      console.error("Error updating admin product status:", error);
       return next(new ErrorHandler(error.message || error, 400));
     }
-  })
+  }),
 );
 
 // all products --- for admin
 router.get(
   "/admin-all-products",
   isAuthenticated,
-  requirePermission('canManageProducts'),
+  requirePermission("canManageProducts"),
   catchAsyncErrors(async (req, res, next) => {
     try {
       const products = await Product.find()
-        .populate('sellerShop', 'name email phoneNumber address avatar averageRating _id')
+        .populate(
+          "sellerShop",
+          "name email phoneNumber address avatar averageRating _id",
+        )
         .sort({
           createdAt: -1,
         });
 
       // Products already have correct shop names based on their type
-      const transformedProducts = products.map(product => {
+      const transformedProducts = products.map((product) => {
         return product.toObject();
       });
 
@@ -1217,7 +1501,7 @@ router.get(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Update product shipping configuration
@@ -1232,7 +1516,7 @@ router.put(
       // Find the product and verify it belongs to the seller
       const product = await Product.findOne({
         _id: productId,
-        shopId: req.seller.id
+        shopId: req.seller.id,
       });
 
       if (!product) {
@@ -1241,13 +1525,23 @@ router.put(
 
       // Update shipping configuration with precision handling
       product.shipping = {
-        baseShippingRate: shipping.baseShippingRate ? Math.round(shipping.baseShippingRate * 100) / 100 : 0,
-        freeShippingThreshold: shipping.freeShippingThreshold ? Math.round(shipping.freeShippingThreshold * 100) / 100 : null,
+        baseShippingRate: shipping.baseShippingRate
+          ? Math.round(shipping.baseShippingRate * 100) / 100
+          : 0,
+        freeShippingThreshold: shipping.freeShippingThreshold
+          ? Math.round(shipping.freeShippingThreshold * 100) / 100
+          : null,
         weight: shipping.weight ? Math.round(shipping.weight * 100) / 100 : 1,
         dimensions: {
-          length: shipping.dimensions?.length ? Math.round(shipping.dimensions.length * 100) / 100 : 10,
-          width: shipping.dimensions?.width ? Math.round(shipping.dimensions.width * 100) / 100 : 10,
-          height: shipping.dimensions?.height ? Math.round(shipping.dimensions.height * 100) / 100 : 5,
+          length: shipping.dimensions?.length
+            ? Math.round(shipping.dimensions.length * 100) / 100
+            : 10,
+          width: shipping.dimensions?.width
+            ? Math.round(shipping.dimensions.width * 100) / 100
+            : 10,
+          height: shipping.dimensions?.height
+            ? Math.round(shipping.dimensions.height * 100) / 100
+            : 5,
         },
         expressDeliveryAvailable: shipping.expressDeliveryAvailable ?? true,
         estimatedDeliveryDays: {
@@ -1255,10 +1549,13 @@ router.put(
           max: shipping.estimatedDeliveryDays?.max || 7,
         },
         restrictions: {
-          customServicePincodes: shipping.restrictions?.customServicePincodes || [],
+          customServicePincodes:
+            shipping.restrictions?.customServicePincodes || [],
           excludePincodes: shipping.restrictions?.excludePincodes || [],
-          requiresSpecialHandling: shipping.restrictions?.requiresSpecialHandling || false,
-          specialHandlingCharge: shipping.restrictions?.specialHandlingCharge || 0,
+          requiresSpecialHandling:
+            shipping.restrictions?.requiresSpecialHandling || false,
+          specialHandlingCharge:
+            shipping.restrictions?.specialHandlingCharge || 0,
         },
       };
 
@@ -1272,7 +1569,7 @@ router.put(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Bulk update shipping configuration for multiple products
@@ -1283,29 +1580,45 @@ router.put(
     try {
       const { productIds, shipping } = req.body;
 
-      if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
+      if (
+        !productIds ||
+        !Array.isArray(productIds) ||
+        productIds.length === 0
+      ) {
         return next(new ErrorHandler("Please provide valid product IDs", 400));
       }
 
       // Find all products that belong to this seller
       const products = await Product.find({
         _id: { $in: productIds },
-        shopId: req.seller.id
+        shopId: req.seller.id,
       });
 
       if (products.length !== productIds.length) {
-        return next(new ErrorHandler("Some products not found or unauthorized", 404));
+        return next(
+          new ErrorHandler("Some products not found or unauthorized", 404),
+        );
       }
 
       // Prepare shipping configuration with precision handling
       const shippingConfig = {
-        baseShippingRate: shipping.baseShippingRate ? Math.round(shipping.baseShippingRate * 100) / 100 : 0,
-        freeShippingThreshold: shipping.freeShippingThreshold ? Math.round(shipping.freeShippingThreshold * 100) / 100 : null,
+        baseShippingRate: shipping.baseShippingRate
+          ? Math.round(shipping.baseShippingRate * 100) / 100
+          : 0,
+        freeShippingThreshold: shipping.freeShippingThreshold
+          ? Math.round(shipping.freeShippingThreshold * 100) / 100
+          : null,
         weight: shipping.weight ? Math.round(shipping.weight * 100) / 100 : 1,
         dimensions: {
-          length: shipping.dimensions?.length ? Math.round(shipping.dimensions.length * 100) / 100 : 10,
-          width: shipping.dimensions?.width ? Math.round(shipping.dimensions.width * 100) / 100 : 10,
-          height: shipping.dimensions?.height ? Math.round(shipping.dimensions.height * 100) / 100 : 5,
+          length: shipping.dimensions?.length
+            ? Math.round(shipping.dimensions.length * 100) / 100
+            : 10,
+          width: shipping.dimensions?.width
+            ? Math.round(shipping.dimensions.width * 100) / 100
+            : 10,
+          height: shipping.dimensions?.height
+            ? Math.round(shipping.dimensions.height * 100) / 100
+            : 5,
         },
         expressDeliveryAvailable: shipping.expressDeliveryAvailable ?? true,
         estimatedDeliveryDays: {
@@ -1313,10 +1626,13 @@ router.put(
           max: shipping.estimatedDeliveryDays?.max || 7,
         },
         restrictions: {
-          customServicePincodes: shipping.restrictions?.customServicePincodes || [],
+          customServicePincodes:
+            shipping.restrictions?.customServicePincodes || [],
           excludePincodes: shipping.restrictions?.excludePincodes || [],
-          requiresSpecialHandling: shipping.restrictions?.requiresSpecialHandling || false,
-          specialHandlingCharge: shipping.restrictions?.specialHandlingCharge || 0,
+          requiresSpecialHandling:
+            shipping.restrictions?.requiresSpecialHandling || false,
+          specialHandlingCharge:
+            shipping.restrictions?.specialHandlingCharge || 0,
         },
       };
 
@@ -1324,11 +1640,11 @@ router.put(
       await Product.updateMany(
         {
           _id: { $in: productIds },
-          shopId: req.seller.id
+          shopId: req.seller.id,
         },
         {
-          $set: { shipping: shippingConfig }
-        }
+          $set: { shipping: shippingConfig },
+        },
       );
 
       res.status(200).json({
@@ -1339,7 +1655,7 @@ router.put(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Add custom service pincodes for a product
@@ -1349,14 +1665,17 @@ router.put(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { pincodes } = req.body; // Array of pincode strings
-      
+
       if (!pincodes || !Array.isArray(pincodes) || pincodes.length === 0) {
-        return next(new ErrorHandler("Please provide valid pincodes array", 400));
+        return next(
+          new ErrorHandler("Please provide valid pincodes array", 400),
+        );
       }
 
       // Validate pincode format
-      const validPincodes = pincodes.filter(pincode => 
-        typeof pincode === 'string' && /^\d{6}$/.test(pincode.trim())
+      const validPincodes = pincodes.filter(
+        (pincode) =>
+          typeof pincode === "string" && /^\d{6}$/.test(pincode.trim()),
       );
 
       if (validPincodes.length === 0) {
@@ -1378,27 +1697,28 @@ router.put(
         product.shipping = {
           restrictions: {
             customServicePincodes: [],
-            excludePincodes: []
-          }
+            excludePincodes: [],
+          },
         };
       } else if (!product.shipping.restrictions) {
         product.shipping.restrictions = {
           customServicePincodes: [],
-          excludePincodes: []
+          excludePincodes: [],
         };
       } else if (!product.shipping.restrictions.customServicePincodes) {
         product.shipping.restrictions.customServicePincodes = [];
       }
 
       // Add unique pincodes
-      const existingPincodes = product.shipping.restrictions.customServicePincodes || [];
-      const newPincodes = validPincodes.filter(pincode => 
-        !existingPincodes.includes(pincode.trim())
+      const existingPincodes =
+        product.shipping.restrictions.customServicePincodes || [];
+      const newPincodes = validPincodes.filter(
+        (pincode) => !existingPincodes.includes(pincode.trim()),
       );
 
       product.shipping.restrictions.customServicePincodes = [
         ...existingPincodes,
-        ...newPincodes.map(p => p.trim())
+        ...newPincodes.map((p) => p.trim()),
       ];
 
       await product.save();
@@ -1408,14 +1728,15 @@ router.put(
         message: `Added ${newPincodes.length} new service pincodes`,
         data: {
           productId: product._id,
-          totalPincodes: product.shipping.restrictions.customServicePincodes.length,
+          totalPincodes:
+            product.shipping.restrictions.customServicePincodes.length,
           addedPincodes: newPincodes,
         },
       });
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Remove custom service pincodes for a product
@@ -1425,9 +1746,11 @@ router.put(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { pincodes } = req.body; // Array of pincode strings to remove
-      
+
       if (!pincodes || !Array.isArray(pincodes) || pincodes.length === 0) {
-        return next(new ErrorHandler("Please provide valid pincodes array", 400));
+        return next(
+          new ErrorHandler("Please provide valid pincodes array", 400),
+        );
       }
 
       const product = await Product.findById(req.params.id);
@@ -1452,14 +1775,16 @@ router.put(
         });
       }
 
-      const beforeCount = product.shipping.restrictions.customServicePincodes.length;
-      
-      product.shipping.restrictions.customServicePincodes = 
-        product.shipping.restrictions.customServicePincodes.filter(pincode =>
-          !pincodes.includes(pincode)
+      const beforeCount =
+        product.shipping.restrictions.customServicePincodes.length;
+
+      product.shipping.restrictions.customServicePincodes =
+        product.shipping.restrictions.customServicePincodes.filter(
+          (pincode) => !pincodes.includes(pincode),
         );
 
-      const afterCount = product.shipping.restrictions.customServicePincodes.length;
+      const afterCount =
+        product.shipping.restrictions.customServicePincodes.length;
       const removedCount = beforeCount - afterCount;
 
       await product.save();
@@ -1476,7 +1801,7 @@ router.put(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Clear all custom service pincodes for a product
@@ -1495,7 +1820,8 @@ router.put(
         return next(new ErrorHandler("Access denied", 403));
       }
 
-      const beforeCount = product.shipping?.restrictions?.customServicePincodes?.length || 0;
+      const beforeCount =
+        product.shipping?.restrictions?.customServicePincodes?.length || 0;
 
       if (product.shipping?.restrictions) {
         product.shipping.restrictions.customServicePincodes = [];
@@ -1514,7 +1840,7 @@ router.put(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Bulk upload custom pincodes from Excel
@@ -1524,15 +1850,17 @@ router.post(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { pincodes, replaceExisting = false } = req.body;
-      
+
       if (!pincodes || !Array.isArray(pincodes) || pincodes.length === 0) {
-        return next(new ErrorHandler("Please provide valid pincodes array", 400));
+        return next(
+          new ErrorHandler("Please provide valid pincodes array", 400),
+        );
       }
 
       // Validate and clean pincodes
       const validPincodes = pincodes
-        .map(pincode => String(pincode).trim())
-        .filter(pincode => /^\d{6}$/.test(pincode))
+        .map((pincode) => String(pincode).trim())
+        .filter((pincode) => /^\d{6}$/.test(pincode))
         .filter((pincode, index, arr) => arr.indexOf(pincode) === index); // Remove duplicates
 
       if (validPincodes.length === 0) {
@@ -1551,9 +1879,14 @@ router.post(
 
       // Initialize shipping structure if needed
       if (!product.shipping) {
-        product.shipping = { restrictions: { customServicePincodes: [], excludePincodes: [] } };
+        product.shipping = {
+          restrictions: { customServicePincodes: [], excludePincodes: [] },
+        };
       } else if (!product.shipping.restrictions) {
-        product.shipping.restrictions = { customServicePincodes: [], excludePincodes: [] };
+        product.shipping.restrictions = {
+          customServicePincodes: [],
+          excludePincodes: [],
+        };
       } else if (!product.shipping.restrictions.customServicePincodes) {
         product.shipping.restrictions.customServicePincodes = [];
       }
@@ -1562,7 +1895,8 @@ router.post(
       if (replaceExisting) {
         finalPincodes = validPincodes;
       } else {
-        const existingPincodes = product.shipping.restrictions.customServicePincodes || [];
+        const existingPincodes =
+          product.shipping.restrictions.customServicePincodes || [];
         finalPincodes = [...new Set([...existingPincodes, ...validPincodes])];
       }
 
@@ -1582,7 +1916,7 @@ router.post(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Update product GST settings
@@ -1602,7 +1936,9 @@ router.put(
 
       // Check if the seller owns this product
       if (product.shopId.toString() !== req.seller.id.toString()) {
-        return next(new ErrorHandler("You can only update your own products", 403));
+        return next(
+          new ErrorHandler("You can only update your own products", 403),
+        );
       }
 
       // Validate GST configuration
@@ -1628,7 +1964,10 @@ router.put(
               sgstRate > 100
             ) {
               return next(
-                new ErrorHandler("Invalid CGST or SGST rate. Must be between 0 and 100", 400)
+                new ErrorHandler(
+                  "Invalid CGST or SGST rate. Must be between 0 and 100",
+                  400,
+                ),
               );
             }
           } else if (gstType === "combined") {
@@ -1638,7 +1977,10 @@ router.put(
               combinedGstRate > 100
             ) {
               return next(
-                new ErrorHandler("Invalid combined GST rate. Must be between 0 and 100", 400)
+                new ErrorHandler(
+                  "Invalid combined GST rate. Must be between 0 and 100",
+                  400,
+                ),
               );
             }
           } else {
@@ -1673,7 +2015,7 @@ router.put(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Clean up orphaned products (Admin only) - products with deleted shops
@@ -1684,88 +2026,105 @@ router.delete(
   catchAsyncErrors(async (req, res, next) => {
     try {
       console.log("Starting cleanup of orphaned products...");
-      
+
       // Get all existing shop IDs
       const Shop = require("../model/shop");
-      const existingShops = await Shop.find({}, '_id');
-      const existingShopIds = existingShops.map(shop => shop._id.toString());
-      
+      const existingShops = await Shop.find({}, "_id");
+      const existingShopIds = existingShops.map((shop) => shop._id.toString());
+
       console.log(`Found ${existingShopIds.length} existing shops`);
-      
+
       // Find all products
       const allProducts = await Product.find();
       console.log(`Found ${allProducts.length} total products`);
-      
+
       // Find orphaned products - ONLY seller-created products that reference non-existent shops
-      const orphanedProducts = allProducts.filter(product => {
+      const orphanedProducts = allProducts.filter((product) => {
         // First check if this is a seller product - if not, don't delete it
         if (product.isSellerProduct === false) {
           return false; // Don't delete admin products
         }
-        
+
         let hasValidShop = false;
-        
+
         // Check shopId (string)
-        if (product.shopId && existingShopIds.includes(product.shopId.toString())) {
+        if (
+          product.shopId &&
+          existingShopIds.includes(product.shopId.toString())
+        ) {
           hasValidShop = true;
         }
-        
+
         // Check sellerShop (ObjectId)
-        if (product.sellerShop && existingShopIds.includes(product.sellerShop.toString())) {
+        if (
+          product.sellerShop &&
+          existingShopIds.includes(product.sellerShop.toString())
+        ) {
           hasValidShop = true;
         }
-        
+
         // Check shop object
         if (product.shop) {
-          if (product.shop._id && existingShopIds.includes(product.shop._id.toString())) {
+          if (
+            product.shop._id &&
+            existingShopIds.includes(product.shop._id.toString())
+          ) {
             hasValidShop = true;
           }
-          if (product.shop.id && existingShopIds.includes(product.shop.id.toString())) {
+          if (
+            product.shop.id &&
+            existingShopIds.includes(product.shop.id.toString())
+          ) {
             hasValidShop = true;
           }
         }
-        
+
         if (!hasValidShop) {
-          console.log(`Found orphaned SELLER product: ${product._id} - ${product.name} (isSellerProduct: ${product.isSellerProduct})`);
+          console.log(
+            `Found orphaned SELLER product: ${product._id} - ${product.name} (isSellerProduct: ${product.isSellerProduct})`,
+          );
           console.log(`  shopId: ${product.shopId}`);
           console.log(`  sellerShop: ${product.sellerShop}`);
           console.log(`  shop: ${JSON.stringify(product.shop)}`);
         }
-        
+
         return !hasValidShop;
       });
-      
+
       console.log(`Found ${orphanedProducts.length} orphaned SELLER products`);
-      
+
       if (orphanedProducts.length === 0) {
         return res.status(200).json({
           success: true,
-          message: "No orphaned seller products found. Admin products are preserved.",
-          deletedCount: 0
+          message:
+            "No orphaned seller products found. Admin products are preserved.",
+          deletedCount: 0,
         });
       }
 
       // Delete orphaned products
-      const orphanedProductIds = orphanedProducts.map(product => product._id);
+      const orphanedProductIds = orphanedProducts.map((product) => product._id);
       const deleteResult = await Product.deleteMany({
-        _id: { $in: orphanedProductIds }
+        _id: { $in: orphanedProductIds },
       });
 
       // Also clean up related data for these products
       const Event = require("../model/event");
       const VideoBanner = require("../model/videoBanner");
-      
+
       // Delete events that reference these products
       const deletedEvents = await Event.deleteMany({
-        productId: { $in: orphanedProductIds }
+        productId: { $in: orphanedProductIds },
       });
 
       // Delete video banners that reference these products
       const deletedVideoBanners = await VideoBanner.deleteMany({
-        productId: { $in: orphanedProductIds }
+        productId: { $in: orphanedProductIds },
       });
 
-      console.log(`Cleanup completed: ${deleteResult.deletedCount} seller products, ${deletedEvents.deletedCount} events, ${deletedVideoBanners.deletedCount} video banners`);
+      console.log(
+        `Cleanup completed: ${deleteResult.deletedCount} seller products, ${deletedEvents.deletedCount} events, ${deletedVideoBanners.deletedCount} video banners`,
+      );
 
       res.status(200).json({
         success: true,
@@ -1773,13 +2132,13 @@ router.delete(
         deletedCount: deleteResult.deletedCount,
         deletedEvents: deletedEvents.deletedCount,
         deletedVideoBanners: deletedVideoBanners.deletedCount,
-        orphanedProductIds: orphanedProductIds.map(id => id.toString())
+        orphanedProductIds: orphanedProductIds.map((id) => id.toString()),
       });
     } catch (error) {
       console.error("Cleanup error:", error);
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Fix product ownership flags (Admin only) - identify and set isSellerProduct correctly
@@ -1790,39 +2149,42 @@ router.put(
   catchAsyncErrors(async (req, res, next) => {
     try {
       console.log("Starting product ownership fix...");
-      
+
       // Get all existing shop IDs
       const Shop = require("../model/shop");
-      const existingShops = await Shop.find({}, '_id');
-      const existingShopIds = existingShops.map(shop => shop._id.toString());
-      
-      console.log(`Found ${existingShopIds.length} existing shops:`, existingShopIds);
-      
+      const existingShops = await Shop.find({}, "_id");
+      const existingShopIds = existingShops.map((shop) => shop._id.toString());
+
+      console.log(
+        `Found ${existingShopIds.length} existing shops:`,
+        existingShopIds,
+      );
+
       // Find all products
       const allProducts = await Product.find();
       console.log(`Found ${allProducts.length} total products`);
-      
+
       const updatedProducts = [];
       const removedProducts = [];
-      
+
       for (let product of allProducts) {
         console.log(`\nProcessing product: ${product.name} (${product._id})`);
         console.log(`  shopId: ${product.shopId}`);
         console.log(`  sellerShop: ${product.sellerShop}`);
         console.log(`  isSellerProduct: ${product.isSellerProduct}`);
-        
+
         // Check if this is an admin product (shopId === 'admin' or no shopId)
-        if (product.shopId === 'admin' || !product.shopId) {
+        if (product.shopId === "admin" || !product.shopId) {
           // This is an admin product - ensure isSellerProduct is false
           if (product.isSellerProduct !== false) {
-            await Product.findByIdAndUpdate(product._id, { 
+            await Product.findByIdAndUpdate(product._id, {
               isSellerProduct: false,
-              sellerShop: null 
+              sellerShop: null,
             });
             updatedProducts.push({
               _id: product._id,
               name: product.name,
-              action: 'Set as admin product'
+              action: "Set as admin product",
             });
             console.log(`  ✅ Updated to admin product`);
           } else {
@@ -1830,22 +2192,22 @@ router.put(
           }
           continue;
         }
-        
+
         // Check if the shop exists
         const shopExists = existingShopIds.includes(product.shopId.toString());
         console.log(`  Shop exists: ${shopExists}`);
-        
+
         if (shopExists) {
           // Shop exists - this should be a seller product
           if (product.isSellerProduct !== true) {
-            await Product.findByIdAndUpdate(product._id, { 
+            await Product.findByIdAndUpdate(product._id, {
               isSellerProduct: true,
-              sellerShop: product.shopId
+              sellerShop: product.shopId,
             });
             updatedProducts.push({
               _id: product._id,
               name: product.name,
-              action: 'Set as seller product'
+              action: "Set as seller product",
             });
             console.log(`  ✅ Updated to seller product`);
           } else {
@@ -1857,12 +2219,12 @@ router.put(
           removedProducts.push({
             _id: product._id,
             name: product.name,
-            shopId: product.shopId
+            shopId: product.shopId,
           });
           console.log(`  ❌ Removed orphaned product (shop not found)`);
         }
       }
-      
+
       console.log(`\nOwnership fix completed:`);
       console.log(`- Updated: ${updatedProducts.length} products`);
       console.log(`- Removed: ${removedProducts.length} orphaned products`);
@@ -1873,13 +2235,13 @@ router.put(
         updatedCount: updatedProducts.length,
         removedCount: removedProducts.length,
         updatedProducts,
-        removedProducts
+        removedProducts,
       });
     } catch (error) {
       console.error("Product ownership fix error:", error);
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Update product stock
@@ -1906,8 +2268,8 @@ router.put(
         return next(
           new ErrorHandler(
             "You are not authorized to update this product!",
-            403
-          )
+            403,
+          ),
         );
       }
 
@@ -1965,22 +2327,22 @@ router.put(
       console.error("Update stock error:", error);
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Get pending products for admin approval
 router.get(
   "/admin/pending-products",
   isAuthenticated,
-  requirePermission('canApproveProducts'),
+  requirePermission("canApproveProducts"),
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const products = await Product.find({ 
-        approvalStatus: 'pending',
-        isSellerProduct: true 
+      const products = await Product.find({
+        approvalStatus: "pending",
+        isSellerProduct: true,
       })
-        .populate('sellerShop', 'name email')
-        .populate('category', 'title')
+        .populate("sellerShop", "name email")
+        .populate("category", "title")
         .sort({ createdAt: -1 });
 
       res.status(200).json({
@@ -1991,14 +2353,14 @@ router.get(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Approve product
 router.put(
   "/admin/approve-product/:id",
   isAuthenticated,
-  requirePermission('canApproveProducts'),
+  requirePermission("canApproveProducts"),
   catchAsyncErrors(async (req, res, next) => {
     try {
       const product = await Product.findById(req.params.id);
@@ -2006,11 +2368,11 @@ router.put(
         return next(new ErrorHandler("Product not found", 404));
       }
 
-      if (product.approvalStatus === 'approved') {
+      if (product.approvalStatus === "approved") {
         return next(new ErrorHandler("Product is already approved", 400));
       }
 
-      product.approvalStatus = 'approved';
+      product.approvalStatus = "approved";
       product.approvedBy = req.user._id;
       product.approvedAt = new Date();
       product.rejectedBy = null;
@@ -2024,21 +2386,28 @@ router.put(
       const shop = await Shop.findById(product.sellerShop);
       if (shop) {
         await NotificationService.createProductNotification(
-          'Product Approved',
+          "Product Approved",
           `Your product "${product.name}" has been approved and is now live!`,
-          'product_approved',
+          "product_approved",
           shop._id,
-          product._id
+          product._id,
         );
 
         // Auto-post to Facebook and Instagram
         try {
-          const { postProductToSocialMedia } = require("../utils/socialMediaPost");
+          const {
+            postProductToSocialMedia,
+          } = require("../utils/socialMediaPost");
           const socialResults = await postProductToSocialMedia(product, shop);
-          console.log(`📱 Social media posting completed for product: ${product.name}`);
+          console.log(
+            `📱 Social media posting completed for product: ${product.name}`,
+          );
         } catch (socialError) {
           // Don't fail the approval if social media posting fails
-          console.error("⚠️ Social media posting failed (non-blocking):", socialError.message);
+          console.error(
+            "⚠️ Social media posting failed (non-blocking):",
+            socialError.message,
+          );
         }
       }
 
@@ -2050,18 +2419,18 @@ router.put(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Reject product
 router.put(
   "/admin/reject-product/:id",
   isAuthenticated,
-  requirePermission('canApproveProducts'),
+  requirePermission("canApproveProducts"),
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { rejectionReason } = req.body;
-      
+
       if (!rejectionReason) {
         return next(new ErrorHandler("Rejection reason is required", 400));
       }
@@ -2071,11 +2440,11 @@ router.put(
         return next(new ErrorHandler("Product not found", 404));
       }
 
-      if (product.approvalStatus === 'rejected') {
+      if (product.approvalStatus === "rejected") {
         return next(new ErrorHandler("Product is already rejected", 400));
       }
 
-      product.approvalStatus = 'rejected';
+      product.approvalStatus = "rejected";
       product.rejectedBy = req.user._id;
       product.rejectedAt = new Date();
       product.rejectionReason = rejectionReason;
@@ -2089,11 +2458,11 @@ router.put(
       const shop = await Shop.findById(product.sellerShop);
       if (shop) {
         await NotificationService.createProductNotification(
-          'Product Rejected',
+          "Product Rejected",
           `Your product "${product.name}" was not approved. Reason: ${rejectionReason}`,
-          'product_rejected',
+          "product_rejected",
           shop._id,
-          product._id
+          product._id,
         );
       }
 
@@ -2105,7 +2474,7 @@ router.put(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 module.exports = router;

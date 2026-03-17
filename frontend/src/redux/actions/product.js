@@ -13,7 +13,7 @@ export const createProduct = (newForm) => async (dispatch) => {
     const { data } = await axios.post(
       `${server}/product/create-product`,
       newForm,
-      config
+      config,
     );
     dispatch({
       type: "productCreateSuccess",
@@ -34,8 +34,21 @@ export const getAllProductsShop = (id) => async (dispatch) => {
       type: "getAllProductsShopRequest",
     });
 
+    if (
+      !id ||
+      id === "null" ||
+      id === "undefined" ||
+      !/^[a-fA-F0-9]{24}$/.test(id)
+    ) {
+      dispatch({
+        type: "getAllProductsShopSuccess",
+        payload: [],
+      });
+      return;
+    }
+
     const { data } = await axios.get(
-      `${server}/product/get-all-products-shop/${id}`
+      `${server}/product/get-all-products-shop/${id}`,
     );
     dispatch({
       type: "getAllProductsShopSuccess",
@@ -60,14 +73,14 @@ export const deleteProduct = (id) => async (dispatch) => {
       `${server}/product/delete-shop-product/${id}`,
       {
         withCredentials: true,
-      }
+      },
     );
 
     dispatch({
       type: "deleteProductSuccess",
       payload: {
         message: data.message,
-        productId: id
+        productId: id,
       },
     });
   } catch (error) {
@@ -93,7 +106,7 @@ export const updateProduct = (id, productData) => async (dispatch) => {
       {
         withCredentials: true,
         ...config,
-      }
+      },
     );
 
     dispatch({
