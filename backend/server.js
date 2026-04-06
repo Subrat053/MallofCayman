@@ -10,7 +10,10 @@ const path = require("path");
 
 // config
 const dotenv = require("dotenv");
-const envPath = process.env.NODE_ENV === "PRODUCTION" ? "config/.env.production" : "config/.env";
+const envPath =
+  process.env.NODE_ENV === "PRODUCTION"
+    ? "config/.env.production"
+    : "config/.env";
 dotenv.config({ path: envPath });
 
 // connect db then initialize settings
@@ -23,54 +26,61 @@ const initializeSiteSettings = async () => {
   try {
     const SiteSettings = require("./model/siteSettings");
     const existingSettings = await SiteSettings.findOne({ isActive: true });
-    
+
     if (!existingSettings) {
       const defaultSettings = new SiteSettings({});
       await defaultSettings.save();
-      console.log('Default site settings initialized');
+      console.log("Default site settings initialized");
     }
   } catch (error) {
-    console.error('Error initializing site settings:', error.message);
+    console.error("Error initializing site settings:", error.message);
   }
 };
 
 // Create uploads directory if it doesn't exist
 const fs = require("fs");
-const uploadsDir = path.join(__dirname, 'uploads');
+const uploadsDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log('Uploads directory created:', uploadsDir);
+  console.log("Uploads directory created:", uploadsDir);
 }
 
 // ── Stripe webhook – raw body required, MUST be before express.json() ──
-app.post('/api/v2/payment/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  let event;
-  try {
-    if (webhookSecret && sig && process.env.STRIPE_SECRET_KEY) {
-      const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-    } else {
-      // Dev/test: parse without signature verification
-      event = JSON.parse(req.body.toString());
+app.post(
+  "/api/v2/payment/stripe/webhook",
+  express.raw({ type: "application/json" }),
+  async (req, res) => {
+    const sig = req.headers["stripe-signature"];
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    let event;
+    try {
+      if (webhookSecret && sig && process.env.STRIPE_SECRET_KEY) {
+        const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+        event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+      } else {
+        // Dev/test: parse without signature verification
+        event = JSON.parse(req.body.toString());
+      }
+    } catch (err) {
+      console.error("Stripe webhook signature error:", err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
     }
-  } catch (err) {
-    console.error('Stripe webhook signature error:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-  switch (event.type) {
-    case 'checkout.session.completed':
-      console.log('Stripe checkout.session.completed:', event.data.object.id);
-      break;
-    case 'payment_intent.payment_failed':
-      console.log('Stripe payment_intent.payment_failed:', event.data.object.id);
-      break;
-    default:
-      break;
-  }
-  res.status(200).json({ received: true });
-});
+    switch (event.type) {
+      case "checkout.session.completed":
+        console.log("Stripe checkout.session.completed:", event.data.object.id);
+        break;
+      case "payment_intent.payment_failed":
+        console.log(
+          "Stripe payment_intent.payment_failed:",
+          event.data.object.id,
+        );
+        break;
+      default:
+        break;
+    }
+    res.status(200).json({ received: true });
+  },
+);
 
 // middlewares
 app.use(express.json({ limit: "50mb" }));
@@ -79,7 +89,7 @@ app.use(cookieParser());
 
 // Enable CORS for all routes
 const allowedOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(',')
+  ? process.env.CORS_ORIGINS.split(",")
   : ["http://localhost:3000"];
 
 app.use(
@@ -87,15 +97,22 @@ app.use(
     origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token", "X-Requested-With", "X-Context"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-csrf-token",
+      "X-Requested-With",
+      "X-Context",
+      "x-master-admin-secret",
+    ],
     exposedHeaders: ["set-cookie"],
     preflightContinue: false,
-    optionsSuccessStatus: 200
-  })
+    optionsSuccessStatus: 200,
+  }),
 );
 
 // Handle preflight requests
-app.options('*', cors());
+app.options("*", cors());
 
 app.use("/uploads", express.static("uploads"));
 
@@ -146,27 +163,29 @@ const storeManagerAdvertisement = require("./routes/storeManagerAdvertisement");
 const blog = require("./controller/blog");
 const property = require("./controller/property");
 
+const { allowAdminOrMaster } = require("./middleware/masterAdminMiddleware");
+
 // endpoints
-app.use("/api/v2/user", user);
-app.use("/api/v2/conversation", conversation);
+app.use("/api/v2/user", allowAdminOrMaster, user);
+app.use("/api/v2/conversation", allowAdminOrMaster, conversation);
 app.use("/api/v2/message", message);
-app.use("/api/v2/order", order);
-app.use("/api/v2/shop", shop);
-app.use("/api/v2/product", product);
-app.use("/api/v2/event", event);
-app.use("/api/v2/coupon", coupon);
-app.use("/api/v2/payment", payment);
+app.use("/api/v2/order", allowAdminOrMaster, order);
+app.use("/api/v2/shop", allowAdminOrMaster, shop);
+app.use("/api/v2/product", allowAdminOrMaster, product);
+app.use("/api/v2/event", allowAdminOrMaster, event);
+app.use("/api/v2/coupon", allowAdminOrMaster, coupon);
+app.use("/api/v2/payment", allowAdminOrMaster, payment);
 app.use("/api/v2/payment/phonepe", phonePePayment);
-app.use("/api/v2/withdraw", withdraw);
-app.use("/api/v2/newsletter", newsletter);
-app.use("/api/v2/notification", notification);
-app.use("/api/v2/pincode", pincode);
-app.use("/api/v2/shipping", shipping);
-app.use("/api/v2/ai-chat", aiChat);
-app.use("/api/v2/banner", banner);
-app.use("/api/v2/category", category);
-app.use("/api/v2/migration", migration);
-app.use("/api/v2/review", review);
+app.use("/api/v2/withdraw", allowAdminOrMaster, withdraw);
+app.use("/api/v2/newsletter", allowAdminOrMaster, newsletter);
+app.use("/api/v2/notification", allowAdminOrMaster, notification);
+app.use("/api/v2/pincode", allowAdminOrMaster, pincode);
+app.use("/api/v2/shipping", allowAdminOrMaster, shipping);
+app.use("/api/v2/ai-chat", allowAdminOrMaster, aiChat);
+app.use("/api/v2/banner", allowAdminOrMaster, banner);
+app.use("/api/v2/category", allowAdminOrMaster, category);
+app.use("/api/v2/migration", allowAdminOrMaster, migration);
+app.use("/api/v2/review", allowAdminOrMaster, review);
 app.use("/api/v2/legal-page", legalPage);
 app.use("/api/v2/site-settings", siteSettings);
 app.use("/api/v2/faq", faq);
@@ -174,12 +193,12 @@ app.use("/api/v2/video-banner", videoBanner);
 app.use("/api/v2/video-call", videoCall);
 app.use("/api/v2/subscription", subscription);
 app.use("/api/v2/commission", commission);
-app.use("/api/v2/advertisement", advertisement);
-app.use("/api/v2/department", department);
+app.use("/api/v2/advertisement", allowAdminOrMaster, advertisement);
+app.use("/api/v2/department", allowAdminOrMaster, department);
 app.use("/api/v2/contact", contact);
 app.use("/api/v2/district", district);
-app.use("/api/v2/store-manager", storeManager);
-app.use("/api/v2/vendor-delivery", vendorDelivery);
+app.use("/api/v2/store-manager", allowAdminOrMaster, storeManager);
+app.use("/api/v2/vendor-delivery", allowAdminOrMaster, vendorDelivery);
 app.use("/api/v2/email-template", emailTemplate);
 app.use("/api/v2/store-manager-advertisement", storeManagerAdvertisement);
 app.use("/api/v2/blog", blog);
@@ -189,23 +208,23 @@ app.use("/api/v2/property", property);
 app.use(ErrorHandler);
 
 // Setup cron jobs for advertisement management
-const cron = require('node-cron');
-const advertisementController = require('./controller/advertisement');
+const cron = require("node-cron");
+const advertisementController = require("./controller/advertisement");
 
 // Run every day at midnight to check for expiring ads and send warnings
-cron.schedule('0 0 * * *', () => {
-  console.log('Running daily advertisement expiry check...');
+cron.schedule("0 0 * * *", () => {
+  console.log("Running daily advertisement expiry check...");
   advertisementController.checkExpiringAdvertisements();
   advertisementController.markExpiredAdvertisements();
 });
 
 // Run every day at 1 AM to process auto-renewals
-cron.schedule('0 1 * * *', () => {
-  console.log('Running daily advertisement auto-renewal process...');
+cron.schedule("0 1 * * *", () => {
+  console.log("Running daily advertisement auto-renewal process...");
   advertisementController.autoRenewAdvertisements();
 });
 
-console.log('✅ Advertisement management cron jobs scheduled');
+console.log("✅ Advertisement management cron jobs scheduled");
 
 // .use(ErrorHandler);
 

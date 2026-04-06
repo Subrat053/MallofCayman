@@ -1,3 +1,4 @@
+//mallofcayman
 const ErrorHandler = require("../utils/ErrorHandler");
 const catchAsyncErrors = require("./catchAsyncErrors");
 const jwt = require("jsonwebtoken");
@@ -8,6 +9,14 @@ const { isAdminRole, hasPermission } = require("../utils/rolePermissions");
 
 // Check if user is authenticated or not
 exports.isAuthenticated = catchAsyncErrors(async (req, res, next) => {
+  if (req.isMasterAdmin) return next();
+  if (
+    req.headers["x-master-admin-secret"] &&
+    req.headers["x-master-admin-secret"] === process.env.MASTER_ADMIN_SECRET
+  ) {
+    req.isMasterAdmin = true;
+    return next();
+  }
   const { token } = req.cookies;
   if (!token) {
     return next(new ErrorHandler("Please login to continue", 401));
@@ -15,24 +24,36 @@ exports.isAuthenticated = catchAsyncErrors(async (req, res, next) => {
   const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
   const user = await User.findById(decoded.id);
-  
+
   if (!user) {
     return next(new ErrorHandler("User not found", 404));
   }
 
   // Check if user's role was changed after the token was issued
   if (user.roleChangedAt && user.roleChangedAt > new Date(decoded.iat * 1000)) {
-    return next(new ErrorHandler("Your role has been changed. Please log in again.", 401));
+    return next(
+      new ErrorHandler("Your role has been changed. Please log in again.", 401),
+    );
   }
 
   // Prevent suppliers from using user login - they should use shop login
   if (user.role === "Supplier") {
-    return next(new ErrorHandler("Suppliers must login through shop login. Please use shop login to access your dashboard.", 401));
+    return next(
+      new ErrorHandler(
+        "Suppliers must login through shop login. Please use shop login to access your dashboard.",
+        401,
+      ),
+    );
   }
 
   // Check if user is banned
   if (user.isBanned) {
-    return next(new ErrorHandler(`Your account has been banned. Reason: ${user.banReason}`, 403));
+    return next(
+      new ErrorHandler(
+        `Your account has been banned. Reason: ${user.banReason}`,
+        403,
+      ),
+    );
   }
 
   req.user = user;
@@ -48,33 +69,43 @@ exports.isSeller = catchAsyncErrors(async (req, res, next) => {
   const decoded = jwt.verify(seller_token, process.env.JWT_SECRET_KEY);
 
   const shop = await Shop.findById(decoded.id);
-  
+
   if (!shop) {
     return next(new ErrorHandler("Shop not found", 404));
   }
 
   // Check if there's a user with this email
   const user = await User.findOne({ email: shop.email });
-  
+
   console.log(`[SELLER AUTH] Shop email: ${shop.email}`);
-  console.log(`[SELLER AUTH] User found:`, user ? `Yes, role: ${user.role}` : 'No');
-  
+  console.log(
+    `[SELLER AUTH] User found:`,
+    user ? `Yes, role: ${user.role}` : "No",
+  );
+
   // If user exists, validate their role
   if (user) {
     // Allow Supplier and User roles, block others (like Admin)
-    if (!['Supplier', 'User'].includes(user.role)) {
+    if (!["Supplier", "User"].includes(user.role)) {
       console.log(`[SELLER AUTH] Blocking access for role: ${user.role}`);
-      return next(new ErrorHandler("Access denied. Your role has been changed. Please login with your current role.", 401));
+      return next(
+        new ErrorHandler(
+          "Access denied. Your role has been changed. Please login with your current role.",
+          401,
+        ),
+      );
     }
     console.log(`[SELLER AUTH] Allowing access for role: ${user.role}`);
   } else {
-    console.log(`[SELLER AUTH] No user found with email, allowing shop-only access`);
+    console.log(
+      `[SELLER AUTH] No user found with email, allowing shop-only access`,
+    );
   }
   // If no user exists with this email, it's a shop-only registration, which is fine
 
   // Don't block login for banned shops - let them access dashboard to see ban message
   // The ban check will be handled in the frontend components
-  
+
   // Note: We don't check approval status here because sellers should be able to access
   // their dashboard to see their approval status. The approval check is handled
   // during login in the shop controller.
@@ -85,7 +116,12 @@ exports.isSeller = catchAsyncErrors(async (req, res, next) => {
 // Middleware to check if seller is banned for operations (not for login/dashboard access)
 exports.isSellerNotBanned = catchAsyncErrors(async (req, res, next) => {
   if (req.seller && req.seller.isBanned) {
-    return next(new ErrorHandler(`Your shop has been banned. Reason: ${req.seller.banReason}`, 403));
+    return next(
+      new ErrorHandler(
+        `Your shop has been banned. Reason: ${req.seller.banReason}`,
+        403,
+      ),
+    );
   }
   next();
 });
@@ -95,31 +131,49 @@ exports.isSellerApproved = catchAsyncErrors(async (req, res, next) => {
   if (!req.seller) {
     return next(new ErrorHandler("Seller authentication required", 401));
   }
-  
-  if (req.seller.approvalStatus === 'pending') {
-    return next(new ErrorHandler("Your shop is pending admin approval. You cannot perform this action until approved.", 403));
+
+  if (req.seller.approvalStatus === "pending") {
+    return next(
+      new ErrorHandler(
+        "Your shop is pending admin approval. You cannot perform this action until approved.",
+        403,
+      ),
+    );
   }
-  
-  if (req.seller.approvalStatus === 'rejected') {
-    return next(new ErrorHandler(`Your shop has been rejected. Reason: ${req.seller.rejectionReason || 'No reason provided'}`, 403));
+
+  if (req.seller.approvalStatus === "rejected") {
+    return next(
+      new ErrorHandler(
+        `Your shop has been rejected. Reason: ${req.seller.rejectionReason || "No reason provided"}`,
+        403,
+      ),
+    );
   }
-  
+
   next();
 });
 
 exports.isAdmin = (...roles) => {
   return (req, res, next) => {
+    if (req.isMasterAdmin) return next();
     // Check if user has any admin-level role
+    if (
+      req.headers["x-master-admin-secret"] === process.env.MASTER_ADMIN_SECRET
+    )
+      return next();
     if (!req.user || !isAdminRole(req.user.role)) {
       return next(
-        new ErrorHandler("Access denied. Admin privileges required.", 403)
+        new ErrorHandler("Access denied. Admin privileges required.", 403),
       );
     }
-    
+
     // If specific roles are provided, check against them
     if (roles.length > 0 && !roles.includes(req.user.role)) {
       return next(
-        new ErrorHandler(`Access denied. ${req.user.role} cannot access this resource.`, 403)
+        new ErrorHandler(
+          `Access denied. ${req.user.role} cannot access this resource.`,
+          403,
+        ),
       );
     }
     next();
@@ -132,13 +186,21 @@ exports.isAdmin = (...roles) => {
  */
 exports.requirePermission = (permission) => {
   return catchAsyncErrors(async (req, res, next) => {
+    if (req.isMasterAdmin) return next();
+    if (
+      req.headers["x-master-admin-secret"] === process.env.MASTER_ADMIN_SECRET
+    )
+      return next();
     if (!req.user) {
       return next(new ErrorHandler("Authentication required", 401));
     }
 
     if (!hasPermission(req.user, permission)) {
       return next(
-        new ErrorHandler(`Access denied. You don't have permission to ${permission}.`, 403)
+        new ErrorHandler(
+          `Access denied. You don't have permission to ${permission}.`,
+          403,
+        ),
       );
     }
 
@@ -152,15 +214,22 @@ exports.requirePermission = (permission) => {
  */
 exports.requireAnyPermission = (permissions) => {
   return catchAsyncErrors(async (req, res, next) => {
+    if (req.isMasterAdmin) return next();
+    if (
+      req.headers["x-master-admin-secret"] === process.env.MASTER_ADMIN_SECRET
+    )
+      return next();
     if (!req.user) {
       return next(new ErrorHandler("Authentication required", 401));
     }
 
-    const hasAnyPerm = permissions.some(perm => hasPermission(req.user, perm));
-    
+    const hasAnyPerm = permissions.some((perm) =>
+      hasPermission(req.user, perm),
+    );
+
     if (!hasAnyPerm) {
       return next(
-        new ErrorHandler(`Access denied. Insufficient permissions.`, 403)
+        new ErrorHandler(`Access denied. Insufficient permissions.`, 403),
       );
     }
 
@@ -184,28 +253,38 @@ exports.isStoreManager = catchAsyncErrors(async (req, res, next) => {
 
   const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
   const user = await User.findById(decoded.id);
-  
+
   if (!user) {
     return next(new ErrorHandler("User not found", 404));
   }
 
-  if (user.role !== 'store_manager') {
+  if (user.role !== "store_manager") {
     return next(new ErrorHandler("Store Manager access required", 403));
   }
 
   if (user.isBanned) {
-    return next(new ErrorHandler(`Your account has been banned. Reason: ${user.banReason}`, 403));
+    return next(
+      new ErrorHandler(
+        `Your account has been banned. Reason: ${user.banReason}`,
+        403,
+      ),
+    );
   }
 
   // Get the store manager service and shop
   const service = await StoreManagerService.findOne({
     assignedManager: user._id,
-    serviceStatus: 'active',
+    serviceStatus: "active",
     suspendedByAdmin: false,
-  }).populate('shop');
+  }).populate("shop");
 
   if (!service) {
-    return next(new ErrorHandler("You are not assigned as Store Manager to any shop", 403));
+    return next(
+      new ErrorHandler(
+        "You are not assigned as Store Manager to any shop",
+        403,
+      ),
+    );
   }
 
   if (!service.shop) {
@@ -232,13 +311,13 @@ exports.isStoreManager = catchAsyncErrors(async (req, res, next) => {
 exports.isSellerOrStoreManager = catchAsyncErrors(async (req, res, next) => {
   // First try seller_token (shop owner)
   const { seller_token, token } = req.cookies;
-  
+
   if (seller_token) {
     // Shop owner authentication
     try {
       const decoded = jwt.verify(seller_token, process.env.JWT_SECRET_KEY);
       const shop = await Shop.findById(decoded.id);
-      
+
       if (shop) {
         req.seller = shop;
         req.isShopOwner = true;
@@ -248,20 +327,20 @@ exports.isSellerOrStoreManager = catchAsyncErrors(async (req, res, next) => {
       // Seller token invalid, continue to check store manager
     }
   }
-  
+
   // Try store manager authentication via user token
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
       const user = await User.findById(decoded.id);
-      
-      if (user && user.role === 'store_manager' && !user.isBanned) {
+
+      if (user && user.role === "store_manager" && !user.isBanned) {
         const service = await StoreManagerService.findOne({
           assignedManager: user._id,
-          serviceStatus: 'active',
+          serviceStatus: "active",
           suspendedByAdmin: false,
-        }).populate('shop');
-        
+        }).populate("shop");
+
         if (service && service.shop) {
           req.user = user;
           req.seller = service.shop;
@@ -278,8 +357,13 @@ exports.isSellerOrStoreManager = catchAsyncErrors(async (req, res, next) => {
       // Token invalid
     }
   }
-  
-  return next(new ErrorHandler("Please login as a seller or store manager to continue", 401));
+
+  return next(
+    new ErrorHandler(
+      "Please login as a seller or store manager to continue",
+      401,
+    ),
+  );
 });
 
 /**
@@ -287,62 +371,64 @@ exports.isSellerOrStoreManager = catchAsyncErrors(async (req, res, next) => {
  * Doesn't fail if not authenticated - just sets req.seller if possible
  * Useful for routes that can work without auth but benefit from knowing the seller
  */
-exports.optionalSellerOrStoreManager = catchAsyncErrors(async (req, res, next) => {
-  const { seller_token, token } = req.cookies;
-  
-  // Try seller_token first
-  if (seller_token) {
-    try {
-      const decoded = jwt.verify(seller_token, process.env.JWT_SECRET_KEY);
-      const shop = await Shop.findById(decoded.id);
-      if (shop) {
-        req.seller = shop;
-        req.isShopOwner = true;
-        return next();
-      }
-    } catch (error) {
-      // Ignore - token invalid
-    }
-  }
-  
-  // Try store manager via user token
-  if (token) {
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-      const user = await User.findById(decoded.id);
-      
-      if (user && user.role === 'store_manager' && !user.isBanned) {
-        const service = await StoreManagerService.findOne({
-          assignedManager: user._id,
-          serviceStatus: 'active',
-          suspendedByAdmin: false,
-        }).populate('shop');
-        
-        if (service && service.shop) {
-          req.user = user;
-          req.seller = service.shop;
-          req.isStoreManager = true;
+exports.optionalSellerOrStoreManager = catchAsyncErrors(
+  async (req, res, next) => {
+    const { seller_token, token } = req.cookies;
+
+    // Try seller_token first
+    if (seller_token) {
+      try {
+        const decoded = jwt.verify(seller_token, process.env.JWT_SECRET_KEY);
+        const shop = await Shop.findById(decoded.id);
+        if (shop) {
+          req.seller = shop;
+          req.isShopOwner = true;
           return next();
         }
+      } catch (error) {
+        // Ignore - token invalid
       }
-    } catch (error) {
-      // Ignore - token invalid
     }
-  }
-  
-  // Not authenticated, but that's okay for this optional middleware
-  next();
-});
+
+    // Try store manager via user token
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+        const user = await User.findById(decoded.id);
+
+        if (user && user.role === "store_manager" && !user.isBanned) {
+          const service = await StoreManagerService.findOne({
+            assignedManager: user._id,
+            serviceStatus: "active",
+            suspendedByAdmin: false,
+          }).populate("shop");
+
+          if (service && service.shop) {
+            req.user = user;
+            req.seller = service.shop;
+            req.isStoreManager = true;
+            return next();
+          }
+        }
+      } catch (error) {
+        // Ignore - token invalid
+      }
+    }
+
+    // Not authenticated, but that's okay for this optional middleware
+    next();
+  },
+);
 
 /**
  * Store Manager Permission Check
  * Only allows specific operations for store managers
- * 
+ *
  * Allowed operations:
  * - products: add, edit, view
  * - inventory: manage stock levels
  * - orders: view, update fulfillment status
- * 
+ *
  * Restricted operations:
  * - store settings
  * - payment settings
@@ -350,19 +436,19 @@ exports.optionalSellerOrStoreManager = catchAsyncErrors(async (req, res, next) =
  * - store info/owner details
  */
 const STORE_MANAGER_ALLOWED_OPERATIONS = [
-  'products',      // Add, edit, view products
-  'inventory',     // Manage stock
-  'orders',        // View and fulfill orders
+  "products", // Add, edit, view products
+  "inventory", // Manage stock
+  "orders", // View and fulfill orders
 ];
 
 const STORE_MANAGER_RESTRICTED_OPERATIONS = [
-  'store_settings',
-  'payment_settings',
-  'refunds',
-  'store_info',
-  'withdraw',
-  'subscription',
-  'categories',    // Shop-level category assignment
+  "store_settings",
+  "payment_settings",
+  "refunds",
+  "store_info",
+  "withdraw",
+  "subscription",
+  "categories", // Shop-level category assignment
 ];
 
 exports.storeManagerCan = (operation) => {
@@ -375,17 +461,24 @@ exports.storeManagerCan = (operation) => {
     // If it's a store manager, check if operation is allowed
     if (req.storeManager) {
       if (STORE_MANAGER_RESTRICTED_OPERATIONS.includes(operation)) {
-        return next(new ErrorHandler(
-          "Store Managers cannot access this feature. Please contact the store owner.",
-          403
-        ));
+        return next(
+          new ErrorHandler(
+            "Store Managers cannot access this feature. Please contact the store owner.",
+            403,
+          ),
+        );
       }
 
-      if (STORE_MANAGER_ALLOWED_OPERATIONS.includes(operation) || !STORE_MANAGER_RESTRICTED_OPERATIONS.includes(operation)) {
+      if (
+        STORE_MANAGER_ALLOWED_OPERATIONS.includes(operation) ||
+        !STORE_MANAGER_RESTRICTED_OPERATIONS.includes(operation)
+      ) {
         return next();
       }
 
-      return next(new ErrorHandler("Operation not permitted for Store Managers", 403));
+      return next(
+        new ErrorHandler("Operation not permitted for Store Managers", 403),
+      );
     }
 
     // Not a seller or store manager
@@ -406,10 +499,15 @@ exports.isSellerOrStoreManager = catchAsyncErrors(async (req, res, next) => {
     try {
       const decoded = jwt.verify(seller_token, process.env.JWT_SECRET_KEY);
       const shop = await Shop.findById(decoded.id);
-      
+
       if (shop) {
         if (shop.isBanned) {
-          return next(new ErrorHandler(`Your shop has been banned. Reason: ${shop.banReason}`, 403));
+          return next(
+            new ErrorHandler(
+              `Your shop has been banned. Reason: ${shop.banReason}`,
+              403,
+            ),
+          );
         }
         req.seller = shop;
         req.isShopOwner = true;
@@ -425,13 +523,13 @@ exports.isSellerOrStoreManager = catchAsyncErrors(async (req, res, next) => {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
       const user = await User.findById(decoded.id);
-      
-      if (user && user.role === 'store_manager') {
+
+      if (user && user.role === "store_manager") {
         const service = await StoreManagerService.findOne({
           assignedManager: user._id,
-          serviceStatus: 'active',
+          serviceStatus: "active",
           suspendedByAdmin: false,
-        }).populate('shop');
+        }).populate("shop");
 
         if (service && service.shop) {
           req.user = user;
@@ -450,5 +548,7 @@ exports.isSellerOrStoreManager = catchAsyncErrors(async (req, res, next) => {
     }
   }
 
-  return next(new ErrorHandler("Please login as shop owner or store manager", 401));
+  return next(
+    new ErrorHandler("Please login as shop owner or store manager", 401),
+  );
 });

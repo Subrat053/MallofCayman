@@ -23,13 +23,13 @@ const adminUsers = [
         address2: "Tech Park",
         zipCode: 560001,
         city: "Bangalore",
-        country: "India"
-      }
+        country: "India",
+      },
     ],
     avatar: {
       url: "https://res.cloudinary.com/dkzfopuco/image/upload/v1683299454/avatar_gfxgav.png",
-      public_id: "avatar_gfxgav"
-    }
+      public_id: "avatar_gfxgav",
+    },
     // Don't set permissions - let it use role-based defaults
   },
   {
@@ -45,15 +45,15 @@ const adminUsers = [
         address2: "Tech Park",
         zipCode: 560002,
         city: "Bangalore",
-        country: "India"
-      }
+        country: "India",
+      },
     ],
     avatar: {
       url: "https://res.cloudinary.com/dkzfopuco/image/upload/v1683299454/avatar_gfxgav.png",
-      public_id: "avatar_gfxgav"
-    }
+      public_id: "avatar_gfxgav",
+    },
     // Don't set permissions - let it use role-based defaults
-  }
+  },
 ];
 
 const seedAdminRoles = async () => {
@@ -71,7 +71,7 @@ const seedAdminRoles = async () => {
       if (existingUser) {
         console.log(`⚠️  User already exists with email: ${adminData.email}`);
         console.log(`   Current role: ${existingUser.role}`);
-        
+
         // Update existing user
         existingUser.name = adminData.name;
         existingUser.role = adminData.role;
@@ -80,10 +80,10 @@ const seedAdminRoles = async () => {
         existingUser.avatar = adminData.avatar;
         // Remove all permissions to use role-based defaults
         existingUser.permissions = undefined;
-        
+
         // Don't update password if it already exists (user may have changed it)
         // existingUser.password = adminData.password;
-        
+
         await existingUser.save();
         console.log(`✅ Updated existing user to ${adminData.role} role`);
       } else {
@@ -101,18 +101,22 @@ const seedAdminRoles = async () => {
     console.log("\n" + "=".repeat(60));
     console.log("✅ Admin roles seed completed successfully!");
     console.log("=".repeat(60));
-    
+
     console.log("\n📋 Login Credentials:");
     console.log("\n🔹 SubAdmin:");
     console.log("   Email: subadmin@mallofcayman.com");
     console.log("   Password: SubAdmin@123");
-    console.log("   Permissions: Vendor/Product/Ad Approvals, Review Moderation");
-    
+    console.log(
+      "   Permissions: Vendor/Product/Ad Approvals, Review Moderation",
+    );
+
     console.log("\n🔹 Manager:");
     console.log("   Email: manager@mallofcayman.com");
     console.log("   Password: Manager@123");
-    console.log("   Permissions: Orders, Products, Coupons, Categories, Users, Content");
-    
+    console.log(
+      "   Permissions: Orders, Products, Coupons, Categories, Users, Content",
+    );
+
     console.log("\n");
     process.exit(0);
   } catch (error) {

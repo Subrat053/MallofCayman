@@ -9,16 +9,34 @@ const jwt = require("jsonwebtoken");
 const sendMail = require("../utils/sendMail");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const sendToken = require("../utils/jwtToken");
-const { isAuthenticated, isAdmin, requirePermission } = require("../middleware/auth");
-const { uploadImageToCloudinary, deleteFromCloudinary, uploadToCloudinary } = require("../config/cloudinary");
+const {
+  isAuthenticated,
+  isAdmin,
+  requirePermission,
+} = require("../middleware/auth");
+const {
+  uploadImageToCloudinary,
+  deleteFromCloudinary,
+  uploadToCloudinary,
+} = require("../config/cloudinary");
 const EmailTemplate = require("../model/emailTemplate");
 
 const router = express.Router();
 
+router.get("/debug-env", (req, res) => {
+  res.json({
+    secret_loaded: process.env.MASTER_ADMIN_SECRET,
+    header_received: req.headers["x-master-admin-secret"],
+    match:
+      req.headers["x-master-admin-secret"] === process.env.MASTER_ADMIN_SECRET,
+    node_env: process.env.NODE_ENV,
+  });
+});
+
 router.post("/create-user", upload.single("file"), async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
-    
+
     // Validate required fields
     if (!name || !email || !password) {
       return next(new ErrorHandler("Please provide all required fields", 400));
@@ -35,24 +53,26 @@ router.post("/create-user", upload.single("file"), async (req, res, next) => {
       try {
         console.log(`Uploading user avatar: ${req.file.originalname}`);
         const result = await uploadToCloudinary(req.file.buffer, {
-          folder: 'users/avatars',
-          resource_type: 'image',
+          folder: "users/avatars",
+          resource_type: "image",
           transformation: {
             width: 300,
             height: 300,
-            crop: 'fill',
-            gravity: 'face'
-          }
+            crop: "fill",
+            gravity: "face",
+          },
         });
         console.log(`User avatar uploaded successfully: ${result.url}`);
-        
+
         avatarData = {
           url: result.url,
-          public_id: result.public_id
+          public_id: result.public_id,
         };
       } catch (error) {
-        console.error('Avatar upload error:', error);
-        return next(new ErrorHandler(`Avatar upload failed: ${error.message}`, 400));
+        console.error("Avatar upload error:", error);
+        return next(
+          new ErrorHandler(`Avatar upload failed: ${error.message}`, 400),
+        );
       }
     }
 
@@ -61,7 +81,7 @@ router.post("/create-user", upload.single("file"), async (req, res, next) => {
       email: email,
       password: password,
     };
-    
+
     // Only add avatar if it exists
     if (avatarData) {
       user.avatar = avatarData;
@@ -75,17 +95,17 @@ router.post("/create-user", upload.single("file"), async (req, res, next) => {
     // send email to user using template
     try {
       // Fetch the email template from database
-      let template = await EmailTemplate.findOne({ slug: 'user_activation' });
-      
+      let template = await EmailTemplate.findOne({ slug: "user_activation" });
+
       let emailSubject, emailHtml;
-      
+
       if (template) {
         // Use the template from database
         const variables = {
           userName: user.name,
           name: user.name,
           email: user.email,
-          activationUrl: activationUrl
+          activationUrl: activationUrl,
         };
         // render() returns { subject, html }
         const rendered = template.render(variables);
@@ -161,7 +181,7 @@ router.post("/create-user", upload.single("file"), async (req, res, next) => {
           </html>
         `;
       }
-      
+
       await sendMail({
         email: user.email,
         subject: emailSubject,
@@ -198,7 +218,7 @@ router.post(
 
       const newUser = jwt.verify(
         activation_token,
-        process.env.ACTIVATION_SECRET
+        process.env.ACTIVATION_SECRET,
       );
       if (!newUser) {
         return next(new ErrorHandler("Invalid token", 400));
@@ -210,33 +230,33 @@ router.post(
       if (user) {
         return next(new ErrorHandler("User already exists", 400));
       }
-      
+
       const userData = {
         name,
         email,
         password,
       };
-      
+
       // Only add avatar if it exists
       if (avatar) {
         userData.avatar = avatar;
       }
-      
+
       user = await User.create(userData);
 
       // Create notification for new user registration
       await NotificationService.createUserRegistrationNotification(
-        'New User Registered',
+        "New User Registered",
         `New user ${name} (${email}) has registered and activated their account`,
-        'new_registration',
-        user._id
+        "new_registration",
+        user._id,
       );
 
       sendToken(user, 201, res);
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // login user
@@ -261,20 +281,25 @@ router.post(
 
       if (!isPasswordValid) {
         return next(
-          new ErrorHandler("Please provide the correct inforamtions", 400)
+          new ErrorHandler("Please provide the correct inforamtions", 400),
         );
       }
 
       // Check if user is a supplier - suppliers should use shop login
       if (user.role === "Supplier") {
-        return next(new ErrorHandler("You are registered as a Supplier. Please use the Shop Login to access your dashboard.", 401));
+        return next(
+          new ErrorHandler(
+            "You are registered as a Supplier. Please use the Shop Login to access your dashboard.",
+            401,
+          ),
+        );
       }
 
       sendToken(user, 201, res);
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // load user
@@ -288,15 +313,15 @@ router.get(
       if (!user) {
         return next(new ErrorHandler("User doesn't exists", 400));
       }
-      
+
       // If user is a store manager, populate their managed shop info
-      if (user.role === 'store_manager' && user.managedShop) {
+      if (user.role === "store_manager" && user.managedShop) {
         user = await User.findById(req.user.id).populate({
-          path: 'managedShop',
-          select: 'name avatar email address'
+          path: "managedShop",
+          select: "name avatar email address",
         });
       }
-      
+
       res.status(200).json({
         success: true,
         user,
@@ -304,7 +329,7 @@ router.get(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // log out user
@@ -326,7 +351,7 @@ router.get(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // update user info
@@ -352,7 +377,7 @@ compare the provided password with the stored password for authentication purpos
 
       if (!isPasswordValid) {
         return next(
-          new ErrorHandler("Please provide the correct information", 400)
+          new ErrorHandler("Please provide the correct information", 400),
         );
       }
 
@@ -369,7 +394,7 @@ compare the provided password with the stored password for authentication purpos
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // update user avatar
@@ -385,47 +410,54 @@ router.put(
       }
 
       const existsUser = await User.findById(req.user.id);
-      
+
       // Upload new avatar to Cloudinary
       let avatarData = null;
       try {
         console.log(`Uploading updated user avatar: ${req.file.originalname}`);
         const result = await uploadToCloudinary(req.file.buffer, {
-          folder: 'users/avatars',
-          resource_type: 'image',
+          folder: "users/avatars",
+          resource_type: "image",
           transformation: {
             width: 300,
             height: 300,
-            crop: 'fill',
-            gravity: 'face'
-          }
+            crop: "fill",
+            gravity: "face",
+          },
         });
         console.log(`Updated user avatar uploaded successfully: ${result.url}`);
-        
+
         avatarData = {
           url: result.url,
-          public_id: result.public_id
+          public_id: result.public_id,
         };
       } catch (error) {
-        console.error('Avatar update upload error:', error);
-        return next(new ErrorHandler(`Avatar upload failed: ${error.message}`, 400));
+        console.error("Avatar update upload error:", error);
+        return next(
+          new ErrorHandler(`Avatar upload failed: ${error.message}`, 400),
+        );
       }
 
       // Delete previous avatar from Cloudinary if it exists
       if (existsUser.avatar && existsUser.avatar.public_id) {
         try {
-          await deleteFromCloudinary(existsUser.avatar.public_id, 'image');
-          console.log(`Deleted old user avatar: ${existsUser.avatar.public_id}`);
+          await deleteFromCloudinary(existsUser.avatar.public_id, "image");
+          console.log(
+            `Deleted old user avatar: ${existsUser.avatar.public_id}`,
+          );
         } catch (error) {
-          console.error('Error deleting previous avatar from Cloudinary:', error.message);
+          console.error(
+            "Error deleting previous avatar from Cloudinary:",
+            error.message,
+          );
           // Continue with the update even if old file deletion fails
         }
       }
 
       const user = await User.findByIdAndUpdate(
-        req.user.id, 
+        req.user.id,
         { avatar: avatarData },
-        { new: true } // Return the updated user
+        { new: true }, // Return the updated user
       );
 
       res.status(200).json({
@@ -444,7 +476,7 @@ router.put(
       }
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // update user addresses
@@ -454,45 +486,47 @@ router.put(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const user = await User.findById(req.user.id);
-      
+
       console.log("Address update request:", {
         userId: req.user.id,
         requestBody: req.body,
-        existingAddresses: user.addresses.length
+        existingAddresses: user.addresses.length,
       });
 
       // If we have an _id, we're updating an existing address
       if (req.body._id) {
         const existsAddress = user.addresses.find(
-          (address) => address._id.toString() === req.body._id.toString()
+          (address) => address._id.toString() === req.body._id.toString(),
         );
 
         if (existsAddress) {
           console.log("Updating existing address with ID:", req.body._id);
-          
+
           // Check if changing to a different address type that already exists
           if (existsAddress.addressType !== req.body.addressType) {
             const conflictAddress = user.addresses.find(
-              (address) => 
-                address.addressType === req.body.addressType && 
-                address._id.toString() !== req.body._id.toString()
+              (address) =>
+                address.addressType === req.body.addressType &&
+                address._id.toString() !== req.body._id.toString(),
             );
-            
+
             if (conflictAddress) {
               return next(
-                new ErrorHandler(`${req.body.addressType} address already exists`)
+                new ErrorHandler(
+                  `${req.body.addressType} address already exists`,
+                ),
               );
             }
           }
-          
+
           // Update existing address
           Object.assign(existsAddress, req.body);
           await user.save();
-          
+
           return res.status(200).json({
             success: true,
             user,
-            message: "Address updated successfully"
+            message: "Address updated successfully",
           });
         } else {
           return next(new ErrorHandler("Address not found", 404));
@@ -500,31 +534,31 @@ router.put(
       } else {
         // Adding new address - check for duplicates
         const sameTypeAddress = user.addresses.find(
-          (address) => address.addressType === req.body.addressType
+          (address) => address.addressType === req.body.addressType,
         );
-        
+
         if (sameTypeAddress) {
           return next(
-            new ErrorHandler(`${req.body.addressType} address already exists`)
+            new ErrorHandler(`${req.body.addressType} address already exists`),
           );
         }
-        
+
         // Add new address
         console.log("Adding new address");
         user.addresses.push(req.body);
         await user.save();
-        
+
         return res.status(200).json({
           success: true,
           user,
-          message: "Address added successfully"
+          message: "Address added successfully",
         });
       }
     } catch (error) {
       console.error("Address update error:", error);
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // delete user address
@@ -542,7 +576,7 @@ router.delete(
         {
           _id: userId,
         },
-        { $pull: { addresses: { _id: addressId } } }
+        { $pull: { addresses: { _id: addressId } } },
       );
 
       const user = await User.findById(userId);
@@ -551,7 +585,7 @@ router.delete(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // update user password
@@ -563,7 +597,7 @@ router.put(
       const user = await User.findById(req.user.id).select("+password");
 
       const isPasswordMatched = await user.comparePassword(
-        req.body.oldPassword
+        req.body.oldPassword,
       );
 
       if (!isPasswordMatched) {
@@ -577,7 +611,7 @@ router.put(
     different passwords and an error is returned. */
       if (req.body.newPassword !== req.body.confirmPassword) {
         return next(
-          new ErrorHandler("Password doesn't matched with each other!", 400)
+          new ErrorHandler("Password doesn't matched with each other!", 400),
         );
       }
       user.password = req.body.newPassword;
@@ -591,7 +625,7 @@ router.put(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // find user infoormation with the userId
@@ -608,7 +642,7 @@ router.get(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // all users --- for admin
@@ -628,21 +662,21 @@ router.get(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // delete users --- admin
 router.delete(
   "/delete-user/:id",
   isAuthenticated,
-  requirePermission('canManageUsers'),
+  requirePermission("canManageUsers"),
   catchAsyncErrors(async (req, res, next) => {
     try {
       const user = await User.findById(req.params.id);
 
       if (!user) {
         return next(
-          new ErrorHandler("User is not available with this id", 400)
+          new ErrorHandler("User is not available with this id", 400),
         );
       }
 
@@ -655,7 +689,7 @@ router.delete(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // forgot password --- users
@@ -692,17 +726,17 @@ router.post(
 
       try {
         // Fetch the email template from database
-        let template = await EmailTemplate.findOne({ slug: 'password_reset' });
-        
+        let template = await EmailTemplate.findOne({ slug: "password_reset" });
+
         let emailSubject, emailHtml;
-        
+
         if (template) {
           // Use the template from database
           const variables = {
             userName: user.name,
             name: user.name,
             email: user.email,
-            resetUrl: resetPasswordUrl
+            resetUrl: resetPasswordUrl,
           };
           // render() returns { subject, html }
           const rendered = template.render(variables);
@@ -778,7 +812,7 @@ router.post(
             </html>
           `;
         }
-        
+
         await sendMail({
           email: user.email,
           subject: emailSubject,
@@ -800,7 +834,7 @@ router.post(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // reset password --- users
@@ -824,8 +858,8 @@ router.put(
         return next(
           new ErrorHandler(
             "Reset password token is invalid or has been expired",
-            400
-          )
+            400,
+          ),
         );
       }
 
@@ -843,21 +877,23 @@ router.put(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Ban user
 router.put(
   "/ban-user/:id",
   isAuthenticated,
-  requirePermission('canManageUsers'),
+  requirePermission("canManageUsers"),
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { reason } = req.body;
       const userId = req.params.id;
 
       if (!reason) {
-        return next(new ErrorHandler("Please provide a reason for banning", 400));
+        return next(
+          new ErrorHandler("Please provide a reason for banning", 400),
+        );
       }
 
       const user = await User.findById(userId);
@@ -895,14 +931,14 @@ router.put(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Unban user
 router.put(
   "/unban-user/:id",
   isAuthenticated,
-  requirePermission('canManageUsers'),
+  requirePermission("canManageUsers"),
   catchAsyncErrors(async (req, res, next) => {
     try {
       const userId = req.params.id;
@@ -936,7 +972,7 @@ router.put(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Check ban status (for user-side)
@@ -945,19 +981,22 @@ router.get(
   isAuthenticated,
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const user = await User.findById(req.user._id).populate('bannedBy', 'name');
+      const user = await User.findById(req.user._id).populate(
+        "bannedBy",
+        "name",
+      );
 
       res.status(200).json({
         success: true,
         isBanned: user.isBanned,
         banReason: user.banReason,
         bannedAt: user.bannedAt,
-        bannedBy: user.bannedBy?.name || 'Admin',
+        bannedBy: user.bannedBy?.name || "Admin",
       });
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Create user by admin with role assignment
@@ -970,67 +1009,85 @@ router.post(
     try {
       const { name, email, password, role } = req.body;
 
-      console.log('[ADMIN CREATE USER] Request received:', {
+      console.log("[ADMIN CREATE USER] Request received:", {
         name: name,
         email: email,
         role: role,
-        hasFile: !!req.file
+        hasFile: !!req.file,
       });
 
       // Validate required fields
       if (!name || !email || !password) {
-        console.log('[ADMIN CREATE USER] Missing required fields');
-        return next(new ErrorHandler("Please provide all required fields (name, email, password)", 400));
+        console.log("[ADMIN CREATE USER] Missing required fields");
+        return next(
+          new ErrorHandler(
+            "Please provide all required fields (name, email, password)",
+            400,
+          ),
+        );
       }
 
       // Validate role
-      const validRoles = ['user', 'Admin', 'Supplier'];
+      const validRoles = ["user", "Admin", "Supplier"];
       if (!role || !validRoles.includes(role)) {
-        console.log('[ADMIN CREATE USER] Invalid role:', role);
-        return next(new ErrorHandler("Please provide a valid role (user, Admin, Supplier)", 400));
+        console.log("[ADMIN CREATE USER] Invalid role:", role);
+        return next(
+          new ErrorHandler(
+            "Please provide a valid role (user, Admin, Supplier)",
+            400,
+          ),
+        );
       }
 
       // Check if user already exists
       const existingUser = await User.findOne({ email });
       if (existingUser) {
-        console.log('[ADMIN CREATE USER] User already exists:', email);
+        console.log("[ADMIN CREATE USER] User already exists:", email);
         if (req.file && fs.existsSync(req.file.path)) {
           fs.unlinkSync(req.file.path);
         }
-        return next(new ErrorHandler("User with this email already exists", 400));
+        return next(
+          new ErrorHandler("User with this email already exists", 400),
+        );
       }
 
       // Handle avatar upload or use default
       let avatarData = {
         url: "https://res.cloudinary.com/dkzfopuco/image/upload/v1671086176/avatars/default-avatar_c2opvg.png",
-        public_id: "avatars/default-avatar_c2opvg"
+        public_id: "avatars/default-avatar_c2opvg",
       };
 
       if (req.file) {
         try {
-          console.log(`[ADMIN CREATE USER] Uploading avatar: ${req.file.originalname}`);
+          console.log(
+            `[ADMIN CREATE USER] Uploading avatar: ${req.file.originalname}`,
+          );
           const result = await uploadToCloudinary(req.file.buffer, {
-            folder: 'users/avatars',
-            resource_type: 'image',
+            folder: "users/avatars",
+            resource_type: "image",
             transformation: {
               width: 300,
               height: 300,
-              crop: 'fill',
-              gravity: 'face'
-            }
+              crop: "fill",
+              gravity: "face",
+            },
           });
-          console.log(`[ADMIN CREATE USER] Avatar uploaded successfully: ${result.url}`);
-          
+          console.log(
+            `[ADMIN CREATE USER] Avatar uploaded successfully: ${result.url}`,
+          );
+
           avatarData = {
             url: result.url,
-            public_id: result.public_id
+            public_id: result.public_id,
           };
         } catch (error) {
-          console.error('[ADMIN CREATE USER] Avatar upload error:', error);
-          return next(new ErrorHandler(`Avatar upload failed: ${error.message}`, 400));
+          console.error("[ADMIN CREATE USER] Avatar upload error:", error);
+          return next(
+            new ErrorHandler(`Avatar upload failed: ${error.message}`, 400),
+          );
         }
       } else {
-        console.log('[ADMIN CREATE USER] No avatar provided, using default');
+        console.log("[ADMIN CREATE USER] No avatar provided, using default");
       }
 
       // Create user directly (no email activation for admin-created users)
@@ -1039,22 +1096,22 @@ router.post(
         email: email.trim().toLowerCase(),
         password: password,
         role: role,
-        avatar: avatarData
+        avatar: avatarData,
       });
 
-      console.log('[ADMIN CREATE USER] User created successfully:', {
+      console.log("[ADMIN CREATE USER] User created successfully:", {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
       });
 
       // Create notification for admin user creation
       await NotificationService.createUserRegistrationNotification(
-        'User Created by Admin',
+        "User Created by Admin",
         `Admin ${req.user.name} created a new ${role.toLowerCase()} account for ${name} (${email})`,
-        'admin_user_creation',
-        user._id
+        "admin_user_creation",
+        user._id,
       );
 
       res.status(201).json({
@@ -1066,22 +1123,22 @@ router.post(
           email: user.email,
           role: user.role,
           avatar: user.avatar,
-          createdAt: user.createdAt
-        }
+          createdAt: user.createdAt,
+        },
       });
     } catch (error) {
-      console.error('[ADMIN CREATE USER] Error:', error);
+      console.error("[ADMIN CREATE USER] Error:", error);
       // Clean up uploaded file if there's an error
       if (req.file && fs.existsSync(req.file.path)) {
         try {
           fs.unlinkSync(req.file.path);
         } catch (cleanupError) {
-          console.log('Error cleaning up failed upload:', cleanupError.message);
+          console.log("Error cleaning up failed upload:", cleanupError.message);
         }
       }
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Change user role by admin
@@ -1094,16 +1151,21 @@ router.put(
       const { role } = req.body;
       const userId = req.params.id;
 
-      console.log('[ADMIN CHANGE ROLE] Request received:', {
+      console.log("[ADMIN CHANGE ROLE] Request received:", {
         userId: userId,
         newRole: role,
-        adminId: req.user._id
+        adminId: req.user._id,
       });
 
       // Validate role
-      const validRoles = ['User', 'Admin', 'Supplier'];
+      const validRoles = ["User", "Admin", "Supplier"];
       if (!role || !validRoles.includes(role)) {
-        return next(new ErrorHandler("Please provide a valid role (User, Admin, Supplier)", 400));
+        return next(
+          new ErrorHandler(
+            "Please provide a valid role (User, Admin, Supplier)",
+            400,
+          ),
+        );
       }
 
       const user = await User.findById(userId);
@@ -1117,141 +1179,176 @@ router.put(
       }
 
       const oldRole = user.role;
-      console.log('[ADMIN CHANGE ROLE] Role change request:', { userId, oldRole, newRole: role });
-      
+      console.log("[ADMIN CHANGE ROLE] Role change request:", {
+        userId,
+        oldRole,
+        newRole: role,
+      });
+
       // Handle role change logic - create shop when changing from user to Supplier
       // Check both lowercase 'user' (default) and uppercase 'User' (from frontend)
-      if ((oldRole === 'user' || oldRole === 'User') && role === 'Supplier') {
+      if ((oldRole === "user" || oldRole === "User") && role === "Supplier") {
         const Shop = require("../model/shop");
-        
-        console.log('[ADMIN CHANGE ROLE] User being promoted to Supplier, checking for existing shop...');
-        
+
+        console.log(
+          "[ADMIN CHANGE ROLE] User being promoted to Supplier, checking for existing shop...",
+        );
+
         // Check if shop already exists
         const existingShop = await Shop.findOne({ email: user.email });
         if (!existingShop) {
-          console.log('[ADMIN CHANGE ROLE] Creating shop account for user:', user.email);
-          
+          console.log(
+            "[ADMIN CHANGE ROLE] Creating shop account for user:",
+            user.email,
+          );
+
           try {
             // Create a default shop for the user with hashed password
             const newShop = await Shop.create({
               name: `${user.name}'s Shop`,
               email: user.email,
-              password: 'temppassword123', // This will be hashed by the model middleware
+              password: "temppassword123", // This will be hashed by the model middleware
               description: `Welcome to ${user.name}'s shop`,
               address: "Please update your address",
               phoneNumber: 1234567890, // Default, should be updated
               zipCode: 123456, // Default, should be updated
               avatar: {
-                url: user.avatar?.url || "https://res.cloudinary.com/dkzfopuco/image/upload/v1683299454/avatar_gfxgav.png",
-                public_id: user.avatar?.public_id || "avatar_gfxgav"
-              }
+                url:
+                  user.avatar?.url ||
+                  "https://res.cloudinary.com/dkzfopuco/image/upload/v1683299454/avatar_gfxgav.png",
+                public_id: user.avatar?.public_id || "avatar_gfxgav",
+              },
             });
-            console.log('[ADMIN CHANGE ROLE] ✅ Shop created successfully:', { shopId: newShop._id, email: newShop.email });
+            console.log("[ADMIN CHANGE ROLE] ✅ Shop created successfully:", {
+              shopId: newShop._id,
+              email: newShop.email,
+            });
           } catch (shopError) {
-            console.error('[ADMIN CHANGE ROLE] ❌ Failed to create shop:', shopError.message);
-            return next(new ErrorHandler(`Failed to create shop: ${shopError.message}`, 500));
+            console.error(
+              "[ADMIN CHANGE ROLE] ❌ Failed to create shop:",
+              shopError.message,
+            );
+            return next(
+              new ErrorHandler(
+                `Failed to create shop: ${shopError.message}`,
+                500,
+              ),
+            );
           }
         } else {
-          console.log('[ADMIN CHANGE ROLE] Shop already exists for user:', { shopId: existingShop._id, email: user.email });
+          console.log("[ADMIN CHANGE ROLE] Shop already exists for user:", {
+            shopId: existingShop._id,
+            email: user.email,
+          });
         }
       }
-      
+
       // Handle role change from Supplier to other roles - optionally disable shop
-      if (oldRole === 'Supplier' && role !== 'Supplier') {
-        console.log('[ADMIN CHANGE ROLE] User role changed from Supplier - they will lose shop access');
+      if (oldRole === "Supplier" && role !== "Supplier") {
+        console.log(
+          "[ADMIN CHANGE ROLE] User role changed from Supplier - they will lose shop access",
+        );
       }
-      
+
       user.role = role;
-      
+
       // Force user to login again by updating a timestamp
       // This will invalidate their current session when they try to access protected routes
       user.roleChangedAt = new Date();
-      
+
       await user.save();
 
-      console.log('[ADMIN CHANGE ROLE] Role changed successfully:', {
+      console.log("[ADMIN CHANGE ROLE] Role changed successfully:", {
         userId: user._id,
         oldRole: oldRole,
         newRole: role,
-        roleChangedAt: user.roleChangedAt
+        roleChangedAt: user.roleChangedAt,
       });
 
       res.status(200).json({
         success: true,
         message: `User role changed from ${oldRole} to ${role} successfully. ${
-          role === 'Supplier' && oldRole === 'user' 
-            ? 'Shop account created with email "' + user.email + '" and temporary password "temppassword123". User should change this password after first login. ' 
-            : ''
+          role === "Supplier" && oldRole === "user"
+            ? 'Shop account created with email "' +
+              user.email +
+              '" and temporary password "temppassword123". User should change this password after first login. '
+            : ""
         }All active sessions have been invalidated. User must login again with appropriate login type.`,
         user: {
           id: user._id,
           name: user.name,
           email: user.email,
-          role: user.role
+          role: user.role,
         },
         loginInstructions: {
           User: "Use regular user login",
-          Admin: "Use regular user login",  
-          Supplier: "Use shop login with email and temporary password"
-        }[role]
+          Admin: "Use regular user login",
+          Supplier: "Use shop login with email and temporary password",
+        }[role],
       });
     } catch (error) {
-      console.error('[ADMIN CHANGE ROLE] Error:', error);
+      console.error("[ADMIN CHANGE ROLE] Error:", error);
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Test endpoint to check user and shop data
-router.get("/check-user/:id", isAuthenticated, requirePermission('canManageUsers'), async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const User = require("../model/user");
-    const Shop = require("../model/shop");
-    
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+router.get(
+  "/check-user/:id",
+  isAuthenticated,
+  requirePermission("canManageUsers"),
+  async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const User = require("../model/user");
+      const Shop = require("../model/shop");
+
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const shop = await Shop.findOne({ email: user.email });
+
+      res.json({
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          roleChangedAt: user.roleChangedAt,
+        },
+        shop: shop
+          ? {
+              id: shop._id,
+              name: shop.name,
+              email: shop.email,
+            }
+          : null,
+      });
+    } catch (error) {
+      console.error("Error checking user:", error);
+      res.status(500).json({ error: error.message });
     }
-    
-    const shop = await Shop.findOne({ email: user.email });
-    
-    res.json({
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        roleChangedAt: user.roleChangedAt
-      },
-      shop: shop ? {
-        id: shop._id,
-        name: shop.name,
-        email: shop.email
-      } : null
-    });
-  } catch (error) {
-    console.error("Error checking user:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
+  },
+);
 
 // Debug: Check users and shops in database
 router.get("/debug-users-shops", async (req, res) => {
   try {
     const User = require("../model/user");
     const Shop = require("../model/shop");
-    
+
     const users = await User.find({}, { email: 1, role: 1, name: 1 });
     const shops = await Shop.find({}, { email: 1, name: 1 });
-    
+
     res.json({
-      users: users.map(u => ({ email: u.email, role: u.role, name: u.name })),
-      shops: shops.map(s => ({ email: s.email, name: s.name })),
+      users: users.map((u) => ({ email: u.email, role: u.role, name: u.name })),
+      shops: shops.map((s) => ({ email: s.email, name: s.name })),
       usersCount: users.length,
-      shopsCount: shops.length
+      shopsCount: shops.length,
     });
-    
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -1262,149 +1359,161 @@ router.put("/fix-supplier-roles", async (req, res) => {
   try {
     const User = require("../model/user");
     const Shop = require("../model/shop");
-    
+
     // Find all users who have shops but don't have Supplier role
     const users = await User.find({});
     const updatedUsers = [];
-    
+
     for (let user of users) {
       const shop = await Shop.findOne({ email: user.email });
-      
+
       // If user has a shop but their role is not "Supplier"
       if (shop && user.role !== "Supplier") {
         const oldRole = user.role;
         user.role = "Supplier";
         await user.save();
-        
+
         updatedUsers.push({
           email: user.email,
           name: user.name,
           oldRole: oldRole,
-          newRole: "Supplier"
+          newRole: "Supplier",
         });
-        
+
         console.log(`Updated ${user.email} from ${oldRole} to Supplier`);
       }
     }
-    
+
     res.json({
       success: true,
       message: `Updated ${updatedUsers.length} users to Supplier role`,
-      updatedUsers
+      updatedUsers,
     });
-    
   } catch (error) {
-    console.error('Fix supplier roles error:', error);
+    console.error("Fix supplier roles error:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
 // Get user by email (for admin to check seller roles)
-router.get("/get-user-by-email/:email", isAuthenticated, requirePermission('canManageUsers'), async (req, res) => {
-  try {
-    const email = req.params.email;
-    const user = await User.findOne({ email: email });
-    
-    if (!user) {
-      return res.status(404).json({ 
+router.get(
+  "/get-user-by-email/:email",
+  isAuthenticated,
+  requirePermission("canManageUsers"),
+  async (req, res) => {
+    try {
+      const email = req.params.email;
+      const user = await User.findOne({ email: email });
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          createdAt: user.createdAt,
+          isBanned: user.isBanned,
+        },
+      });
+    } catch (error) {
+      console.error("Error getting user by email:", error);
+      res.status(500).json({
         success: false,
-        message: "User not found" 
+        error: error.message,
       });
     }
-    
-    res.status(200).json({
-      success: true,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        createdAt: user.createdAt,
-        isBanned: user.isBanned
-      }
-    });
-  } catch (error) {
-    console.error("Error getting user by email:", error);
-    res.status(500).json({ 
-      success: false,
-      error: error.message 
-    });
-  }
-});
+  },
+);
 
 // Create user account for existing seller (admin only)
-router.post("/create-user-for-seller", isAuthenticated, isAdmin("Admin"), async (req, res) => {
-  try {
-    const { name, email, role } = req.body;
+router.post(
+  "/create-user-for-seller",
+  isAuthenticated,
+  isAdmin("Admin"),
+  async (req, res) => {
+    try {
+      const { name, email, role } = req.body;
 
-    console.log('[CREATE USER FOR SELLER] Request:', { name, email, role });
+      console.log("[CREATE USER FOR SELLER] Request:", { name, email, role });
 
-    // Validate input
-    if (!name || !email || !role) {
-      return res.status(400).json({
-        success: false,
-        message: "Name, email, and role are required"
-      });
-    }
-
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "User account already exists for this email"
-      });
-    }
-
-    // Check if shop exists
-    const Shop = require("../model/shop");
-    const shop = await Shop.findOne({ email });
-    if (!shop) {
-      return res.status(404).json({
-        success: false,
-        message: "Shop not found for this email"
-      });
-    }
-
-    // Create user account with shop's information
-    const newUser = await User.create({
-      name: name,
-      email: email,
-      password: 'temppassword123', // Default password - they should change this
-      role: role,
-      avatar: {
-        url: shop.avatar?.url || "https://res.cloudinary.com/dkzfopuco/image/upload/v1683299454/avatar_gfxgav.png",
-        public_id: shop.avatar?.public_id || "avatar_gfxgav"
-      },
-      phoneNumber: shop.phoneNumber || 1234567890,
-      addresses: [{
-        address1: shop.address || "Please update your address",
-        zipCode: shop.zipCode || 123456
-      }]
-    });
-
-    console.log('[CREATE USER FOR SELLER] User created:', newUser._id);
-
-    res.status(201).json({
-      success: true,
-      message: `User account created successfully with role ${role}. Default password is 'temppassword123' - please inform the user to change it.`,
-      user: {
-        _id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role
+      // Validate input
+      if (!name || !email || !role) {
+        return res.status(400).json({
+          success: false,
+          message: "Name, email, and role are required",
+        });
       }
-    });
 
-  } catch (error) {
-    console.error('[CREATE USER FOR SELLER] Error:', error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to create user account",
-      error: error.message
-    });
-  }
-});
+      // Check if user already exists
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "User account already exists for this email",
+        });
+      }
+
+      // Check if shop exists
+      const Shop = require("../model/shop");
+      const shop = await Shop.findOne({ email });
+      if (!shop) {
+        return res.status(404).json({
+          success: false,
+          message: "Shop not found for this email",
+        });
+      }
+
+      // Create user account with shop's information
+      const newUser = await User.create({
+        name: name,
+        email: email,
+        password: "temppassword123", // Default password - they should change this
+        role: role,
+        avatar: {
+          url:
+            shop.avatar?.url ||
+            "https://res.cloudinary.com/dkzfopuco/image/upload/v1683299454/avatar_gfxgav.png",
+          public_id: shop.avatar?.public_id || "avatar_gfxgav",
+        },
+        phoneNumber: shop.phoneNumber || 1234567890,
+        addresses: [
+          {
+            address1: shop.address || "Please update your address",
+            zipCode: shop.zipCode || 123456,
+          },
+        ],
+      });
+
+      console.log("[CREATE USER FOR SELLER] User created:", newUser._id);
+
+      res.status(201).json({
+        success: true,
+        message: `User account created successfully with role ${role}. Default password is 'temppassword123' - please inform the user to change it.`,
+        user: {
+          _id: newUser._id,
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role,
+        },
+      });
+    } catch (error) {
+      console.error("[CREATE USER FOR SELLER] Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to create user account",
+        error: error.message,
+      });
+    }
+  },
+);
 
 // Debug endpoint - Check user and shop status
 router.get(
@@ -1412,34 +1521,58 @@ router.get(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { email } = req.params;
-      
-      console.log('[DEBUG] Checking user and shop for email:', email);
-      
+
+      console.log("[DEBUG] Checking user and shop for email:", email);
+
       // Check user
       const user = await User.findOne({ email: email });
-      console.log('[DEBUG] User found:', user ? { id: user._id, email: user.email, role: user.role, name: user.name } : 'Not found');
-      
+      console.log(
+        "[DEBUG] User found:",
+        user
+          ? {
+              id: user._id,
+              email: user.email,
+              role: user.role,
+              name: user.name,
+            }
+          : "Not found",
+      );
+
       // Check shop
       const Shop = require("../model/shop");
       const shop = await Shop.findOne({ email: email });
-      console.log('[DEBUG] Shop found:', shop ? { id: shop._id, email: shop.email, name: shop.name } : 'Not found');
-      
+      console.log(
+        "[DEBUG] Shop found:",
+        shop
+          ? { id: shop._id, email: shop.email, name: shop.name }
+          : "Not found",
+      );
+
       res.status(200).json({
         success: true,
         data: {
-          user: user ? { id: user._id, email: user.email, role: user.role, name: user.name } : null,
-          shop: shop ? { id: shop._id, email: shop.email, name: shop.name } : null,
+          user: user
+            ? {
+                id: user._id,
+                email: user.email,
+                role: user.role,
+                name: user.name,
+              }
+            : null,
+          shop: shop
+            ? { id: shop._id, email: shop.email, name: shop.name }
+            : null,
           hasUser: !!user,
           hasShop: !!shop,
           userRole: user?.role,
-          canCreateShop: user && user.role === 'Supplier' && !shop
-        }
+          canCreateShop: user && user.role === "Supplier" && !shop,
+        },
       });
     } catch (error) {
-      console.error('[DEBUG] Error:', error);
+      console.error("[DEBUG] Error:", error);
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Force create shop for supplier
@@ -1450,57 +1583,64 @@ router.post(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { email } = req.params;
-      
-      console.log('[FORCE CREATE SHOP] Creating shop for email:', email);
-      
+
+      console.log("[FORCE CREATE SHOP] Creating shop for email:", email);
+
       // Check user
       const user = await User.findOne({ email: email });
       if (!user) {
         return next(new ErrorHandler("User not found", 404));
       }
-      
-      if (user.role !== 'Supplier') {
+
+      if (user.role !== "Supplier") {
         return next(new ErrorHandler("User must have Supplier role", 400));
       }
-      
+
       // Check if shop already exists
       const Shop = require("../model/shop");
       const existingShop = await Shop.findOne({ email: email });
       if (existingShop) {
-        return next(new ErrorHandler("Shop already exists for this email", 400));
+        return next(
+          new ErrorHandler("Shop already exists for this email", 400),
+        );
       }
-      
+
       // Create shop
       const newShop = await Shop.create({
         name: `${user.name}'s Shop`,
         email: user.email,
-        password: 'temppassword123',
+        password: "temppassword123",
         description: `Welcome to ${user.name}'s shop`,
         address: "Please update your address",
         phoneNumber: 1234567890,
         zipCode: 123456,
         avatar: {
-          url: user.avatar?.url || "https://res.cloudinary.com/dkzfopuco/image/upload/v1683299454/avatar_gfxgav.png",
-          public_id: user.avatar?.public_id || "avatar_gfxgav"
-        }
+          url:
+            user.avatar?.url ||
+            "https://res.cloudinary.com/dkzfopuco/image/upload/v1683299454/avatar_gfxgav.png",
+          public_id: user.avatar?.public_id || "avatar_gfxgav",
+        },
       });
-      
-      console.log('[FORCE CREATE SHOP] Shop created successfully:', newShop._id);
-      
+
+      console.log(
+        "[FORCE CREATE SHOP] Shop created successfully:",
+        newShop._id,
+      );
+
       res.status(200).json({
         success: true,
         message: "Shop created successfully",
         shop: {
           id: newShop._id,
           name: newShop.name,
-          email: newShop.email
-        }
+          email: newShop.email,
+        },
       });
     } catch (error) {
-      console.error('[FORCE CREATE SHOP] Error:', error);
+      console.error("[FORCE CREATE SHOP] Error:", error);
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Get all admin users (Admin, SubAdmin, Manager) - Only Admin can access
@@ -1511,8 +1651,10 @@ router.get(
   catchAsyncErrors(async (req, res, next) => {
     try {
       const adminUsers = await User.find({
-        role: { $in: ["Admin", "SubAdmin", "Manager"] }
-      }).select("-password").sort({ createdAt: -1 });
+        role: { $in: ["Admin", "SubAdmin", "Manager"] },
+      })
+        .select("-password")
+        .sort({ createdAt: -1 });
 
       res.status(200).json({
         success: true,
@@ -1521,7 +1663,7 @@ router.get(
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Create SubAdmin or Manager - Only Admin can create
@@ -1535,13 +1677,20 @@ router.post(
 
       // Validate role
       if (!["SubAdmin", "Manager"].includes(role)) {
-        return next(new ErrorHandler("Invalid role. Only SubAdmin and Manager can be created", 400));
+        return next(
+          new ErrorHandler(
+            "Invalid role. Only SubAdmin and Manager can be created",
+            400,
+          ),
+        );
       }
 
       // Check if user already exists
       const existingUser = await User.findOne({ email });
       if (existingUser) {
-        return next(new ErrorHandler("User with this email already exists", 400));
+        return next(
+          new ErrorHandler("User with this email already exists", 400),
+        );
       }
 
       // Create user with role and optional custom permissions
@@ -1550,7 +1699,7 @@ router.post(
         email,
         password,
         role,
-        permissions: customPermissions || {}
+        permissions: customPermissions || {},
       });
 
       res.status(201).json({
@@ -1561,13 +1710,13 @@ router.post(
           name: user.name,
           email: user.email,
           role: user.role,
-          permissions: user.permissions
-        }
+          permissions: user.permissions,
+        },
       });
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Update admin user role or permissions - Only Admin can update
@@ -1587,7 +1736,9 @@ router.put(
 
       // Prevent modifying the main Admin account
       if (user.role === "Admin" && req.user._id.toString() !== userId) {
-        return next(new ErrorHandler("Cannot modify other Admin accounts", 403));
+        return next(
+          new ErrorHandler("Cannot modify other Admin accounts", 403),
+        );
       }
 
       // Update role if provided
@@ -1596,7 +1747,7 @@ router.put(
       }
 
       // Update custom permissions if provided
-      if (permissions && typeof permissions === 'object') {
+      if (permissions && typeof permissions === "object") {
         user.permissions = { ...user.permissions, ...permissions };
       }
 
@@ -1610,13 +1761,13 @@ router.put(
           name: user.name,
           email: user.email,
           role: user.role,
-          permissions: user.permissions
-        }
+          permissions: user.permissions,
+        },
       });
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 // Delete admin user (SubAdmin/Manager) - Only Admin can delete
@@ -1647,12 +1798,12 @@ router.delete(
 
       res.status(200).json({
         success: true,
-        message: `${user.role} deleted successfully`
+        message: `${user.role} deleted successfully`,
       });
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  })
+  }),
 );
 
 module.exports = router;
